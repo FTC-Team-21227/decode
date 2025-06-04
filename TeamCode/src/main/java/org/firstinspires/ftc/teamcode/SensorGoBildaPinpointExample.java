@@ -29,7 +29,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import java.util.ArrayList;
 import java.util.Locale;
+import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver.Register;
 
 /*
 This opmode shows how to use the goBILDA® Pinpoint Odometry Computer.
@@ -57,7 +59,7 @@ For support, contact tech@gobilda.com
 -Ethan Doak
  */
 
-@TeleOp(name="goBILDA® PinPoint Odometry Example", group="Linear OpMode")
+@TeleOp(name="goBILDA® Pinpoint Odometry Example", group="Linear OpMode")
 //@Disabled
 
 public class SensorGoBildaPinpointExample extends LinearOpMode {
@@ -66,6 +68,44 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
 
     double oldTime = 0;
 
+    Register[] positionAndOrientation = {
+            Register.DEVICE_STATUS,
+            Register.X_POSITION,
+            Register.Y_POSITION,
+            Register.H_ORIENTATION,
+            Register.QUATERNION_W,
+            Register.QUATERNION_X,
+            Register.QUATERNION_Y,
+            Register.QUATERNION_Z,
+    };
+
+    Register[] onlyPosition = {
+            Register.X_POSITION,
+            Register.Y_POSITION,
+            Register.H_ORIENTATION,
+    };
+
+    Register[] likeEverything = {
+            Register.DEVICE_STATUS,
+            Register.LOOP_TIME,
+            Register.X_ENCODER_VALUE,
+            Register.Y_ENCODER_VALUE,
+            Register.X_POSITION,
+            Register.Y_POSITION,
+            Register.H_ORIENTATION,
+            Register.X_VELOCITY,
+            Register.Y_VELOCITY,
+            Register.H_VELOCITY,
+            Register.X_POD_OFFSET,
+            Register.Y_POD_OFFSET,
+            Register.YAW_SCALAR,
+            Register.QUATERNION_W,
+            Register.QUATERNION_X,
+            Register.QUATERNION_Y,
+            Register.QUATERNION_Z,
+            Register.PITCH,
+            Register.ROLL,
+    };
 
     @Override
     public void runOpMode() {
@@ -75,6 +115,9 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
 
+        //odo.setBulkReadScope(positionAndOrientation);
+
+
         /*
         Set the odometry pod positions relative to the point that the odometry computer tracks around.
         The X pod offset refers to how far sideways from the tracking point the
@@ -83,7 +126,7 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
         the tracking point the Y (strafe) odometry pod is. forward of center is a positive number,
         backwards is a negative number.
          */
-        odo.setOffsets(-84.0, -168.0); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setOffsets(-84.0, -168.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -92,7 +135,7 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
         number of ticks per mm of your odometry pod.
          */
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        //odo.setEncoderResolution(13.26291192);
+        //odo.setEncoderResolution(13.26291192, DistanceUnit.MM);
 
 
         /*
@@ -115,8 +158,14 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
         odo.resetPosAndIMU();
 
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("X offset", odo.getXOffset());
-        telemetry.addData("Y offset", odo.getYOffset());
+
+        odo.readRegister(Register.X_POD_OFFSET);
+        odo.readRegister(Register.Y_POD_OFFSET);
+        odo.readRegister(Register.DEVICE_VERSION);
+        odo.readRegister(Register.YAW_SCALAR);
+
+        telemetry.addData("X offset", odo.getXOffset(DistanceUnit.MM));
+        telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.MM));
         telemetry.addData("Device Version Number:", odo.getDeviceVersion());
         telemetry.addData("Device Scalar", odo.getYawScalar());
         telemetry.update();
@@ -135,19 +184,22 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
              */
             odo.update();
 
-            /*
-            Optionally, you can update only the heading of the device. This takes less time to read, but will not
-            pull any other data. Only the heading (which you can pull with getHeading() or in getPosition().
-             */
-            //odo.update(GoBildaPinpointDriver.readData.ONLY_UPDATE_HEADING);
-
-
             if (gamepad1.a){
                 odo.resetPosAndIMU(); //resets the position to 0 and recalibrates the IMU
             }
 
             if (gamepad1.b){
                 odo.recalibrateIMU(); //recalibrates the IMU without resetting position
+            }
+
+            if (gamepad1.dpad_down){
+                odo.setBulkReadScope(onlyPosition);
+            }
+            if (gamepad1.dpad_up){
+                odo.setBulkReadScope(positionAndOrientation);
+            }
+            if (gamepad1.dpad_left){
+                odo.setBulkReadScope(likeEverything);
             }
 
             /*
@@ -192,6 +244,7 @@ public class SensorGoBildaPinpointExample extends LinearOpMode {
 
             telemetry.addData("REV Hub Frequency: ", frequency); //prints the control system refresh rate
             telemetry.update();
+
 
         }
     }}
