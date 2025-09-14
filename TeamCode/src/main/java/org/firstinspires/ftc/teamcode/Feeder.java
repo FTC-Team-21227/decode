@@ -4,12 +4,18 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Feeder {
-    DcMotor feeder;
+    DcMotor FEEDER;
     //power
     public Feeder (HardwareMap hardwareMap){
-        feeder = hardwareMap.get(DcMotor.class, "feeder");
+        FEEDER = hardwareMap.get(DcMotor.class, "feeder");
+        FEEDER.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        FEEDER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FEEDER.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public void rollIn(){
-        feeder.setPower(1);
+        FEEDER.setPower(Robot.Constants.feederPower);
+    }
+    public void stop(){
+        FEEDER.setPower(0);
     }
 }
