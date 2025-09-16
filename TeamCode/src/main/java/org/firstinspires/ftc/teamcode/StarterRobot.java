@@ -60,9 +60,8 @@ public class StarterRobot {
         public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
         public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
         public final static double FULL_SPEED = 1.0;
-        public final static double LAUNCHER_TARGET_VELOCITY = 100;
-        public final static double LAUNCHER_MIN_VELOCITY = 90;
-
+        public final static double LAUNCHER_TARGET_VELOCITY = 6000;
+        public final static double LAUNCHER_MIN_VELOCITY = 5000;
     }
 
     // Thanks to FTC16072 for sharing this code!!
