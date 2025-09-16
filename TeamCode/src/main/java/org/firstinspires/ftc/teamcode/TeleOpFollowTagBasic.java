@@ -154,10 +154,11 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         }
         if (Math.abs(gamepad1.right_stick_x) >= 0.01) {
             imu_rotation = 0;
-            Targeting_Angle = april.getYaw(); // INSERT YAW ANGLE
+            Targeting_Angle = Heading_Angle;
         }
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
         else {
+            Targeting_Angle = april.getYaw(); // INSERT YAW ANGLE
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > 180) {
                 Angle_Difference = Angle_Difference - 360;
