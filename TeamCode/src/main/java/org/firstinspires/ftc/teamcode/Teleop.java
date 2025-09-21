@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
 public class Teleop extends OpMode {
-    Robot robot = new Robot(hardwareMap, new Pose2d(0,0,0));
+    Robot robot = new Robot(hardwareMap, new Pose2d(0,0,0), Robot.Color.RED);
     public void init(){
         robot.initTeleop(telemetry);
         telemetry.update();

@@ -19,7 +19,7 @@ public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -63.3, Math.toRadians(90));
-        Robot robot = new Robot(hardwareMap, initialPose);
+        Robot robot = new Robot(hardwareMap, initialPose, Robot.Color.RED);
 
         TrajectoryActionBuilder tab1 = robot.drive.actionBuilder(initialPose) //first specimen
 //                .setTangent(Math.toRadians(90))
@@ -36,6 +36,10 @@ public class Auto extends LinearOpMode {
                 //first specimen
                 new ParallelAction(
                         firstTrajectory,
+                        //shotReq = false
+                        //delayTillShot = 1
+                        //second,
+                        //shotReq = true
 
                         telemetryPacket -> {
                             robot.updateShooter(true,telemetry);

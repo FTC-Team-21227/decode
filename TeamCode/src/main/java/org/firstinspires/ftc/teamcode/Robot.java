@@ -1,8 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Trajectory;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -27,17 +31,23 @@ public class Robot {
     Turret turret;
     Hood hood;
     Camera camera;
+    enum Color {
+        RED,
+        BLUE
+    }
+    private final Color color;
 
     //initialize subsystems
-    public Robot(HardwareMap hardwareMap, Pose2d initialPose){
+    public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
         camera = new Camera(hardwareMap);
-        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
+//        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
         drive2 = new AprilDrive(hardwareMap, initialPose);
         intake = new Intake(hardwareMap);
         feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
+        this.color = color;
     }
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
@@ -79,6 +89,14 @@ public class Robot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
+        switch (color){
+            case RED:
+                Constants.goalPos = new Vector2d(-58.3727,55.6425);
+            case BLUE:
+                Constants.goalPos = new Vector2d(58.3727,55.6425);
+                drive2.localizer.setPose(mirrorPose(drive2.localizer.getPose()));
+        }
+
         telemetry.addData("Status", "Initialized");
     }
 
@@ -87,7 +105,7 @@ public class Robot {
     public static class Constants{
         public final static Vector2d turretPos = new Vector2d(0,-5);
         public final static double deltaH = 50;
-        public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
+        public static Vector2d goalPos;
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
         public final static double feederPower = 1.0;
@@ -108,6 +126,7 @@ public class Robot {
         public final static double turretRightScale1 = 1;
     }
 
+    //queuer, state machines, commanding the robot
     // Thanks to FTC16072 for sharing this code!!
     public void driveFieldCentric(double forward, double right, double rotate) {
         // First, convert direction being asked to drive to polar coordinates
@@ -129,8 +148,6 @@ public class Robot {
                 -rotate
         ));
     }
-
-    //queuer/state machine
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
@@ -169,6 +186,7 @@ public class Robot {
             case IDLE:
                 if (shotRequested) {
                     launchState = LaunchState.SPIN_UP;
+                    feederTimer.reset();
                 }
                 break;
             case SPIN_UP:
@@ -178,6 +196,7 @@ public class Robot {
                 }
                 break;
             case LAUNCH:
+                //if time delay enough
                 feeder.rollIn();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
@@ -219,5 +238,16 @@ public class Robot {
     public int[] lookUp(Vector2d pos, Vector2d vel){
 
         return new int[]{power[0][0][0],angle[0][0][0]};
+    }
+
+    //misc functions
+    public Pose2d mirrorPose(Pose2d pose){
+        return pose;
+    }
+    public Action buildTrajectory(TrajectoryActionBuilder tab){
+        if (color.equals(Color.BLUE)){
+            //not sure if mirroring poses in the tab is possible
+        }
+        return tab.build();
     }
 }
