@@ -5,31 +5,30 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public class Robot {
+//PROOF OF CONCEPT; DON'T USE; THIS ONE WON'T BE UPDATED; WE'LL MAKE ANOTHER CLASS IF/WHEN WE'RE READY AND WANT TO TRY SINGLETON
+public class RobotSG {
     //add:
     // Red/blue pose mirroring, where goal vector should always be (0,0)
     // Lookup table functionality
     // Turret position mapped correctly to robot pose etc.
     // Telemetry
     // Some way to carry the information over to teleop, not have to reinitialize
-
+    private static RobotSG instance;
     AprilTagMecanumDrive drive;
     AprilDrive drive2;
     Intake intake;
     Feeder feeder;
     Flywheel flywheel;
     Turret turret;
-    Hood hood;
-    Camera camera;
+    public Camera camera;
 
     //initialize subsystems
-    public Robot(HardwareMap hardwareMap, Pose2d initialPose){
+    private RobotSG(HardwareMap hardwareMap, Pose2d initialPose){
         camera = new Camera(hardwareMap);
         drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
         drive2 = new AprilDrive(hardwareMap, initialPose);
@@ -37,7 +36,12 @@ public class Robot {
         feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
-        hood = new Hood(hardwareMap);
+    }
+    public static RobotSG getInstance(HardwareMap hardwareMap, Pose2d initialPose){
+        if (instance == null){
+            instance = new RobotSG(hardwareMap, initialPose);
+        }
+        return instance;
     }
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
@@ -86,8 +90,6 @@ public class Robot {
     @Config
     public static class Constants{
         public final static Vector2d turretPos = new Vector2d(0,-5);
-        public final static double deltaH = 50;
-        public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
         public final static double feederPower = 1.0;
@@ -98,14 +100,7 @@ public class Robot {
         public final static double FULL_SPEED = 1.0;
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
         public final static double LAUNCHER_MIN_VELOCITY = 1075;
-        public final static double hoodLowAngle = 0;
-        public final static double hoodHighAngle = 90;
-        public final static double hoodScale0 = 0;
-        public final static double hoodScale1 = 1;
-        public final static double turretLeftScale0 = 0;
-        public final static double turretLeftScale1 = 1;
-        public final static double turretRightScale0 = 0;
-        public final static double turretRightScale1 = 1;
+
     }
 
     // Thanks to FTC16072 for sharing this code!!
@@ -133,37 +128,8 @@ public class Robot {
     //queuer/state machine
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
-        // Assume we have: Vector2d goalPosition
-        Vector2d goalVector = Constants.goalPos.minus(drive2.localizer.getPose().position);
-        double absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
-        double turretAngle = absoluteAngleToGoal - drive2.localizer.getPose().heading.toDouble(); // Relative to robot's heading
-
-        turret.turnToRobotAngle(turretAngle);
-
-        // Given d (horizontal distance) and deltaH (height difference)
-        double g = 386.22; // in/s^2
-
-        double deltaH = Constants.deltaH;
-        double d = goalVector.norm();
-// Calculate launch angle theta
-        double theta = Math.atan(7 * deltaH / (3 * d));
-
-// Calculate time of flight t_f
-        double t_f = Math.sqrt(8 * deltaH / (3 * g));
-
-// Calculate initial speed v
-        double v = d / (t_f * Math.cos(theta));
-
-// Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
-        double wheelDiameter = 3.78; // inches, for example
-        double wheelCircumference = Math.PI * wheelDiameter;
-        double rpm = (v * 60) / wheelCircumference; // RPM
-
-// Set hood angle to theta (convert to servo position)
-        hood.turnToAngle(theta);
-
-// Set flywheel RPM
-        flywheel.spinTo(rpm);
+        turret.turnToRobotAngle(drive.localizer.getPose().heading.toDouble());
+        flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
         //-/-///
         switch (launchState) {
             case IDLE:

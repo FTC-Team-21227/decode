@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
@@ -71,7 +72,7 @@ public class Camera {
             // == CAMERA CALIBRATION ==
             // If you do not manually specify calibration parameters, the SDK will attempt
             // to load a predefined calibration for your camera.
-            .setLensIntrinsics(549.651, 549.651, 317.108, 236.644)// 240P .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271)
+//            .setLensIntrinsics(549.651, 549.651, 317.108, 236.644)// 240P .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271)
             // ... these parameters are fx, fy, cx, cy.
 
             .build();
@@ -90,7 +91,7 @@ public class Camera {
         // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
         // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
         // Note: Decimation can be changed on-the-fly to adapt during a match.
-        aprilTag.setDecimation(1.0F);
+//        aprilTag.setDecimation(1.0F);
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -124,6 +125,9 @@ public class Camera {
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
+
+        FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
+
     }
 
 
