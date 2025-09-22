@@ -54,12 +54,12 @@ public class Robot {
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){
             super(hardwareMap,initialPose);
         }
-        public Pose2d relocalize() {
+        public Pose2d relocalize(Telemetry telemetry) {
             PoseVelocity2d vel = super.updatePoseEstimate();
             if (vel.linearVel.norm() > 1.0 || Math.toDegrees(vel.angVel) > 1.0) {
                 return localizer.getPose();
             }
-            Pose2d poseWorldTurret = camera.update();
+            Pose2d poseWorldTurret = camera.update(telemetry);
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
             Pose2d poseWorldRobot = poseWorldTurret.times(turret.getPoseRobotTurret().inverse());
             localizer.setPose(poseWorldRobot);
@@ -212,7 +212,7 @@ public class Robot {
         telemetry.addData("motorSpeed", flywheel.getVel());
     }
 
-    public void updateLocalizer(){
+    public void updateLocalizer(Telemetry telemetry){
         switch (driveState){
             case RELATIVE:
                 drive2.updatePoseEstimate();
@@ -221,7 +221,7 @@ public class Robot {
                 }
                 break;
             case ABSOLUTE:
-                drive2.relocalize();
+                drive2.relocalize(telemetry);
                 driveState = DriveState.RELATIVE;
                 break;
         }

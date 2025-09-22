@@ -28,14 +28,14 @@ public class StarterRobot {
 
     //initialize subsystems
     public StarterRobot(HardwareMap hardwareMap){
-        feeders = new Feeders(hardwareMap);
+//        feeders = new Feeders(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         camera = new Camera(hardwareMap);
-        hood = new Hood(hardwareMap);
-        W_BL = hardwareMap.get(DcMotor.class, "W_BL");
-        W_BR = hardwareMap.get(DcMotor.class, "W_BR");
-        W_FR = hardwareMap.get(DcMotor.class, "W_FR");
-        W_FL = hardwareMap.get(DcMotor.class, "W_FL");
+//        hood = new Hood(hardwareMap);
+//        W_BL = hardwareMap.get(DcMotor.class, "W_BL");
+//        W_BR = hardwareMap.get(DcMotor.class, "W_BR");
+//        W_FR = hardwareMap.get(DcMotor.class, "W_FR");
+//        W_FL = hardwareMap.get(DcMotor.class, "W_FL");
         imu = hardwareMap.get(IMU.class, "imu");
     }
     private enum LaunchState {
@@ -55,25 +55,25 @@ public class StarterRobot {
     ElapsedTime aprilTimer;
 
     public void initTeleop(Telemetry telemetry) {
-        W_FR.setDirection(DcMotor.Direction.FORWARD);
-        W_FL.setDirection(DcMotor.Direction.REVERSE);
-        W_BR.setDirection(DcMotor.Direction.FORWARD);
-        W_BL.setDirection(DcMotor.Direction.REVERSE);
-        W_FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        W_FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        W_BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        W_BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        W_FR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        W_FL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        W_BR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        W_BL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        W_FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        W_FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        W_FR.setDirection(DcMotor.Direction.FORWARD);
+//        W_FL.setDirection(DcMotor.Direction.REVERSE);
+//        W_BR.setDirection(DcMotor.Direction.FORWARD);
+//        W_BL.setDirection(DcMotor.Direction.REVERSE);
+//        W_FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        W_FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        W_BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        W_BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        W_FR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        W_FL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        W_BR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        W_BL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        W_FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        W_FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
-        imu.resetYaw();
+//        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
+//        imu.resetYaw();
 
         launchState = LaunchState.IDLE;
         driveState = DriveState.ABSOLUTE;
@@ -172,9 +172,9 @@ public class StarterRobot {
         W_FL.setPower(Motor_power_FL);
     }
 
-
+    double rpm = 1500;
     //queuer/state machine
-    public void updateShooter(boolean shotRequested, Telemetry telemetry) {
+    public void updateShooter(boolean shotRequested, double change, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
         goalVector = Constants.goalPos.minus(pose.position);
@@ -197,11 +197,10 @@ public class StarterRobot {
 // Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
         double wheelDiameter = 3.78; // inches, for example
         double wheelCircumference = Math.PI * wheelDiameter;
-        double rpm = (v * 60) / wheelCircumference; // RPM
-
+//        rpm = (v * 60) / wheelCircumference; // RPM
 // Set hood angle to theta (convert to servo position)
-        hood.turnToAngle(theta);
-
+//        hood.turnToAngle(theta);
+        rpm += change*10;
 // Set flywheel RPM
         flywheel.spinTo(rpm);
         //-/-///
@@ -230,13 +229,14 @@ public class StarterRobot {
                 break;
         }
         telemetry.addData("State", launchState);
+        telemetry.addData("targetVel", rpm);
         telemetry.addData("motorSpeed", flywheel.getVel());
     }
 
     public Pose2d updateLocalizer(Telemetry telemetry){
         switch (driveState){
             case ABSOLUTE:
-                Pose2d poseWorldTurret = camera.update();
+                Pose2d poseWorldTurret = camera.update(telemetry);
                 if (poseWorldTurret == null){
                     return new Pose2d(pose.position, imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
                 }

@@ -36,7 +36,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -46,9 +48,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.List;
 
@@ -73,7 +72,7 @@ import java.util.List;
  */
 @TeleOp(name = "Concept: AprilTag Localization", group = "Concept")
 //@Disabled
-public class AprilTagLocalization extends LinearOpMode {
+public class AprilTagLocalization2 {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
@@ -122,10 +121,10 @@ public class AprilTagLocalization extends LinearOpMode {
     private VisionPortal visionPortal; //manages the overall pipeline
 //    OpenCvWebcam camera;
 
-    @Override
-    public void runOpMode() { // Running...
+//    @Override
+    public AprilTagLocalization2(HardwareMap hardwareMap, Telemetry telemetry){ // Running...
 
-        initAprilTag(); // initialize AprilTag Processor
+        initAprilTag(hardwareMap); // initialize AprilTag Processor
 //        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 //        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
@@ -133,37 +132,37 @@ public class AprilTagLocalization extends LinearOpMode {
         telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
         telemetry.addData(">", "Touch START to start OpMode");
         telemetry.update();
-        waitForStart();
+//        waitForStart();
 
-        while (opModeIsActive()) { // while the AprilTagLocalization is running
-
-            telemetryAprilTag();
-            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-
-            // Push telemetry to the Driver Station.
-            telemetry.update();
-            FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
-//            camera.openCameraDevice();
-//            camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-            if (!currentDetections.isEmpty())
-            {
-                TelemetryPacket packet = new TelemetryPacket();
-//                packet.put();
-            }
-
-            // Save CPU resources; can resume streaming when needed.
-            if (gamepad1.dpad_down) {
-                visionPortal.stopStreaming();
-            } else if (gamepad1.dpad_up) {
-                visionPortal.resumeStreaming();
-            }
-
-            // Share the CPU.
-            sleep(20);
-        }
+//        while (opModeIsActive()) { // while the AprilTagLocalization is running
+//
+//            telemetryAprilTag();
+//            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+//
+//            // Push telemetry to the Driver Station.
+//            telemetry.update();
+//            FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
+////            camera.openCameraDevice();
+////            camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+//            if (!currentDetections.isEmpty())
+//            {
+//                TelemetryPacket packet = new TelemetryPacket();
+////                packet.put();
+//            }
+//
+//            // Save CPU resources; can resume streaming when needed.
+//            if (gamepad1.dpad_down) {
+//                visionPortal.stopStreaming();
+//            } else if (gamepad1.dpad_up) {
+//                visionPortal.resumeStreaming();
+//            }
+//
+//            // Share the CPU.
+//            sleep(20);
+//        }
 
         // Save more CPU resources when camera is no longer needed.
-        visionPortal.close();
+//        visionPortal.close();
 
     }   // end method runOpMode()
 
@@ -176,16 +175,16 @@ public class AprilTagLocalization extends LinearOpMode {
         return tag.id;
     }
 
-    public double getYaw()
-    {
-        initAprilTag();
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-//        currentDetections.sort((a, b) -> Double.compare(b.ftcPose.range, a.ftcPose.range));
-        AprilTagDetection cur_tag = currentDetections.get(0);
-        return cur_tag.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
-    }
+//    public double getYaw()
+//    {
+//        initAprilTag();
+//        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+////        currentDetections.sort((a, b) -> Double.compare(b.ftcPose.range, a.ftcPose.range));
+//        AprilTagDetection cur_tag = currentDetections.get(0);
+//        return cur_tag.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
+//    }
 
-    private void initAprilTag() {
+    private void initAprilTag(HardwareMap hardwareMap) {
 
         // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder()
@@ -255,13 +254,15 @@ public class AprilTagLocalization extends LinearOpMode {
     /**
      * Add telemetry about AprilTag detections.
      */
-    private void telemetryAprilTag() {
-
+    public double telemetryAprilTag(Telemetry telemetry
+    ) {
+        telemetry.update();
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
+            telemetry.update();
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 // Only use tags that don't have Obelisk in them
@@ -290,6 +291,7 @@ public class AprilTagLocalization extends LinearOpMode {
                             detection.rawPose.y,
                             detection.rawPose.z));
 //                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)"));
+                    return detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
                 }
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
@@ -301,6 +303,12 @@ public class AprilTagLocalization extends LinearOpMode {
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
 
+        if (currentDetections.size() > 0)
+        {
+            AprilTagDetection detection = currentDetections.get(0);
+            return detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
+        }
+        return Double.NaN;
     }   // end method telemetryAprilTag()
 
 }   // end class

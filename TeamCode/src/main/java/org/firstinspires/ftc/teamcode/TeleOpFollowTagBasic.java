@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -15,23 +17,25 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcode.AprilTagLocalization.*;
 import org.firstinspires.ftc.teamcode.AprilTagLocalization;
+import org.firstinspires.ftc.teamcode.*;
 
 import java.util.List;
 
 @TeleOp(name = "TeleOpTag")
 public class TeleOpFollowTagBasic extends LinearOpMode {
     //    private MecanumDrive_Lock drive;
-    private GoBildaPinpointDriver pinpoint;
+//    private GoBildaPinpointDriver pinpoint;
     private DcMotor W_BL;
     private DcMotor W_BR;
     private DcMotor W_FR;
     private DcMotor W_FL;
+    IMU imu;
     double Heading_Angle;
     double Motor_power_BR;
     double imu_rotation;
     double Motor_power_BL;
     double Targeting_Angle;
-    private AprilTagLocalization april;
+    private AprilTagLocalization2 april;
     double Motor_fwd_power;
     double Motor_power_FL;
     double Motor_side_power;
@@ -51,14 +55,18 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
     public void runOpMode() throws InterruptedException{
         //getting all the motors, servos, and sensors from the hardware map
         Pose2d initialPose = new Pose2d(0,0,Math.toRadians(0));
+        //initial angle direction as previously set
         initialHeading = Math.toDegrees(initialPose.heading.toDouble());
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-        pinpoint.resetPosAndIMU();
+        //imu from hardware map
+        imu = hardwareMap.get(IMU.class, "imu");
+        //apriltag
+        april = new AprilTagLocalization2(hardwareMap,telemetry );
         try {
             Thread.sleep(300);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        //motors
         W_BL = hardwareMap.get(DcMotor.class, "W_BL");
         W_BR = hardwareMap.get(DcMotor.class, "W_BR");
         W_FR = hardwareMap.get(DcMotor.class, "W_FR");
@@ -71,7 +79,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
             // Put run blocks here.
             while (opModeIsActive()) {
                 currTime = getRuntime();
-                pinpoint.update();
+//                pinpoint.update();
 
                 //Set Targeting_Angle somewhere here to lock onto the apriltag.
 
@@ -82,12 +90,11 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
                 W_BR.setPower(Motor_power_BR);
                 W_FR.setPower(Motor_power_FR);
                 W_FL.setPower(Motor_power_FL);
-
                 if (gamepad1.back && !back) { //change to sub pos for easy align
                     initialHeading = 0;
                     Targeting_Angle = 0;
                     Heading_Angle = 0;
-                    pinpoint.resetPosAndIMU();
+//                    pinpoint.resetPosAndIMU();
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -106,6 +113,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
                 telemetry.addData("IMU_Rotation Power", imu_rotation);
                 telemetry.addData("Run time", currTime);
                 telemetry.addData("Loop time", getRuntime() - currTime);
+//                telemetry.addData("Apriltag Detected", )
                 telemetry.update();
             }
         }
@@ -130,13 +138,15 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         W_FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP)));
+        imu.resetYaw();
 
         Motor_Power = 1.0;
         Motor_Trans_Power = 1.0;
         Motor_Rot_Power = 1.0;
 
         Targeting_Angle = initialHeading;
-        april = new AprilTagLocalization();
+//        april = new AprilTagLocalization();
 
         waitForStart();
     }
@@ -146,8 +156,10 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
      */
     private void Calculate_IMU_Rotation_Power() {
         double Angle_Difference;
+        telemetry.update();
+        double yaw = april.telemetryAprilTag(telemetry);
         try {
-            Heading_Angle = Math.toDegrees(pinpoint.getHeading(AngleUnit.RADIANS)) + initialHeading; //degrees
+            Heading_Angle = Math.toDegrees(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS)) + initialHeading; //angle IMU tells the robot is facing
         }
         catch (Exception e){
             Heading_Angle = Targeting_Angle;
@@ -157,22 +169,25 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
             Targeting_Angle = Heading_Angle;
         }
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
-        else {
-            Targeting_Angle = april.getYaw(); // INSERT YAW ANGLE
+        else if (gamepad1.a){
+            if (!Double.isNaN(yaw)){
+                Targeting_Angle = -90+yaw; // INSERT YAW ANGLE
+            }
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > 180) {
                 Angle_Difference = Angle_Difference - 360;
             } else if (Angle_Difference < -180) {
                 Angle_Difference = Angle_Difference + 360;
             }
-            if (Math.abs(Angle_Difference) < 1) {
+            if (Math.abs(Angle_Difference) < 2) {
                 imu_rotation = 0;
             }
             //FOR PROPORTIONAL ANGLE CONTROL: CHANGE THESE TO NONZERO
             else if (Angle_Difference >= 1) {
-                imu_rotation = (Angle_Difference * 0.0 /*+ 0.1*/);
-            } else {
-                imu_rotation = (Angle_Difference * -0.0 /*- 0.1*/);
+                imu_rotation = (Angle_Difference * 0.02 /*+ 0.1*/);
+            }
+            else {
+                imu_rotation = (Angle_Difference * -0.02 /*- 0.1*/);
             }
         }
     }
@@ -193,6 +208,8 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         Motor_Side_input = -x * mag * mag;
         Motor_fwd_power = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_FWD_input - Math.sin(Heading_Angle / 180 * Math.PI) * Motor_Side_input) * Motor_Trans_Power;
         Motor_side_power = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_Side_input + Math.sin(Heading_Angle / 180 * Math.PI) * Motor_FWD_input) / 0.7736350635 * Motor_Trans_Power; //*1.5
+//        Motor_fwd_power = Motor_FWD_input;
+//        Motor_side_power = Motor_Side_input;
         Motor_Rotation_power = gamepad1.right_stick_x * 0.35 * Motor_Rot_Power + imu_rotation; //0.7 //0.5
         Motor_power_BL = -(((Motor_fwd_power - Motor_side_power) - Motor_Rotation_power) * Motor_Power);
         Motor_power_BR = -((Motor_fwd_power + Motor_side_power + Motor_Rotation_power) * Motor_Power);

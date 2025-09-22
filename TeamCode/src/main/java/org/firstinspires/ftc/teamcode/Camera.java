@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -46,36 +47,15 @@ public class Camera {
      * it's pointing straight left, -90 degrees for straight right, etc. You can also set the roll
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
-    private final Position cameraPosition = new Position( //ON THE TURRET
-            DistanceUnit.INCH,
-            0.0, 0.0, 0.0, 0
-    );
-    private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(
-            AngleUnit.DEGREES,
-            -90.0, -90.0, 0.0, 0
-    );
+    private Position cameraPosition = new Position(DistanceUnit.INCH,
+            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
+    private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
+            0, -90, 0, 0); // UNKNOWN CONSTANTS
 
     /**
      * The variable to store our instance of the AprilTag processor.
      */
-    private AprilTagProcessor aprilTag = new AprilTagProcessor.Builder()
-
-            // The following default settings are available to un-comment and edit as needed.
-            //.setDrawAxes(false)
-            //.setDrawCubeProjection(false)
-            //.setDrawTagOutline(true)
-            //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-            .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
-            //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-            .setCameraPose(cameraPosition, cameraOrientation)
-
-            // == CAMERA CALIBRATION ==
-            // If you do not manually specify calibration parameters, the SDK will attempt
-            // to load a predefined calibration for your camera.
-//            .setLensIntrinsics(549.651, 549.651, 317.108, 236.644)// 240P .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271)
-            // ... these parameters are fx, fy, cx, cy.
-
-            .build();
+    AprilTagProcessor aprilTag;
 
     /**
      * The variable to store our instance of the vision portal.
@@ -92,6 +72,25 @@ public class Camera {
         // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
         // Note: Decimation can be changed on-the-fly to adapt during a match.
 //        aprilTag.setDecimation(1.0F);
+        aprilTag = new AprilTagProcessor.Builder()
+
+                // The following default settings are available to un-comment and edit as needed.
+                //.setDrawAxes(false)
+                //.setDrawCubeProjection(false)
+                //.setDrawTagOutline(true)
+                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
+                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+                .setCameraPose(cameraPosition, cameraOrientation)
+
+                // == CAMERA CALIBRATION ==
+                // If you do not manually specify calibration parameters, the SDK will attempt
+                // to load a predefined calibration for your camera.
+                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271)
+                // ... these parameters are fx, fy, cx, cy.
+
+                .build();
+
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -103,7 +102,7 @@ public class Camera {
 
 
         // Choose a camera resolution. Not all cameras support all resolutions.
-        builder.setCameraResolution(new Size(640, 480));
+        builder.setCameraResolution(new Size(320, 240));
 
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
@@ -135,9 +134,11 @@ public class Camera {
      * Updates the Localizer's pose estimate.
      * @return the Localizer's current velocity estimate
      */
-    public Pose2d update(){
+    public Pose2d update(Telemetry telemetry){
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
         if (currentDetections.isEmpty()) return null;
 
         // Step through the list of detections and display info for each one.
