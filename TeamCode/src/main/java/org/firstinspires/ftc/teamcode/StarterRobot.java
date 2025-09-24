@@ -19,7 +19,7 @@ public class StarterRobot {
     Feeders feeders;
     Flywheel flywheel;
     Hood hood;
-    Camera camera;
+    AprilTagLocalization2 camera;
     private DcMotor W_BL;
     private DcMotor W_BR;
     private DcMotor W_FR;
@@ -28,14 +28,14 @@ public class StarterRobot {
 
     //initialize subsystems
     public StarterRobot(HardwareMap hardwareMap){
-//        feeders = new Feeders(hardwareMap);
+        feeders = new Feeders(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
-        camera = new Camera(hardwareMap);
+        camera = new AprilTagLocalization2(hardwareMap);
 //        hood = new Hood(hardwareMap);
-//        W_BL = hardwareMap.get(DcMotor.class, "W_BL");
-//        W_BR = hardwareMap.get(DcMotor.class, "W_BR");
-//        W_FR = hardwareMap.get(DcMotor.class, "W_FR");
-//        W_FL = hardwareMap.get(DcMotor.class, "W_FL");
+        W_BL = hardwareMap.get(DcMotor.class, "W_BL");
+        W_BR = hardwareMap.get(DcMotor.class, "W_BR");
+        W_FR = hardwareMap.get(DcMotor.class, "W_FR");
+        W_FL = hardwareMap.get(DcMotor.class, "W_FL");
         imu = hardwareMap.get(IMU.class, "imu");
     }
     private enum LaunchState {
@@ -55,25 +55,25 @@ public class StarterRobot {
     ElapsedTime aprilTimer;
 
     public void initTeleop(Telemetry telemetry) {
-//        W_FR.setDirection(DcMotor.Direction.FORWARD);
-//        W_FL.setDirection(DcMotor.Direction.REVERSE);
-//        W_BR.setDirection(DcMotor.Direction.FORWARD);
-//        W_BL.setDirection(DcMotor.Direction.REVERSE);
-//        W_FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        W_FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        W_BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        W_BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        W_FR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        W_FL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        W_BR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        W_BL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        W_FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        W_FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        W_FR.setDirection(DcMotor.Direction.FORWARD);
+        W_FL.setDirection(DcMotor.Direction.REVERSE);
+        W_BR.setDirection(DcMotor.Direction.FORWARD);
+        W_BL.setDirection(DcMotor.Direction.REVERSE);
+        W_FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        W_FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        W_BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        W_BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        W_FR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        W_FL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        W_BR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        W_BL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        W_FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        W_FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
-//        imu.resetYaw();
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
+        imu.resetYaw();
 
         launchState = LaunchState.IDLE;
         driveState = DriveState.ABSOLUTE;
@@ -83,6 +83,7 @@ public class StarterRobot {
 
         pose = new Pose2d(0,0,0);
         telemetry.addData("Status", "Initialized");
+        telemetry.update();
     }
 
     //constants
@@ -137,7 +138,7 @@ public class StarterRobot {
         double Targeting_Angle;
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
         if (Math.abs(rotate) <= 0.01) {
-            Targeting_Angle = absoluteAngleToGoal; // INSERT YAW ANGLE
+            Targeting_Angle = -absoluteAngleToGoal; // INSERT YAW ANGLE
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > Math.PI) {
                 Angle_Difference = Angle_Difference - Math.PI*2;
@@ -149,9 +150,9 @@ public class StarterRobot {
             }
             //FOR PROPORTIONAL ANGLE CONTROL: CHANGE THESE TO NONZERO
             else if (Angle_Difference >= Math.PI/180) {
-                imu_rotation = (Angle_Difference * 0.1);
+                imu_rotation = (Angle_Difference * 0.02);
             } else {
-                imu_rotation = (Angle_Difference * -0.1);
+                imu_rotation = (Angle_Difference * -0.02);
             }
         }
         double Motor_Rotation_power = rotate * 0.35 + imu_rotation; //0.7 //0.5
@@ -174,7 +175,7 @@ public class StarterRobot {
 
     double rpm = 1500;
     //queuer/state machine
-    public void updateShooter(boolean shotRequested, double change, Telemetry telemetry) {
+    public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
         goalVector = Constants.goalPos.minus(pose.position);
@@ -200,7 +201,10 @@ public class StarterRobot {
 //        rpm = (v * 60) / wheelCircumference; // RPM
 // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
-        rpm += change*10;
+        double change = 0;
+        if (up) change += 2.5;
+        if (down) change -= 2.5;
+        rpm += change;
 // Set flywheel RPM
         flywheel.spinTo(rpm);
         //-/-///
@@ -231,6 +235,7 @@ public class StarterRobot {
         telemetry.addData("State", launchState);
         telemetry.addData("targetVel", rpm);
         telemetry.addData("motorSpeed", flywheel.getVel());
+        telemetry.update();
     }
 
     public Pose2d updateLocalizer(Telemetry telemetry){
@@ -241,6 +246,7 @@ public class StarterRobot {
                     return new Pose2d(pose.position, imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
                 }
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
+                telemetry.addLine("ROBOT RELOCALIZATION POSES");
                 telemetry.addLine(String.format("XY %6.1f %6.1f %6.1f  (inch)",
                         poseWorldTurret.position.x,
                         poseWorldTurret.position.y));
@@ -254,6 +260,7 @@ public class StarterRobot {
                 telemetry.addLine(String.format("Pose Heading %6.1f %6.1f %6.1f  (deg)",
                         pose.heading.toDouble()
                 ));
+                telemetry.update();
                 return pose;
 //                driveState = DriveState.RELATIVE;
         }

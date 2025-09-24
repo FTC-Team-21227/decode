@@ -60,7 +60,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         //imu from hardware map
         imu = hardwareMap.get(IMU.class, "imu");
         //apriltag
-        april = new AprilTagLocalization2(hardwareMap,telemetry );
+        april = new AprilTagLocalization2(hardwareMap);
         try {
             Thread.sleep(300);
         } catch (InterruptedException e) {
@@ -156,8 +156,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
      */
     private void Calculate_IMU_Rotation_Power() {
         double Angle_Difference;
-        telemetry.update();
-        double yaw = april.telemetryAprilTag(telemetry);
+        double yaw = Robot.Constants.goalPos.minus(april.update(telemetry).position).angleCast().toDouble();
         try {
             Heading_Angle = Math.toDegrees(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS)) + initialHeading; //angle IMU tells the robot is facing
         }
@@ -171,7 +170,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
         else if (gamepad1.a){
             if (!Double.isNaN(yaw)){
-                Targeting_Angle = -90+yaw; // INSERT YAW ANGLE
+                Targeting_Angle = -yaw; // INSERT YAW ANGLE
             }
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > 180) {

@@ -17,29 +17,31 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Robot {
     //add:
-    // Red/blue pose mirroring, where goal vector should always be (0,0)
+    // Red/blue pose mirroring
     // Lookup table functionality
     // Turret position mapped correctly to robot pose etc.
     // Telemetry
-    // Some way to carry the information over to teleop, not have to reinitialize
+    // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
-    AprilTagMecanumDrive drive;
-    AprilDrive drive2;
-    Intake intake;
-    Feeder feeder;
-    Flywheel flywheel;
-    Turret turret;
-    Hood hood;
-    Camera camera;
-    enum Color {
+    AprilTagMecanumDrive drive; //not used right now
+    AprilDrive drive2; //the drive base of the robot including motors, odometry, pinpoint, and camera, capable of hybrid localization
+    Intake intake; //the motor subsystem that runs throughout the match to spin the intake axle
+    Feeder feeder; //the motor subsystem that runs occasionally to move the ball up the elevator into the flywheel
+    Flywheel flywheel; //the motor subsystem that spins to certain target RPM throughout the match
+    Turret turret; //the 2-servo subsystem that turns to any robot-relative angle
+    Hood hood; //the servo subsystem that raises or lowers the hood anywhere from 0 to 90 degrees
+    AprilTagLocalization2 camera; //the camera subsystem that is used in AprilDrive and Obelisk detection
+    //enum that stores the color of the robot, accessible globally
+    public enum Color {
         RED,
         BLUE
     }
-    private final Color color;
+    public final Color color; //create an instance of the enum to initialize later
 
     //initialize subsystems
     public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
-        camera = new Camera(hardwareMap);
+        this.color = color; //pose mirroring can occur depending on color
+        camera = new AprilTagLocalization2(hardwareMap);
 //        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
         drive2 = new AprilDrive(hardwareMap, initialPose);
         intake = new Intake(hardwareMap);
@@ -47,23 +49,30 @@ public class Robot {
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
-        this.color = color;
     }
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
-        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){
+        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ //just use the parent constructor, we only are creating one method
             super(hardwareMap,initialPose);
         }
+        //relocalize method: every 10 ish seconds, use the goal AprilTag to re-define the robot's pose relative to the field.
+        //maybe want to return a boolean of successful relocalization instead of the pose, which is accessible by other means. Then we can keep trying to relocalize until we get a success.
         public Pose2d relocalize(Telemetry telemetry) {
-            PoseVelocity2d vel = super.updatePoseEstimate();
+            PoseVelocity2d vel = super.updatePoseEstimate(); //update the pinpoint velocity estimate as normal
+            //don't relocalize if the robot is moving too fast. The motion blur will cause some problems
             if (vel.linearVel.norm() > 1.0 || Math.toDegrees(vel.angVel) > 1.0) {
                 return localizer.getPose();
             }
-            Pose2d poseWorldTurret = camera.update(telemetry);
+            Pose2d poseWorldTurret = camera.update(telemetry); //get the pose of the turret relative to the field using the Apriltag.
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
+            //if no pose was found, default to the pinpoint localizer relative pose.
+            if (poseWorldTurret == null){
+                return localizer.getPose();
+            }
+            //Pose multiplication: pWR = pWT * pRT^-1. Transforming the turret pose into the robot pose.
             Pose2d poseWorldRobot = poseWorldTurret.times(turret.getPoseRobotTurret().inverse());
-            localizer.setPose(poseWorldRobot);
-            return poseWorldRobot;
+            localizer.setPose(poseWorldRobot); //reset the localizer pose to the current field-relative pose.
+            return poseWorldRobot; //return the pose for our needs.
         }
     }
     private enum LaunchState {
@@ -98,14 +107,15 @@ public class Robot {
         }
 
         telemetry.addData("Status", "Initialized");
+        telemetry.update();
     }
 
     //constants
     @Config
     public static class Constants{
         public final static Vector2d turretPos = new Vector2d(0,-5);
-        public final static double deltaH = 50;
-        public static Vector2d goalPos;
+        public final static double deltaH = 22;
+        public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
         public final static double feederPower = 1.0;
@@ -191,7 +201,7 @@ public class Robot {
                 break;
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
-                if (flywheel.getVel() > Constants.LAUNCHER_MIN_VELOCITY) {
+                if (flywheel.getVel() > rpm-50) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -210,6 +220,8 @@ public class Robot {
         }
         telemetry.addData("State", launchState);
         telemetry.addData("motorSpeed", flywheel.getVel());
+        telemetry.addData("targetSpeed", rpm);
+        telemetry.update();
     }
 
     public void updateLocalizer(Telemetry telemetry){
@@ -222,6 +234,7 @@ public class Robot {
                 break;
             case ABSOLUTE:
                 drive2.relocalize(telemetry);
+                aprilTimer.reset();
                 driveState = DriveState.RELATIVE;
                 break;
         }
@@ -244,10 +257,10 @@ public class Robot {
     public Pose2d mirrorPose(Pose2d pose){
         return pose;
     }
-    public Action buildTrajectory(TrajectoryActionBuilder tab){
-        if (color.equals(Color.BLUE)){
-            //not sure if mirroring poses in the tab is possible
-        }
-        return tab.build();
-    }
+//    public Action buildTrajectory(TrajectoryActionBuilder tab){
+//        if (color.equals(Color.BLUE)){
+//            //not sure if mirroring poses in the tab is possible
+//        }
+//        return tab.build();
+//    }
 }

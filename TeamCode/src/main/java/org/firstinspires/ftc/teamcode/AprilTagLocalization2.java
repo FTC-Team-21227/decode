@@ -34,9 +34,11 @@ import android.util.Size;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -75,6 +77,10 @@ import java.util.List;
 public class AprilTagLocalization2 {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+
+    ElapsedTime pipelineTimer = new ElapsedTime();
+    double averagePipe = 0;
+    int successfulDetections = 0;
 
     /**
      * Variables to store the position and orientation of the camera on the robot. Setting these
@@ -122,16 +128,14 @@ public class AprilTagLocalization2 {
 //    OpenCvWebcam camera;
 
 //    @Override
-    public AprilTagLocalization2(HardwareMap hardwareMap, Telemetry telemetry){ // Running...
+    public AprilTagLocalization2(HardwareMap hardwareMap){ // Running...
 
         initAprilTag(hardwareMap); // initialize AprilTag Processor
 //        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 //        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         // Wait for the DS start button to be touched.
-        telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
-        telemetry.addData(">", "Touch START to start OpMode");
-        telemetry.update();
+
 //        waitForStart();
 
 //        while (opModeIsActive()) { // while the AprilTagLocalization is running
@@ -256,13 +260,13 @@ public class AprilTagLocalization2 {
      */
     public double telemetryAprilTag(Telemetry telemetry
     ) {
-        telemetry.update();
+        telemetry.addData("FPS", visionPortal.getFps());
+        pipelineTimer.reset();
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
-            telemetry.update();
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 // Only use tags that don't have Obelisk in them
@@ -291,6 +295,12 @@ public class AprilTagLocalization2 {
                             detection.rawPose.y,
                             detection.rawPose.z));
 //                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)"));
+                    double time = pipelineTimer.milliseconds();
+                    averagePipe = (averagePipe*successfulDetections + time)/(successfulDetections+1);
+                    successfulDetections++;
+                    telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
+                    telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
+                    telemetry.update();
                     return detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
                 }
             } else {
@@ -300,15 +310,82 @@ public class AprilTagLocalization2 {
         }   // end for() loop
 
         // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.update();
 
-        if (currentDetections.size() > 0)
+        if (!currentDetections.isEmpty())
         {
             AprilTagDetection detection = currentDetections.get(0);
             return detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
         }
         return Double.NaN;
     }   // end method telemetryAprilTag()
+    //Update the Pose of the TURRET CENTER relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
+    //Future improvement: Only use the correct goal color apriltag to localize.
+    public Pose2d update(Telemetry telemetry
+    ) {
+        telemetry.addData("FPS", visionPortal.getFps()); //the FPS processed through the visionPortal for apriltag processing etc. =/= Dashboard Stream FPS
+        pipelineTimer.reset();
+        //Get all Apriltag detections from the apriltag processor of the visionPortal
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
 
+        // Step through the list of detections and display info for each one.
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                // Only use tags that don't have Obelisk in them
+                if (!detection.metadata.name.contains("Obelisk")) {
+                    telemetry.addLine("robotPose");
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                            detection.robotPose.getPosition().x,
+                            detection.robotPose.getPosition().y,
+                            detection.robotPose.getPosition().z));
+                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+                            detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
+                            detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
+                            detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
+                    telemetry.addLine("FtcPose");
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                            detection.ftcPose.x,
+                            detection.ftcPose.y,
+                            detection.ftcPose.z));
+                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+                            detection.ftcPose.pitch,
+                            detection.ftcPose.roll,
+                            detection.ftcPose.yaw));
+                    telemetry.addLine("rawPose");
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                            detection.rawPose.x,
+                            detection.rawPose.y,
+                            detection.rawPose.z));
+//                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)"));
+                    double time = pipelineTimer.milliseconds();
+                    averagePipe = (averagePipe*successfulDetections + time)/(successfulDetections+1);
+                    successfulDetections++;
+                    //display the instantaneous delay and average delay.
+                    telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
+                    telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
+                    telemetry.update();
+                    //return a new Pose with the robotPose x,y,yaw. Here, the robotPose is the position of the TURRET relative to the field.
+                    return new Pose2d(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
+                }
+            } else {
+                //Handle apriltags which have null metadata. Should never encounter
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }   // end for() loop
+        telemetry.update();
+        //this return statement is most likely redundant, but if a return did not occur in the loop, then return the first pose in currentDetections.
+        if (!currentDetections.isEmpty())
+        {
+            AprilTagDetection detection = currentDetections.get(0);
+            return new Pose2d(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
+
+        }
+        //return null if no apriltags are detected.
+        return null;
+    }
 }   // end class
