@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.annotation.SuppressLint;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
@@ -54,6 +56,8 @@ public class StarterRobot {
     ElapsedTime feederTimer;
     ElapsedTime aprilTimer;
 
+    double initialHeading;
+
     public void initTeleop(Telemetry telemetry) {
         W_FR.setDirection(DcMotor.Direction.FORWARD);
         W_FL.setDirection(DcMotor.Direction.REVERSE);
@@ -72,7 +76,7 @@ public class StarterRobot {
         W_BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         W_BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP)));
         imu.resetYaw();
 
         launchState = LaunchState.IDLE;
@@ -82,6 +86,8 @@ public class StarterRobot {
         aprilTimer = new ElapsedTime();
 
         pose = new Pose2d(0,0,0);
+
+        initialHeading = 0;
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
@@ -89,7 +95,7 @@ public class StarterRobot {
     //constants
     @Config
     public static class Constants{
-        public final static Vector2d turretPos = new Vector2d(0,-5);
+        public final static Vector2d turretPos = new Vector2d(0,0);
         public final static double deltaH = 50;
         public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
@@ -110,7 +116,7 @@ public class StarterRobot {
         public final static double turretLeftScale1 = 1;
         public final static double turretRightScale0 = 0;
         public final static double turretRightScale1 = 1;
-        public final static double drivePower = 0.3;
+        public final static double drivePower = 0.5;
     }
 
     Vector2d goalVector;
@@ -118,9 +124,10 @@ public class StarterRobot {
     Pose2d pose;
 
     // Thanks to FTC16072 for sharing this code!!
-    public void driveFieldCentric(double forward, double right, double rotate) {
-        double Heading_Angle = pose.heading.toDouble();
+    public void driveFieldCentric(double forward, double right, double rotate, Telemetry telemetry) {
         double Angle_Difference;
+        absoluteAngleToGoal = Math.PI - Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        double Heading_Angle = pose.heading.toDouble();
 
         // First, convert direction being asked to drive to polar coordinates
         double theta = Math.atan2(forward, right);
@@ -131,28 +138,32 @@ public class StarterRobot {
                 pose.heading.toDouble());
 
         // Third, convert back to cartesian
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
+//        double newForward = r * Math.sin(theta);
+//        double newRight = r * Math.cos(theta);
+        double Motor_FWD_input = forward;
+        double Motor_Side_input = -right;
+        double newForward = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_FWD_input - Math.sin(Heading_Angle / 180 * Math.PI) * Motor_Side_input) ;
+        double newRight = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_Side_input + Math.sin(Heading_Angle / 180 * Math.PI) * Motor_FWD_input) / 0.7736350635 ; //*1.5
 
         double imu_rotation = 0;
-        double Targeting_Angle;
+        double Targeting_Angle = Heading_Angle;
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
-        if (Math.abs(rotate) <= 0.01) {
-            Targeting_Angle = -absoluteAngleToGoal; // INSERT YAW ANGLE
+        if (Math.abs(rotate) <= -0.0) {
+            Targeting_Angle = absoluteAngleToGoal; // INSERT YAW ANGLE
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > Math.PI) {
                 Angle_Difference = Angle_Difference - Math.PI*2;
             } else if (Angle_Difference < -Math.PI) {
                 Angle_Difference = Angle_Difference + Math.PI*2;
             }
-            if (Math.abs(Angle_Difference) < Math.PI/180) {
+            if (Math.abs(Angle_Difference) < 4* Math.PI/180) {
                 imu_rotation = 0;
             }
             //FOR PROPORTIONAL ANGLE CONTROL: CHANGE THESE TO NONZERO
             else if (Angle_Difference >= Math.PI/180) {
-                imu_rotation = (Angle_Difference * 0.02);
+                imu_rotation = (Angle_Difference * 0.02 * 180/Math.PI);
             } else {
-                imu_rotation = (Angle_Difference * -0.02);
+                imu_rotation = (Angle_Difference * 0.02 * 180/Math.PI);
             }
         }
         double Motor_Rotation_power = rotate * 0.35 + imu_rotation; //0.7 //0.5
@@ -171,7 +182,10 @@ public class StarterRobot {
         W_BR.setPower(Motor_power_BR);
         W_FR.setPower(Motor_power_FR);
         W_FL.setPower(Motor_power_FL);
-    }
+        telemetry.addData("Rotation Power", Motor_Rotation_power);
+        telemetry.addData("Heading", Heading_Angle);
+        telemetry.addData("Targeting Angle", Targeting_Angle);
+        telemetry.addData("IMU_Rotation Power", imu_rotation);    }
 
     double rpm = 1500;
     //queuer/state machine
@@ -179,7 +193,7 @@ public class StarterRobot {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
         goalVector = Constants.goalPos.minus(pose.position);
-        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
+//        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
 
         // Given d (horizontal distance) and deltaH (height difference)
         double g = 386.22; // in/s^2
@@ -198,7 +212,7 @@ public class StarterRobot {
 // Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
         double wheelDiameter = 3.78; // inches, for example
         double wheelCircumference = Math.PI * wheelDiameter;
-//        rpm = (v * 60) / wheelCircumference; // RPM
+        rpm = 1500*(d/100); // RPM
 // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
         double change = 0;
@@ -235,32 +249,38 @@ public class StarterRobot {
         telemetry.addData("State", launchState);
         telemetry.addData("targetVel", rpm);
         telemetry.addData("motorSpeed", flywheel.getVel());
-        telemetry.update();
+//        telemetry.update();
     }
 
+    @SuppressLint("DefaultLocale")
     public Pose2d updateLocalizer(Telemetry telemetry){
         switch (driveState){
             case ABSOLUTE:
+                double angle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 Pose2d poseWorldTurret = camera.update(telemetry);
                 if (poseWorldTurret == null){
-                    return new Pose2d(pose.position, imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+                    telemetry.addData("using imu",angle+initialHeading);
+                    pose = new Pose2d(pose.position, angle+initialHeading);
+                    return pose;
                 }
+                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()-Math.PI/2);
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
                 telemetry.addLine("ROBOT RELOCALIZATION POSES");
-                telemetry.addLine(String.format("XY %6.1f %6.1f %6.1f  (inch)",
+                telemetry.addLine(String.format("XY %6.1f %6.1f  (inch)",
                         poseWorldTurret.position.x,
                         poseWorldTurret.position.y));
-                telemetry.addLine(String.format("Y %6.1f %6.1f %6.1f  (deg)",
+                telemetry.addLine(String.format("Y %6.1f   (rad)",
                         poseWorldTurret.heading.toDouble()
                 ));
                 pose = poseWorldTurret.times(new Pose2d(Constants.turretPos,0).inverse());
-                telemetry.addLine(String.format("Pose XY %6.1f %6.1f %6.1f  (inch)",
+                telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));
-                telemetry.addLine(String.format("Pose Heading %6.1f %6.1f %6.1f  (deg)",
+                telemetry.addLine(String.format("Pose Heading %6.1f  (rad)",
                         pose.heading.toDouble()
                 ));
-                telemetry.update();
+                initialHeading = pose.heading.toDouble() - angle;
+//                telemetry.update();
                 return pose;
 //                driveState = DriveState.RELATIVE;
         }

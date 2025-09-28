@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 public class Flywheel {
     //pid methods
     DcMotorEx FLYWHEEL;
@@ -23,6 +25,6 @@ public class Flywheel {
         FLYWHEEL.setVelocity(targetVel);
     }
     public double getVel(){
-        return FLYWHEEL.getVelocity();
+        return FLYWHEEL.getVelocity(AngleUnit.RADIANS);
     }
 }

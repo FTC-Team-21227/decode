@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -156,7 +157,10 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
      */
     private void Calculate_IMU_Rotation_Power() {
         double Angle_Difference;
-        double yaw = Robot.Constants.goalPos.minus(april.update(telemetry).position).angleCast().toDouble();
+        Pose2d pose = april.update(telemetry);
+        double yaw = Double.NaN;
+        if (pose != null)
+            yaw = Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble();
         try {
             Heading_Angle = Math.toDegrees(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS)) + initialHeading; //angle IMU tells the robot is facing
         }
@@ -170,7 +174,7 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
         //AprilTag angle locking: when the driver isn't turning the robot, lock the robot's heading onto the apriltag.
         else if (gamepad1.a){
             if (!Double.isNaN(yaw)){
-                Targeting_Angle = -yaw; // INSERT YAW ANGLE
+                Targeting_Angle = Math.toDegrees(yaw)-180; // INSERT YAW ANGLE
             }
             Angle_Difference = Heading_Angle - Targeting_Angle; // <= This is what we're using
             if (Angle_Difference > 180) {
@@ -178,15 +182,16 @@ public class TeleOpFollowTagBasic extends LinearOpMode {
             } else if (Angle_Difference < -180) {
                 Angle_Difference = Angle_Difference + 360;
             }
-            if (Math.abs(Angle_Difference) < 2) {
+            if (Math.abs(Angle_Difference) < 4) {
                 imu_rotation = 0;
             }
             //FOR PROPORTIONAL ANGLE CONTROL: CHANGE THESE TO NONZERO
-            else if (Angle_Difference >= 1) {
+            //(redundant cases)
+            else if (Angle_Difference >= 4) {
                 imu_rotation = (Angle_Difference * 0.02 /*+ 0.1*/);
             }
             else {
-                imu_rotation = (Angle_Difference * -0.02 /*- 0.1*/);
+                imu_rotation = (Angle_Difference * 0.02 /*- 0.1*/);
             }
         }
     }

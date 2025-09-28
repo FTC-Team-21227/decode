@@ -247,8 +247,10 @@ public class AprilTagLocalization2 {
         // Set and enable the processor.
         builder.addProcessor(aprilTag);
 
+
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
+        FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
 
         // Disable or re-enable the aprilTag processor at any time.
         //visionPortal.setProcessorEnabled(aprilTag, true);
@@ -367,7 +369,7 @@ public class AprilTagLocalization2 {
                     //display the instantaneous delay and average delay.
                     telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
                     telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
-                    telemetry.update();
+//                    telemetry.update();
                     //return a new Pose with the robotPose x,y,yaw. Here, the robotPose is the position of the TURRET relative to the field.
                     return new Pose2d(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
                 }
@@ -377,7 +379,7 @@ public class AprilTagLocalization2 {
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }   // end for() loop
-        telemetry.update();
+//        telemetry.update();
         //this return statement is most likely redundant, but if a return did not occur in the loop, then return the first pose in currentDetections.
         if (!currentDetections.isEmpty())
         {
