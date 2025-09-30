@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Hood {
     Servo HOOD;
+
     public Hood(HardwareMap hardwareMap){
         HOOD = hardwareMap.get(Servo.class, "hood");
         HOOD.scaleRange(Robot.Constants.hoodScale0,Robot.Constants.hoodScale1); // left = low, right = high
