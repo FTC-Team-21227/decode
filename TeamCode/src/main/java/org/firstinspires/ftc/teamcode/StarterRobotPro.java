@@ -48,7 +48,7 @@ public class StarterRobotPro {
     private LaunchState launchState;
     private enum DriveState {
         RELATIVE,
-        ABSOLUTE,
+        ABSOLUTE, // Drive with AprilTag localization for absolute position on field
     }
     private DriveState driveState;
 
@@ -57,6 +57,9 @@ public class StarterRobotPro {
 
     double initialHeading;
 
+    /**
+     * Initialize and set motors, IMU, shooter, timers, initial pose & heading
+     */
     public void initTeleop(Telemetry telemetry) {
         W_FR.setDirection(DcMotor.Direction.FORWARD);
         W_FL.setDirection(DcMotor.Direction.REVERSE);
@@ -123,6 +126,10 @@ public class StarterRobotPro {
     Pose2d pose;
 
     // Thanks to FTC16072 for sharing this code!!
+
+    /**
+     * Drives the robot field-centric
+     */
     public void driveFieldCentric(double forward, double right, double rotate, Telemetry telemetry) {
         double Angle_Difference;
         absoluteAngleToGoal = Math.PI - Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble();
@@ -186,38 +193,46 @@ public class StarterRobotPro {
         telemetry.addData("Targeting Angle", Targeting_Angle);
         telemetry.addData("IMU_Rotation Power", imu_rotation);    }
 
+
     //queuer/state machine
+    /**
+     * Calculates and sets hood angle and flywheel RPM.
+     * Includes shooter state manager.
+     * @param shotRequested: Boolean to start shooter state machine
+     */
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
-        //replace these with LUT values
-        // Assume we have: Vector2d goalPosition
+        // CALCULATIONS! Replace these with LUT values
+        // Assume we have Vector2d goalPosition
         goalVector = Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
-        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Relative to robot's heading
-
+        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Turret angle relative to robot's heading
         turret.turnToRobotAngle(turretAngle);
-        // Given d (horizontal distance) and deltaH (height difference)
-        double g = 386.22; // in/s^2
 
-        double deltaH = Constants.deltaH;
-        double d = goalVector.norm();
-// Calculate launch angle theta
+        double g = 386.22; // Gravity (in/s^2)
+
+        double deltaH = Constants.deltaH; // Height difference from shooter to goal
+        double d = goalVector.norm(); // Horizontal distance
+        // Calculate launch angle theta
         double theta = Math.atan(7 * deltaH / (3 * d));
 
-// Calculate time of flight t_f
+        // Calculate time of flight t_f
         double t_f = Math.sqrt(8 * deltaH / (3 * g));
 
-// Calculate initial speed v
+        // Calculate initial speed v
         double v = d / (t_f * Math.cos(theta));
 
-// Convert v to rad/s (example calibration: v = wheelRadius * rad/s)
+        // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
         double wheelRadius = 3.78/2; // inches, for example
 //        double wheelCircumference = Math.PI * wheelDiameter;
         double radps = v / wheelRadius; // RPM
-// Set hood angle to theta (convert to servo position)
+
+        // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
-// Set flywheel RPM
+        // Set flywheel RPM
         flywheel.spinTo(radps);
-        //-/-///
+
+
+        // Tracking shooter state
         switch (launchState) {
             case IDLE:
                 if (shotRequested) {
@@ -248,19 +263,26 @@ public class StarterRobotPro {
 //        telemetry.update();
     }
 
+    /**
+     * Returns field-relative robot pose (calculated using turret pose), or returns IMU-recorded pose if no AprilTag detections
+     */
     @SuppressLint("DefaultLocale")
     public Pose2d updateLocalizer(Telemetry telemetry){
         switch (driveState){
-            case ABSOLUTE:
+            case ABSOLUTE: // Drive with AprilTag localization
                 double angle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                // Use AprilTag detections to get turret pose relative to field
                 Pose2d poseWorldTurret = camera.update(telemetry);
+                // If no AprilTag info, localize with imu
                 if (poseWorldTurret == null){
-                    telemetry.addData("using imu",angle+initialHeading);
+                    telemetry.addData("Using IMU",angle+initialHeading);
                     pose = new Pose2d(pose.position, angle+initialHeading);
                     return pose;
                 }
-                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()-Math.PI/2);
+                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()-Math.PI/2); // Adjusting heading angle
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
+
+                // Telemetry lines for turret position
                 telemetry.addLine("ROBOT RELOCALIZATION POSES");
                 telemetry.addLine(String.format("XY %6.1f %6.1f  (inch)",
                         poseWorldTurret.position.x,
@@ -268,6 +290,8 @@ public class StarterRobotPro {
                 telemetry.addLine(String.format("Y %6.1f   (rad)",
                         poseWorldTurret.heading.toDouble()
                 ));
+
+                // Use AprilTag detections to get turret pose relative to field
                 pose = poseWorldTurret.times(new Pose2d(Constants.turretPos,0).inverse());
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,

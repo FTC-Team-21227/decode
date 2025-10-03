@@ -205,7 +205,7 @@ public class AprilTagLocalization2 {
                 // == CAMERA CALIBRATION ==
                 // If you do not manually specify calibration parameters, the SDK will attempt
                 // to load a predefined calibration for your camera.
-                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271)
+                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271) // for 640x320: 549.651, 549.651, 317.108, 236.644
                 // ... these parameters are fx, fy, cx, cy.
 
                 .build();
@@ -255,7 +255,8 @@ public class AprilTagLocalization2 {
         // Disable or re-enable the aprilTag processor at any time.
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
-    }   // end method initAprilTag()
+    }   // End method initAprilTag()
+
 
     /**
      * Add telemetry about AprilTag detections.
@@ -323,12 +324,18 @@ public class AprilTagLocalization2 {
         }
         return Double.NaN;
     }   // end method telemetryAprilTag()
-    //Update the Pose of the TURRET CENTER relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
-    //Future improvement: Only use the correct goal color apriltag to localize.
+
+
+    /**
+     * Update the Pose of the TURRET CENTER relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
+     * FUTURE IMPROVEMENT: Only use the correct goal color apriltag to localize.
+     * @return robotPose, which is the position of the TURRET relative to the field
+     */
     public Pose2d update(Telemetry telemetry
     ) {
         telemetry.addData("FPS", visionPortal.getFps()); //the FPS processed through the visionPortal for apriltag processing etc. =/= Dashboard Stream FPS
         pipelineTimer.reset();
+
         //Get all Apriltag detections from the apriltag processor of the visionPortal
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
@@ -339,7 +346,7 @@ public class AprilTagLocalization2 {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 // Only use tags that don't have Obelisk in them
                 if (!detection.metadata.name.contains("Obelisk")) {
-                    telemetry.addLine("robotPose");
+                    telemetry.addLine("robotPose"); // robot pose
                     telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
                             detection.robotPose.getPosition().x,
                             detection.robotPose.getPosition().y,
@@ -357,7 +364,7 @@ public class AprilTagLocalization2 {
                             detection.ftcPose.pitch,
                             detection.ftcPose.roll,
                             detection.ftcPose.yaw));
-                    telemetry.addLine("rawPose");
+                    telemetry.addLine("rawPose"); // raw pose matrix
                     telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
                             detection.rawPose.x,
                             detection.rawPose.y,
@@ -380,14 +387,14 @@ public class AprilTagLocalization2 {
             }
         }   // end for() loop
 //        telemetry.update();
-        //this return statement is most likely redundant, but if a return did not occur in the loop, then return the first pose in currentDetections.
+        // This return statement is most likely redundant, but if a return did not occur in the loop, then return the first pose in currentDetections.
         if (!currentDetections.isEmpty())
         {
             AprilTagDetection detection = currentDetections.get(0);
             return new Pose2d(detection.robotPose.getPosition().x,detection.robotPose.getPosition().y,detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS));
 
         }
-        //return null if no apriltags are detected.
+        // Return null if no apriltags are detected.
         return null;
     }
-}   // end class
+}   // End class
