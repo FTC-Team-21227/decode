@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp(name = "Flywheel Test")
-//Program used to test out flywheel speed based on robot distance and height difference from goal
+// Program used to test out flywheel speed based on robot distance and height difference from goal
 public class shooterTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();

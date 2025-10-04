@@ -241,17 +241,19 @@ public class StarterRobotPro {
                 break;
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
+                // Switch state to launch when flywheel velocity is great enough
                 if (flywheel.getVel() > Constants.LAUNCHER_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
             case LAUNCH:
-                feeders.rollIn();
+                feeders.rollIn(); // Intake ball to shooter
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
+                    // Launch ball
                     launchState = LaunchState.IDLE;
                     feeders.stop();
                 }
@@ -264,7 +266,8 @@ public class StarterRobotPro {
     }
 
     /**
-     * Returns field-relative robot pose (calculated using turret pose), or returns IMU-recorded pose if no AprilTag detections
+     * Returns field-relative robot pose (calculated using turret pose), or returns IMU-recorded
+     * pose if no AprilTag detections. Also displays pose information on telemetry.
      */
     @SuppressLint("DefaultLocale")
     public Pose2d updateLocalizer(Telemetry telemetry){
