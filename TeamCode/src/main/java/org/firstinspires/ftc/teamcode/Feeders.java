@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -9,6 +10,7 @@ public class Feeders {
     CRServo right;
     public Feeders(HardwareMap hardwareMap){
         left = hardwareMap.get(CRServo.class, "feeder1");
+        left.setDirection(DcMotorSimple.Direction.REVERSE);
         right = hardwareMap.get(CRServo.class, "feeder2");
     }
     public void rollIn(){

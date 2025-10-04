@@ -22,9 +22,9 @@ public class Flywheel {
     }
     public void spinTo(double vel){
         targetVel = vel;
-        FLYWHEEL.setVelocity(targetVel,AngleUnit.RADIANS);
+        FLYWHEEL.setVelocity(targetVel);
     }
     public double getVel(){
-        return FLYWHEEL.getVelocity(AngleUnit.RADIANS);
+        return FLYWHEEL.getVelocity();
     }
 }

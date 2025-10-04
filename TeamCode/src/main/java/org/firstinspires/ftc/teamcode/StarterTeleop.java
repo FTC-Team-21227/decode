@@ -14,7 +14,7 @@ public class StarterTeleop extends OpMode {
     }
     public void loop(){
         robot.updateLocalizer(telemetry);
-//        robot.updateShooter(gamepad1.right_bumper, gamepad1.dpad_up, gamepad1.dpad_down, telemetry);
+        robot.updateShooter(gamepad1.right_bumper, gamepad1.dpad_up, gamepad1.dpad_down, telemetry);
         robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, telemetry);
         telemetry.update();
     }

@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+@Config
 public class StarterRobot {
     Feeders feeders;
     Flywheel flywheel;
@@ -96,7 +97,8 @@ public class StarterRobot {
     @Config
     public static class Constants{
         public final static Vector2d turretPos = new Vector2d(0,0);
-        public final static double deltaH = 50;
+        public static double flywheelPower = 2.315;
+        public final static double deltaH = 30;
         public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
@@ -126,7 +128,7 @@ public class StarterRobot {
     // Thanks to FTC16072 for sharing this code!!
     public void driveFieldCentric(double forward, double right, double rotate, Telemetry telemetry) {
         double Angle_Difference;
-        absoluteAngleToGoal = Math.PI - Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        absoluteAngleToGoal = Math.PI + Constants.goalPos.minus(pose.position).angleCast().toDouble();
         double Heading_Angle = pose.heading.toDouble();
 
         // First, convert direction being asked to drive to polar coordinates
@@ -156,14 +158,16 @@ public class StarterRobot {
             } else if (Angle_Difference < -Math.PI) {
                 Angle_Difference = Angle_Difference + Math.PI*2;
             }
-            if (Math.abs(Angle_Difference) < 4* Math.PI/180) {
+            if (Math.abs(Angle_Difference) < 2* Math.PI/180) {
                 imu_rotation = 0;
             }
             //FOR PROPORTIONAL ANGLE CONTROL: CHANGE THESE TO NONZERO
-            else if (Angle_Difference >= Math.PI/180) {
-                imu_rotation = (Angle_Difference * 0.02 * 180/Math.PI);
-            } else {
-                imu_rotation = (Angle_Difference * 0.02 * 180/Math.PI);
+//            else if (Angle_Difference >= Math.PI/180) {
+//                imu_rotation = (Angle_Difference * 0.05 * 180/Math.PI);
+//            }
+            else {
+                telemetry.addLine("correcting");
+                imu_rotation = (Angle_Difference * 0.05 * 180/Math.PI);
             }
         }
         double Motor_Rotation_power = rotate * 0.35 + imu_rotation; //0.7 //0.5
@@ -187,40 +191,42 @@ public class StarterRobot {
         telemetry.addData("Targeting Angle", Targeting_Angle);
         telemetry.addData("IMU_Rotation Power", imu_rotation);    }
 
-    double rpm = 1500;
+    double radps = 300;
     //queuer/state machine
     public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        goalVector = Constants.goalPos.minus(pose.position);
+        goalVector = StarterRobotPro.Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
+        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Turret angle relative to robot's heading
+//        turret.turnToRobotAngle(turretAngle);
+        double proportionAlongTraj = 0.75;
+        double g = 386.22; // Gravity (in/s^2)
 
-        // Given d (horizontal distance) and deltaH (height difference)
-        double g = 386.22; // in/s^2
+        double deltaH = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double d = goalVector.norm(); // Horizontal distance
+        // Calculate launch angle theta
+        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
 
-        double deltaH = Constants.deltaH;
-        double d = goalVector.norm();
-// Calculate launch angle theta
-        double theta = Math.atan(7 * deltaH / (3 * d));
+        // Calculate time of flight t_f
+        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
 
-// Calculate time of flight t_f
-        double t_f = Math.sqrt(8 * deltaH / (3 * g));
-
-// Calculate initial speed v
+        // Calculate initial speed v
         double v = d / (t_f * Math.cos(theta));
 
-// Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
-        double wheelDiameter = 3.78; // inches, for example
-        double wheelCircumference = Math.PI * wheelDiameter;
-        rpm = 1500*(d/100); // RPM
+        // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
+        double wheelRadius = 1.89; // inches, for example
+//        double wheelCircumference = Math.PI * wheelDiameter;
+        double change = 0;
+        if (up) change += 0.001;
+        if (down) change -= 0.001;
+        Constants.flywheelPower += change;
+        radps = v / wheelRadius * Constants.flywheelPower; // RPM
 // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
-        double change = 0;
-        if (up) change += 2.5;
-        if (down) change -= 2.5;
-        rpm += change;
+
 // Set flywheel RPM
-        flywheel.spinTo(rpm);
+        flywheel.spinTo(radps*28/Math.PI/2);
         //-/-///
         switch (launchState) {
             case IDLE:
@@ -230,7 +236,7 @@ public class StarterRobot {
                 break;
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
-                if (flywheel.getVel() > Constants.LAUNCHER_MIN_VELOCITY) {
+                if (flywheel.getVel() > radps*28/Math.PI/2-50) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -246,9 +252,13 @@ public class StarterRobot {
                 }
                 break;
         }
+        telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
         telemetry.addData("State", launchState);
-        telemetry.addData("targetVel", rpm);
-        telemetry.addData("motorSpeed", flywheel.getVel());
+        telemetry.addLine("goalVector: " + goalVector.x+" "+goalVector.y);
+        telemetry.addData("distance to goal", d);
+        telemetry.addData("hood theta", theta*180/Math.PI);
+        telemetry.addData("targetVel (rad/s)", radps);
+        telemetry.addData("motorSpeed", flywheel.getVel()*2*Math.PI/28);
 //        telemetry.update();
     }
 
@@ -284,6 +294,6 @@ public class StarterRobot {
                 return pose;
 //                driveState = DriveState.RELATIVE;
         }
-        return null;
+        return pose;
     }
 }

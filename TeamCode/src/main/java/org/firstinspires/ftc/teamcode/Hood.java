@@ -9,6 +9,7 @@ public class Hood {
 
     public Hood(HardwareMap hardwareMap){
         HOOD = hardwareMap.get(Servo.class, "hood");
+        HOOD.setDirection(Servo.Direction.FORWARD);
         HOOD.scaleRange(Robot.Constants.hoodScale0,Robot.Constants.hoodScale1); // left = low, right = high
     }
     public void turnToAngle(double angle){ //range 0-some angle

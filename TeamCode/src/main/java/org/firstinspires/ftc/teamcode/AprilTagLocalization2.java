@@ -205,7 +205,8 @@ public class AprilTagLocalization2 {
                 // == CAMERA CALIBRATION ==
                 // If you do not manually specify calibration parameters, the SDK will attempt
                 // to load a predefined calibration for your camera.
-                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271) // for 640x320: 549.651, 549.651, 317.108, 236.644
+//                .setLensIntrinsics(281.5573273, 281.366942, 156.3332591, 119.8965271) // for 320x240
+                .setLensIntrinsics( 549.651, 549.651, 317.108, 236.644) // for 640x480:
                 // ... these parameters are fx, fy, cx, cy.
 
                 .build();
@@ -231,7 +232,8 @@ public class AprilTagLocalization2 {
         }
 
         // Choose a camera resolution. Not all cameras support all resolutions.
-        builder.setCameraResolution(new Size(320,240));
+//        builder.setCameraResolution(new Size(320,240));
+        builder.setCameraResolution(new Size(640,480));
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
         //builder.enableLiveView(true);

@@ -128,7 +128,7 @@ public class Robot {
         public final static double LAUNCHER_MIN_VELOCITY = 1075;
         public final static double hoodLowAngle = 0;
         public final static double hoodHighAngle = 90;
-        public final static double hoodScale0 = 0;
+        public final static double hoodScale0 = 0.27;
         public final static double hoodScale1 = 1;
         public final static double turretLeftScale0 = 0;
         public final static double turretLeftScale1 = 1;
