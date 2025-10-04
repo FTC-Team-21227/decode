@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp(name = "Hood Test")
-//Program used to test out flywheel speed based on robot distance and height difference from goal
+// Program used to test hood positions
 public class hoodTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();
@@ -20,38 +20,33 @@ public class hoodTest extends LinearOpMode {
 
     double HoodPosition;
 
-
     @Override
     public void runOpMode() throws InterruptedException {
         initialization();
         waitForStart();
         while (opModeIsActive()) {
-            // Run flywheel based on calculated velocity
-
-            telemetry.update();
-            if (gamepad1.a){
+            if (gamepad1.a) {
                 HoodPosition = 1;
             }
-            if (gamepad1.b){
+            if (gamepad1.b) {
                 HoodPosition = 0;
             }
-            if (gamepad1.dpad_up) {
+            if (gamepad1.dpad_up) { // Increase hood position
                 HoodPosition += 0.01;
             }
-            if (gamepad1.dpad_down){
+            if (gamepad1.dpad_down) { // Decrease hood position
                 HoodPosition -= 0.01;
             }
+            hood.turnToAngle(HoodPosition);
+            // Telemetry lines
+            telemetry.addData("Hood target position", HoodPosition);
+            telemetry.addData("Hood curr position", hood.getAngle());
+            telemetry.update();
         }
     }
-
-    /**
-     * Calculates the velocity based on height difference from shooter to goal, and distance from shooter to goal base.
-     * @return calculated velocity (double)
-     */
 
     private void initialization() {
         hood = new Hood(hardwareMap);
         HoodPosition = 0;
     }
-
 }

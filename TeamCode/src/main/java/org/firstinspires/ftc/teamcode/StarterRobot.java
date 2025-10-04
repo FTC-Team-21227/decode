@@ -194,7 +194,7 @@ public class StarterRobot {
     double radps = 300;
     //queuer/state machine
     public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
-        //replace these with LUT values
+        // Replace these with LUT values
         // Assume we have: Vector2d goalPosition
         goalVector = StarterRobotPro.Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
@@ -222,10 +222,10 @@ public class StarterRobot {
         if (down) change -= 0.001;
         Constants.flywheelPower += change;
         radps = v / wheelRadius * Constants.flywheelPower; // RPM
-// Set hood angle to theta (convert to servo position)
+        // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
 
-// Set flywheel RPM
+        // Set flywheel RPM
         flywheel.spinTo(radps*28/Math.PI/2);
         //-/-///
         switch (launchState) {
