@@ -108,7 +108,7 @@ public class Robot {
         Constants.drivePower = 0.5;
 
         telemetry.addData("Status", "Initialized");
-        telemetry.update();
+//        telemetry.update();
     }
 
     //constants
@@ -169,24 +169,29 @@ public class Robot {
         // Assume we have: Vector2d goalPosition
         Pose2d pose = drive2.localizer.getPose();
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
-        double absoluteAngleToGoal = Math.PI + Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Relative to robot's heading
 
-        turret.turnToRobotAngle(turretAngle);
-
-        double proportionAlongTraj = 0.75;
+        double p = 0.75; //fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
-        double deltaH = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double h = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
         double d = goalVector.norm(); // Horizontal distance
+
+        double t_tot = Math.sqrt(2*h / (p*g*(1-p))); //ball trajectory time from ground to ground
+        double theta = Math.atan(h / (d*(1-p))); //ball launch angle of elevation
+        double v = d / (p * t_tot * Math.cos(theta)); //ball launch speed
+//        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        double turretAngle = Constants.goalPos.minus(pose.position).angleCast().toDouble() - pose.heading.toDouble(); // Relative to robot's heading
+
+
+
         // Calculate launch angle theta
-        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
+//        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
 
         // Calculate time of flight t_f
-        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
+//        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
 
         // Calculate initial speed v
-        double v = d / (t_f * Math.cos(theta));
+//        double v = d / (t_f * Math.cos(theta));
 
         // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
         double wheelRadius = 1.89; // inches, for example
@@ -195,10 +200,11 @@ public class Robot {
 //        if (up) change += 0.001;
 //        if (down) change -= 0.001;
 //        StarterRobot.Constants.flywheelPower += change;
-        double radps = v / wheelRadius * StarterRobot.Constants.flywheelPower; // RPM
+        double radps = v / wheelRadius * Robot.Constants.flywheelPower; // RPM
         // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
 
+        turret.turnToRobotAngle(turretAngle);
         // Set flywheel RPM
         flywheel.spinTo(radps*28/Math.PI/2);
 // Set hood angle to theta (convert to servo position)
@@ -240,7 +246,7 @@ public class Robot {
         telemetry.addData("hood theta", theta*180/Math.PI);
         telemetry.addData("targetVel (rad/s)", radps);
         telemetry.addData("motorSpeed", flywheel.getVel()*2*Math.PI/28);
-        telemetry.update();
+//        telemetry.update();
     }
 
     public void updateLocalizer(Telemetry telemetry){

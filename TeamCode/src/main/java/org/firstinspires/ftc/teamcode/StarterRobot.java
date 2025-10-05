@@ -86,11 +86,12 @@ public class StarterRobot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
-        pose = new Pose2d(0,0,0);
+        //robot starts out facing the goals ( - x axis)
+        pose = new Pose2d(0,0,Math.PI);
 
-        initialHeading = 0;
+        initialHeading = Math.PI;
         telemetry.addData("Status", "Initialized");
-        telemetry.update();
+//        telemetry.update();
     }
 
     //constants
@@ -128,7 +129,7 @@ public class StarterRobot {
     // Thanks to FTC16072 for sharing this code!!
     public void driveFieldCentric(double forward, double right, double rotate, Telemetry telemetry) {
         double Angle_Difference;
-        absoluteAngleToGoal = Math.PI + Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        absoluteAngleToGoal = /*Math.PI +*/ Constants.goalPos.minus(pose.position).angleCast().toDouble();
         double Heading_Angle = pose.heading.toDouble();
 
         // First, convert direction being asked to drive to polar coordinates
@@ -205,21 +206,18 @@ public class StarterRobot {
         // Assume we have: Vector2d goalPosition
         goalVector = Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
-        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Turret angle relative to robot's heading
-//        turret.turnToRobotAngle(turretAngle);
-        double proportionAlongTraj = 0.75;
+
+        double p = 0.75; //fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
-        double deltaH = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double h = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
         double d = goalVector.norm(); // Horizontal distance
-        // Calculate launch angle theta
-        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
 
-        // Calculate time of flight t_f
-        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
-
-        // Calculate initial speed v
-        double v = d / (t_f * Math.cos(theta));
+        double t_tot = Math.sqrt(2*h / (p*g*(1-p))); //ball trajectory time from ground to ground
+        double theta = Math.atan(h / (d*(1-p))); //ball launch angle of elevation
+        double v = d / (p * t_tot * Math.cos(theta)); //ball launch speed
+//        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        double turretAngle = Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble() - pose.heading.toDouble(); // Relative to robot's heading
 
         // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
         double wheelRadius = 1.89; // inches, for example

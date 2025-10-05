@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp
 public class Teleop extends OpMode {
-    Robot robot = new Robot(hardwareMap, new Pose2d(0,0,0), Robot.Color.RED);
+    Robot robot = new Robot(hardwareMap, new Pose2d(0,0,Math.PI), Robot.Color.RED); //start facing the goals, RED poses
     public void init(){
         robot.initTeleop(telemetry);
         telemetry.update();
