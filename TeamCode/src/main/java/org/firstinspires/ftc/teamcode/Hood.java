@@ -8,14 +8,14 @@ public class Hood {
     Servo HOOD;
 
     public Hood(HardwareMap hardwareMap){
-        HOOD = hardwareMap.get(Servo.class, "hood");
+        HOOD = hardwareMap.get(Servo.class, "HoodLinearServo");
         HOOD.setDirection(Servo.Direction.FORWARD);
-        HOOD.scaleRange(Robot.Constants.hoodScale0,Robot.Constants.hoodScale1); // left = low, right = high
+        HOOD.scaleRange(Robot.Constants.hoodScale0, Robot.Constants.hoodScale1); // left = low, right = high
     }
-    public void turnToAngle(double angle){ //range 0-some angle
-        HOOD.setPosition(angle/(Robot.Constants.hoodHighAngle-Robot.Constants.hoodLowAngle));
+    public void turnToAngle(double angle){ // range 0-41 degrees
+        HOOD.setPosition(angle / (Robot.Constants.hoodHighAngle - Robot.Constants.hoodLowAngle));
     }
     public double getAngle(){
-        return HOOD.getPosition()*(Robot.Constants.hoodHighAngle-Robot.Constants.hoodLowAngle);
+        return HOOD.getPosition() * (Robot.Constants.hoodHighAngle - Robot.Constants.hoodLowAngle);
     }
 }

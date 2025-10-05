@@ -193,6 +193,13 @@ public class StarterRobot {
 
     double radps = 300;
     //queuer/state machine
+
+    /**
+     * Sets flywheel speed based flywheel power constant and wheel radius. Manges shooter states.
+     * @param shotRequested button to start flywheel
+     * @param up button to increase flywheel speed
+     * @param down button to decrease flywheel speed
+     */
     public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         // Replace these with LUT values
         // Assume we have: Vector2d goalPosition

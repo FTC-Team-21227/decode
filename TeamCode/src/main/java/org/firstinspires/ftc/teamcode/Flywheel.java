@@ -14,7 +14,7 @@ public class Flywheel {
     double targetVel;
     //power
     public Flywheel (HardwareMap hardwareMap){
-        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "flywheel");
+        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "Fly_Wheel");
         FLYWHEEL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLYWHEEL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);

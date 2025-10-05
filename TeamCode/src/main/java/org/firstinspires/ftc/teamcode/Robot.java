@@ -1,15 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.Trajectory;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -32,11 +27,13 @@ public class Robot {
     Hood hood; //the servo subsystem that raises or lowers the hood anywhere from 0 to 90 degrees
     AprilTagLocalization2 camera; //the camera subsystem that is used in AprilDrive and Obelisk detection
     //enum that stores the color of the robot, accessible globally
+
     public enum Color {
         RED,
         BLUE
     }
     public final Color color; //create an instance of the enum to initialize later
+
 
     //initialize subsystems
     public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
@@ -50,6 +47,8 @@ public class Robot {
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
     }
+
+
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ //just use the parent constructor, we only are creating one method
@@ -91,6 +90,7 @@ public class Robot {
     ElapsedTime feederTimer;
     ElapsedTime aprilTimer;
 
+
     public void initTeleop(Telemetry telemetry) {
         launchState = LaunchState.IDLE;
         driveState = DriveState.RELATIVE;
@@ -112,12 +112,13 @@ public class Robot {
 
     //constants
     @Config
-    public static class Constants{
+    public static final class Constants{
         public final static Vector2d turretPos = new Vector2d(0,-5);
         public final static double deltaH = 22;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
+
         public final static double feederPower = 1.0;
         public final static double intakePower = 1.0;
         public final static double outtakePower = -1.0;
@@ -126,18 +127,19 @@ public class Robot {
         public final static double FULL_SPEED = 1.0;
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
         public final static double LAUNCHER_MIN_VELOCITY = 1075;
+        // HOOD CONSTANTS
         public final static double hoodLowAngle = 0;
-        public final static double hoodHighAngle = 90;
+        public final static double hoodHighAngle = 55; // Highest actual degree is 41
         public final static double hoodScale0 = 0.27;
         public final static double hoodScale1 = 1;
-        public final static double turretLeftScale0 = 0;
-        public final static double turretLeftScale1 = 1;
-        public final static double turretRightScale0 = 0;
-        public final static double turretRightScale1 = 1;
+        // TURRET CONSTANTS
+        public final static double turretScale0 = 0;
+        public final static double turretScale1 = 1;
+        public final static double turretLeftAngle = 0; // In degrees
+        public final static double turretRightAngle = 360; // In degrees
     }
 
-    //queuer, state machines, commanding the robot
-    // Thanks to FTC16072 for sharing this code!!
+
     public void driveFieldCentric(double forward, double right, double rotate) {
         // First, convert direction being asked to drive to polar coordinates
         double theta = Math.atan2(forward, right);
@@ -158,6 +160,7 @@ public class Robot {
                 -rotate
         ));
     }
+
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition

@@ -17,9 +17,9 @@ public class shooterTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();
     private Servo HoodServo;
-    private CRServo TurnTable;
+    private Servo TurnTable;
     private DcMotor FlyWheelMotor;
-    private DigitalChannel LED_DigitalChannel;
+//    private DigitalChannel LED_DigitalChannel;
 
     // Editable in dashboard, distance and height difference from robot to goal
     public static double distance;
@@ -72,8 +72,8 @@ public class shooterTest extends LinearOpMode {
     }
 
     private void initialization() {
-        LED_DigitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
-        LED_DigitalChannel.setState(true);
+//        LED_DigitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
+//        LED_DigitalChannel.setState(true);
         FlyWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         FlyWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         FlyWheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -82,8 +82,7 @@ public class shooterTest extends LinearOpMode {
         HoodServo.scaleRange(0.27, 1);
         HoodPosition = 0;
         HoodServo.setPosition(HoodPosition);
-        TurnTable.setDirection(CRServo.Direction.FORWARD);
-        TurnTable.setPower(0);
+        TurnTable.setPosition(0);
     }
 
     /**

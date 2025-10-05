@@ -26,7 +26,7 @@ public class CoachShooter extends LinearOpMode {
     public void runOpMode() {
         double Ready;
 
-        Guard_Angle = hardwareMap.get(Servo.class, "Guard_Angle");
+        Guard_Angle = hardwareMap.get(Servo.class, "HoodLinearServo");
         Shooter_Angle = hardwareMap.get(CRServo.class, "Shooter_Angle");
         Fly_Wheel = hardwareMap.get(DcMotor.class, "Fly_Wheel");
         LED_DigitalChannel = hardwareMap.get(DigitalChannel.class, "LED");

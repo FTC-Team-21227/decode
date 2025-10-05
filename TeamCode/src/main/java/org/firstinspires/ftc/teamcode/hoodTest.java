@@ -3,11 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -18,35 +13,35 @@ public class hoodTest extends LinearOpMode {
     Telemetry telemetry = dashboard.getTelemetry();
     Hood hood;
 
-    double HoodPosition;
+    double HoodAngle;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initialization();
         waitForStart();
         while (opModeIsActive()) {
-            if (gamepad1.a) {
-                HoodPosition = 1;
+            if (gamepad1.aWasPressed()) { // Lowest angle
+                HoodAngle = 0;
             }
-            if (gamepad1.b) {
-                HoodPosition = 0;
+            if (gamepad1.yWasPressed()) { // Highest angle (41 degrees)
+                HoodAngle = 35;
             }
-            if (gamepad1.dpad_up) { // Increase hood position
-                HoodPosition += 0.01;
+            if (gamepad1.dpadUpWasPressed()) { // Increase hood position
+                HoodAngle += 1;
             }
-            if (gamepad1.dpad_down) { // Decrease hood position
-                HoodPosition -= 0.01;
+            if (gamepad1.dpadDownWasPressed()) { // Decrease hood position
+                HoodAngle -= 1;
             }
-            hood.turnToAngle(HoodPosition);
+            hood.turnToAngle(HoodAngle);
             // Telemetry lines
-            telemetry.addData("Hood target position", HoodPosition);
-            telemetry.addData("Hood curr position", hood.getAngle());
+            telemetry.addData("Hood target angle", HoodAngle);
+            telemetry.addData("Hood curr angle", hood.getAngle());
             telemetry.update();
         }
     }
 
     private void initialization() {
         hood = new Hood(hardwareMap);
-        HoodPosition = 0;
+        HoodAngle = 0;
     }
 }
