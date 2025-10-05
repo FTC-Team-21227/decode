@@ -38,6 +38,13 @@ public class Robot {
     //initialize subsystems
     public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
         this.color = color; //pose mirroring can occur depending on color
+        switch (color){
+            case RED:
+                Constants.goalPos = new Vector2d(-58.3727,55.6425);
+            case BLUE:
+                Constants.goalPos = new Vector2d(-58.3727,-55.6425);
+                initialPose = mirrorPose(initialPose);
+        }
         camera = new AprilTagLocalization2(hardwareMap);
 //        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
         drive2 = new AprilDrive(hardwareMap, initialPose);
@@ -98,13 +105,7 @@ public class Robot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
-        switch (color){
-            case RED:
-                Constants.goalPos = new Vector2d(-58.3727,55.6425);
-            case BLUE:
-                Constants.goalPos = new Vector2d(58.3727,55.6425);
-                drive2.localizer.setPose(mirrorPose(drive2.localizer.getPose()));
-        }
+        Constants.drivePower = 0.5;
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -114,7 +115,8 @@ public class Robot {
     @Config
     public static final class Constants{
         public final static Vector2d turretPos = new Vector2d(0,-5);
-        public final static double deltaH = 22;
+        public static double flywheelPower = 2.315;
+        public final static double deltaH = 30;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public final static double p = 300, i = 0, d = 0, f = 10;
@@ -137,6 +139,7 @@ public class Robot {
         public final static double turretScale1 = 1;
         public final static double turretLeftAngle = 0; // In degrees
         public final static double turretRightAngle = 360; // In degrees
+        public static double drivePower = 1.0;
     }
 
 
@@ -164,36 +167,45 @@ public class Robot {
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Vector2d goalVector = Constants.goalPos.minus(drive2.localizer.getPose().position);
-        double absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
-        double turretAngle = absoluteAngleToGoal - drive2.localizer.getPose().heading.toDouble(); // Relative to robot's heading
+        Pose2d pose = drive2.localizer.getPose();
+        Vector2d goalVector = Constants.goalPos.minus(pose.position);
+        double absoluteAngleToGoal = Math.PI + Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Relative to robot's heading
 
         turret.turnToRobotAngle(turretAngle);
 
-        // Given d (horizontal distance) and deltaH (height difference)
-        double g = 386.22; // in/s^2
+        double proportionAlongTraj = 0.75;
+        double g = 386.22; // Gravity (in/s^2)
 
-        double deltaH = Constants.deltaH;
-        double d = goalVector.norm();
-// Calculate launch angle theta
-        double theta = Math.atan(7 * deltaH / (3 * d));
+        double deltaH = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double d = goalVector.norm(); // Horizontal distance
+        // Calculate launch angle theta
+        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
 
-// Calculate time of flight t_f
-        double t_f = Math.sqrt(8 * deltaH / (3 * g));
+        // Calculate time of flight t_f
+        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
 
-// Calculate initial speed v
+        // Calculate initial speed v
         double v = d / (t_f * Math.cos(theta));
 
-// Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
-        double wheelDiameter = 3.78; // inches, for example
-        double wheelCircumference = Math.PI * wheelDiameter;
-        double rpm = (v * 60) / wheelCircumference; // RPM
+        // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
+        double wheelRadius = 1.89; // inches, for example
+//        double wheelCircumference = Math.PI * wheelDiameter;
+//        double change = 0;
+//        if (up) change += 0.001;
+//        if (down) change -= 0.001;
+//        StarterRobot.Constants.flywheelPower += change;
+        double radps = v / wheelRadius * StarterRobot.Constants.flywheelPower; // RPM
+        // Set hood angle to theta (convert to servo position)
+//        hood.turnToAngle(theta);
 
+        // Set flywheel RPM
+        flywheel.spinTo(radps*28/Math.PI/2);
 // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
 
 // Set flywheel RPM
-        flywheel.spinTo(rpm);
+//        flywheel.spinTo(rpm);
         //-/-///
         switch (launchState) {
             case IDLE:
@@ -204,7 +216,7 @@ public class Robot {
                 break;
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
-                if (flywheel.getVel() > rpm-50) {
+                if (flywheel.getVel() > radps*28/Math.PI/2-50) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -221,9 +233,13 @@ public class Robot {
                 }
                 break;
         }
+        telemetry.addData("flywheel power scale factor", StarterRobot.Constants.flywheelPower);
         telemetry.addData("State", launchState);
-        telemetry.addData("motorSpeed", flywheel.getVel());
-        telemetry.addData("targetSpeed", rpm);
+        telemetry.addLine("goalVector: " + goalVector.x+" "+goalVector.y);
+        telemetry.addData("distance to goal", d);
+        telemetry.addData("hood theta", theta*180/Math.PI);
+        telemetry.addData("targetVel (rad/s)", radps);
+        telemetry.addData("motorSpeed", flywheel.getVel()*2*Math.PI/28);
         telemetry.update();
     }
 

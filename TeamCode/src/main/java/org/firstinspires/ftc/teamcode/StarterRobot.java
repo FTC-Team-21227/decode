@@ -203,7 +203,7 @@ public class StarterRobot {
     public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         // Replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        goalVector = StarterRobotPro.Constants.goalPos.minus(pose.position);
+        goalVector = Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
         double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Turret angle relative to robot's heading
 //        turret.turnToRobotAngle(turretAngle);
