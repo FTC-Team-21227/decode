@@ -1,16 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.annotation.SuppressLint;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public class Robot {
+public class ShooterRobot {
     //add:
     // Red/blue pose mirroring
     // Lookup table functionality
@@ -18,10 +21,6 @@ public class Robot {
     // Telemetry
     // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
-    AprilTagMecanumDrive drive; //not used right now
-    AprilDrive drive2; //the drive base of the robot including motors, odometry, pinpoint, and camera, capable of hybrid localization
-    Intake intake; //the motor subsystem that runs throughout the match to spin the intake axle
-    Feeder feeder; //the motor subsystem that runs occasionally to move the ball up the elevator into the flywheel
     Flywheel flywheel; //the motor subsystem that spins to certain target RPM throughout the match
     Turret turret; //the 2-servo subsystem that turns to any robot-relative angle
     Hood hood; //the servo subsystem that raises or lowers the hood anywhere from 0 to 90 degrees
@@ -36,21 +35,19 @@ public class Robot {
 
 
     //initialize subsystems
-    public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
+    public ShooterRobot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
         this.color = color; //pose mirroring can occur depending on color
-        switch (color){
-            case RED:
-                Constants.goalPos = new Vector2d(-58.3727,55.6425);
-            case BLUE:
-                Constants.goalPos = new Vector2d(-58.3727,-55.6425);
-                initialPose = mirrorPose(initialPose);
-        }
+//        switch (color){
+//            case RED:
+//                Constants.goalPos = new Vector2d(-58.3727,55.6425);
+//            case BLUE:
+//                Constants.goalPos = new Vector2d(-58.3727,-55.6425);
+//        }
+        this.pose = initialPose;
         camera = new AprilTagLocalization2(hardwareMap);
 //        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
-        drive2 = new AprilDrive(hardwareMap, initialPose);
-        intake = new Intake(hardwareMap);
-        feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
+        flywheel.FLYWHEEL.setDirection(DcMotorSimple.Direction.REVERSE);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
     }
@@ -100,7 +97,7 @@ public class Robot {
 
     public void initTeleop(Telemetry telemetry) {
         launchState = LaunchState.IDLE;
-        driveState = DriveState.RELATIVE;
+        driveState = DriveState.ABSOLUTE;
 
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
@@ -115,7 +112,7 @@ public class Robot {
     @Config
     public static final class Constants{
         public final static Vector2d turretPos = new Vector2d(0,0);
-        public static double flywheelPower = 1;
+        public static double flywheelPower = 2.315;
         public final static double deltaH = 30;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
@@ -130,44 +127,22 @@ public class Robot {
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
         public final static double LAUNCHER_MIN_VELOCITY = 1075;
         // HOOD CONSTANTS
-        public final static double hoodLowAngle = 87; // the traj angle from horizonatla //0;
-        public final static double hoodHighAngle = 50; //the traj angle from horizontal 55; // Highest actual degree is 41
+        public final static double hoodLowAngle = 0;
+        public final static double hoodHighAngle = 55; // Highest actual degree is 41
         public final static double hoodScale0 = 0.27;
         public final static double hoodScale1 = 1;
         // TURRET CONSTANTS
-        public final static double turretHighAngle = Math.PI/2; // In rad
-        public final static double turretLowAngle = -11*Math.PI/6; // In rad (= -330 deg)
         public final static double turretScale0 = 0;
         public final static double turretScale1 = 1;
+        public final static double turretLeftAngle = 0; // In degrees
+        public final static double turretRightAngle = 360; // In degrees
         public static double drivePower = 1.0;
     }
 
-
-    public void driveFieldCentric(double forward, double right, double rotate) {
-        // First, convert direction being asked to drive to polar coordinates
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
-
-        // Second, rotate angle by the angle the robot is pointing
-        theta = AngleUnit.normalizeRadians(theta -
-                drive2.localizer.getPose().heading.toDouble());
-
-        // Third, convert back to cartesian
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
-        drive2.setDrivePowers(new PoseVelocity2d(
-                new Vector2d(
-                        -newForward,
-                        -newRight
-                ),
-                -rotate
-        ));
-    }
-
+    Pose2d pose;
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Pose2d pose = drive2.localizer.getPose();
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
         double p = 0.75; //fraction of time along trajectory from ground to ground
@@ -180,7 +155,7 @@ public class Robot {
         double theta = Math.atan(h / (d*(1-p))); //ball launch angle of elevation
         double v = d / (p * t_tot * Math.cos(theta)); //ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = Constants.goalPos.minus(pose.position).angleCast().toDouble() - pose.heading.toDouble(); // Relative to robot's heading
+        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() - Math.PI; // Relative to robot's heading
 
 
 
@@ -200,15 +175,18 @@ public class Robot {
 //        if (up) change += 0.001;
 //        if (down) change -= 0.001;
 //        StarterRobot.Constants.flywheelPower += change;
-        double radps = v / wheelRadius * Robot.Constants.flywheelPower; // RPM
+        double radps = v / wheelRadius * ShooterRobot.Constants.flywheelPower; // RPM
         // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
 
+        telemetry.addData("turret turn to", turretAngle*180/Math.PI);
+        telemetry.addData("flywheel vel", radps*28/Math.PI/2);
+        telemetry.addData("hood turn to", theta*180/Math.PI);
         turret.turnToRobotAngle(turretAngle);
-        // Set flywheel RPM
+//        // Set flywheel RPM
         flywheel.spinTo(radps*28/Math.PI/2);
-// Set hood angle to theta (convert to servo position)
-        hood.turnToAngle(theta);
+//// Set hood angle to theta (convert to servo position)
+        hood.turnToAngle(theta*180/Math.PI);
 
 // Set flywheel RPM
 //        flywheel.spinTo(rpm);
@@ -228,14 +206,12 @@ public class Robot {
                 break;
             case LAUNCH:
                 //if time delay enough
-                feeder.rollIn();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
-                    feeder.stop();
                 }
                 break;
         }
@@ -249,43 +225,36 @@ public class Robot {
 //        telemetry.update();
     }
 
+    @SuppressLint("DefaultLocale")
     public void updateLocalizer(Telemetry telemetry){
         switch (driveState){
-            case RELATIVE:
-                drive2.updatePoseEstimate();
-                if (aprilTimer.seconds() > 10){
-                    driveState = DriveState.ABSOLUTE;
-                }
-                break;
             case ABSOLUTE:
-                drive2.relocalize(telemetry);
-                aprilTimer.reset();
-                driveState = DriveState.RELATIVE;
-                break;
+                Pose2d poseWorldTurret = camera.update(telemetry);
+                if (poseWorldTurret == null){
+//                    pose = new Pose2d(pose.position, angle);
+                    return;
+                }
+                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()-Math.PI/2);
+//            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
+                telemetry.addLine("ROBOT RELOCALIZATION POSES");
+                telemetry.addLine(String.format("XY %6.1f %6.1f  (inch)",
+                        poseWorldTurret.position.x,
+                        poseWorldTurret.position.y));
+                telemetry.addLine(String.format("Y %6.1f   (rad)",
+                        poseWorldTurret.heading.toDouble()
+                ));
+                pose = poseWorldTurret.times(new Pose2d(StarterRobot.Constants.turretPos,0).inverse());
+                telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
+                        pose.position.x,
+                        pose.position.y));
+                telemetry.addLine(String.format("Pose Heading %6.1f  (rad)",
+                        pose.heading.toDouble()
+                ));
+//                initialHeading = pose.heading.toDouble() - angle;
+//                telemetry.update();
+//                return pose;
+//                driveState = DriveState.RELATIVE;
         }
+//        return pose;
     }
-
-    public void controlIntake(boolean in, boolean out, boolean stop){
-        if (in) intake.intake();
-        else if (out) intake.outtake();
-        else if (stop) intake.stop();
-    }
-    //Lookup table (lut)
-    public int[][][] power = {{{1}}};
-    public int[][][] angle = {{{1}}};
-    public int[] lookUp(Vector2d pos, Vector2d vel){
-
-        return new int[]{power[0][0][0],angle[0][0][0]};
-    }
-
-    //misc functions
-    public Pose2d mirrorPose(Pose2d pose){
-        return pose;
-    }
-//    public Action buildTrajectory(TrajectoryActionBuilder tab){
-//        if (color.equals(Color.BLUE)){
-//            //not sure if mirroring poses in the tab is possible
-//        }
-//        return tab.build();
-//    }
 }

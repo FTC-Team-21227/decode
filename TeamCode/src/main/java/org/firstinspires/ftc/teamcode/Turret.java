@@ -9,7 +9,7 @@ public class Turret {
 
     public Turret(HardwareMap hardwareMap){
         turret = hardwareMap.get(Servo.class, "Shooter_Angle"); // Turntable
-        turret.scaleRange(Robot.Constants.turretScale0,Robot.Constants.turretScale1); // Left = 0, right = 2pi
+        turret.scaleRange(Robot.Constants.turretScale0,Robot.Constants.turretScale1); // 0 = +90 deg, 1 = -330 deg
     }
 
     /**
@@ -17,15 +17,15 @@ public class Turret {
      * @param angle in radians
      */
     public void turnToRobotAngle(double angle) {
-        double targetPos = angle / (2 * Math.PI);
-        turret.setPosition(targetPos);
+//        double targetPos = angle / (2 * Math.PI);
+        turret.setPosition((angle-Robot.Constants.turretLowAngle)/ (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle));
     }
 
     /**
      * @return Turret's robot-relative angle (in radians)
      */
     public double getTurretRobotAngle() {
-        return turret.getPosition() * 2 * Math.PI;
+        return turret.getPosition() * (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle) + Robot.Constants.turretLowAngle;
     }
 
     /**

@@ -106,8 +106,11 @@ public class AprilTagLocalization2 {
      * it's pointing straight left, -90 degrees for straight right, etc. You can also set the roll
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
+    //TEMP CHANGE
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
+            -4.25, 5.5, 8.4, 0); // UNKNOWN CONSTANTS
+//    private Position cameraPosition = new Position(DistanceUnit.INCH,
+//            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0); // UNKNOWN CONSTANTS
 
