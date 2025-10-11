@@ -256,13 +256,13 @@ public class MecanumDrive {
 
         double maxPowerMag = 1;
         for (DualNum<Time> power : wheelVels.all()) {
-            maxPowerMag = Math.max(maxPowerMag, power.value());
+            maxPowerMag = Math.max(maxPowerMag, power.value() * Robot.Constants.drivePower);
         }
 
-        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag);
-        leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
-        rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
-        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
+        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag * Robot.Constants.drivePower);
+        leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag * Robot.Constants.drivePower);
+        rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag * Robot.Constants.drivePower);
+        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag * Robot.Constants.drivePower);
     }
 
     public final class FollowTrajectoryAction implements Action {

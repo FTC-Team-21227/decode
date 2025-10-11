@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+//Robot containing flywheel, turret, hood, and camera
 public class ShooterRobot {
     //add:
     // Red/blue pose mirroring
@@ -102,60 +103,30 @@ public class ShooterRobot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
-        Constants.drivePower = 0.5;
+        Robot.Constants.drivePower = 0.5;
 
         telemetry.addData("Status", "Initialized");
 //        telemetry.update();
     }
 
-    //constants
-    @Config
-    public static final class Constants{
-        public final static Vector2d turretPos = new Vector2d(0,0);
-        public static double flywheelPower = 2.315;
-        public final static double deltaH = 30;
-        public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
-        public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public final static double p = 300, i = 0, d = 0, f = 10;
-
-        public final static double feederPower = 1.0;
-        public final static double intakePower = 1.0;
-        public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
-        public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
-        public final static double FULL_SPEED = 1.0;
-        public final static double LAUNCHER_TARGET_VELOCITY = 1125;
-        public final static double LAUNCHER_MIN_VELOCITY = 1075;
-        // HOOD CONSTANTS
-        public final static double hoodLowAngle = 0;
-        public final static double hoodHighAngle = 55; // Highest actual degree is 41
-        public final static double hoodScale0 = 0.27;
-        public final static double hoodScale1 = 1;
-        // TURRET CONSTANTS
-        public final static double turretScale0 = 0;
-        public final static double turretScale1 = 1;
-        public final static double turretLeftAngle = 0; // In degrees
-        public final static double turretRightAngle = 360; // In degrees
-        public static double drivePower = 1.0;
-    }
 
     Pose2d pose;
-    public void updateShooter(boolean shotRequested, Telemetry telemetry) {
+    public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Vector2d goalVector = Constants.goalPos.minus(pose.position);
+        Vector2d goalVector = Robot.Constants.goalPos.minus(pose.position);
 
-        double p = 0.75; //fraction of time along trajectory from ground to ground
+        double p = 0.9; //fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
-        double h = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double h = Robot.Constants.deltaH; // Height difference from shooter to goal
         double d = goalVector.norm(); // Horizontal distance
 
         double t_tot = Math.sqrt(2*h / (p*g*(1-p))); //ball trajectory time from ground to ground
         double theta = Math.atan(h / (d*(1-p))); //ball launch angle of elevation
         double v = d / (p * t_tot * Math.cos(theta)); //ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() - Math.PI; // Relative to robot's heading
+        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() /*- Math.PI*/; // Relative to robot's heading
 
 
 
@@ -175,18 +146,20 @@ public class ShooterRobot {
 //        if (up) change += 0.001;
 //        if (down) change -= 0.001;
 //        StarterRobot.Constants.flywheelPower += change;
-        double radps = v / wheelRadius * ShooterRobot.Constants.flywheelPower; // RPM
+        double change = 0;
+        if (up) change += 0.001;
+        if (down) change -= 0.001;
+        Robot.Constants.flywheelPower += change;
+        double radps = v / wheelRadius * Robot.Constants.flywheelPower; // RPM
         // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
 
-        telemetry.addData("turret turn to", turretAngle*180/Math.PI);
-        telemetry.addData("flywheel vel", radps*28/Math.PI/2);
-        telemetry.addData("hood turn to", theta*180/Math.PI);
+//        telemetry.addData("hood turn to", theta*180/Math.PI);
         turret.turnToRobotAngle(turretAngle);
 //        // Set flywheel RPM
         flywheel.spinTo(radps*28/Math.PI/2);
 //// Set hood angle to theta (convert to servo position)
-        hood.turnToAngle(theta*180/Math.PI);
+        hood.turnToAngle(theta);
 
 // Set flywheel RPM
 //        flywheel.spinTo(rpm);
@@ -210,18 +183,26 @@ public class ShooterRobot {
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
                 }
                 break;
         }
-        telemetry.addData("flywheel power scale factor", StarterRobot.Constants.flywheelPower);
+        if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
+        telemetry.addData("flywheel power scale factor", Robot.Constants.flywheelPower);
         telemetry.addData("State", launchState);
-        telemetry.addLine("goalVector: " + goalVector.x+" "+goalVector.y);
-        telemetry.addData("distance to goal", d);
-        telemetry.addData("hood theta", theta*180/Math.PI);
+        telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);
+        telemetry.addData("distance to goal (inch)", d);
+        telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
+        telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()*180/Math.PI);
+        telemetry.addData("turret pos", turret.turret.getPosition());
+        telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
+        telemetry.addData("hood get angle (rad to deg)", hood.getAngle());
+        telemetry.addData("hood pos", hood.HOOD.getPosition());
+        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2);
         telemetry.addData("targetVel (rad/s)", radps);
-        telemetry.addData("motorSpeed", flywheel.getVel()*2*Math.PI/28);
+        telemetry.addData("motorSpeed (tick/s)", flywheel.getVel());
+        telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel()*2*Math.PI/28);
 //        telemetry.update();
     }
 
@@ -234,7 +215,7 @@ public class ShooterRobot {
 //                    pose = new Pose2d(pose.position, angle);
                     return;
                 }
-                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()-Math.PI/2);
+                poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()+Math.PI/2);
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
                 telemetry.addLine("ROBOT RELOCALIZATION POSES");
                 telemetry.addLine(String.format("XY %6.1f %6.1f  (inch)",
@@ -243,7 +224,7 @@ public class ShooterRobot {
                 telemetry.addLine(String.format("Y %6.1f   (rad)",
                         poseWorldTurret.heading.toDouble()
                 ));
-                pose = poseWorldTurret.times(new Pose2d(StarterRobot.Constants.turretPos,0).inverse());
+                pose = poseWorldTurret.times(new Pose2d(Robot.Constants.turretPos,0).inverse());
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));

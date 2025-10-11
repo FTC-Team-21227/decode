@@ -17,11 +17,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+//robot containing flywheel, feeders, camera, drive motors, and IMU
 @Config
 public class StarterRobot {
     Feeders feeders;
     Flywheel flywheel;
-    Hood hood;
     AprilTagLocalization2 camera;
     private DcMotor W_BL;
     private DcMotor W_BR;
@@ -94,34 +94,6 @@ public class StarterRobot {
 //        telemetry.update();
     }
 
-    //constants
-    @Config
-    public static class Constants{
-        public final static Vector2d turretPos = new Vector2d(0,0);
-        public static double flywheelPower = 2.315;
-        public final static double deltaH = 30;
-        public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
-        public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public final static double p = 300, i = 0, d = 0, f = 10;
-        public final static double feederPower = 1.0;
-        public final static double intakePower = 1.0;
-        public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
-        public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
-        public final static double FULL_SPEED = 1.0;
-        public final static double LAUNCHER_TARGET_VELOCITY = 1125;
-        public final static double LAUNCHER_MIN_VELOCITY = 1075;
-        public final static double hoodLowAngle = 0;
-        public final static double hoodHighAngle = 90;
-        public final static double hoodScale0 = 0;
-        public final static double hoodScale1 = 1;
-        public final static double turretLeftScale0 = 0;
-        public final static double turretLeftScale1 = 1;
-        public final static double turretRightScale0 = 0;
-        public final static double turretRightScale1 = 1;
-        public final static double drivePower = 0.5;
-    }
-
     Vector2d goalVector;
     double absoluteAngleToGoal;
     Pose2d pose;
@@ -129,7 +101,7 @@ public class StarterRobot {
     // Thanks to FTC16072 for sharing this code!!
     public void driveFieldCentric(double forward, double right, double rotate, Telemetry telemetry) {
         double Angle_Difference;
-        absoluteAngleToGoal = /*Math.PI +*/ Constants.goalPos.minus(pose.position).angleCast().toDouble();
+        absoluteAngleToGoal = /*Math.PI +*/ Robot.Constants.goalPos.minus(pose.position).angleCast().toDouble();
         double Heading_Angle = pose.heading.toDouble();
 
         // First, convert direction being asked to drive to polar coordinates
@@ -172,10 +144,10 @@ public class StarterRobot {
             }
         }
         double Motor_Rotation_power = rotate * 0.35 + imu_rotation; //0.7 //0.5
-        double Motor_power_BL = -(((newForward - newRight) - Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_BR = -((newForward + newRight + Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_FL = -(((newForward + newRight) - Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_FR = -(((newForward - newRight) + Motor_Rotation_power) * Constants.drivePower);
+        double Motor_power_BL = -(((newForward - newRight) - Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_BR = -((newForward + newRight + Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_FL = -(((newForward + newRight) - Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_FR = -(((newForward - newRight) + Motor_Rotation_power) * Robot.Constants.drivePower);
         double m = Math.max(Math.max(Math.abs(Motor_power_BL),Math.abs(Motor_power_BR)),Math.max(Math.abs(Motor_power_FL),Math.abs(Motor_power_FR)));
         if (m > 1){
             Motor_power_BL /= m;
@@ -204,13 +176,13 @@ public class StarterRobot {
     public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
         // Replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        goalVector = Constants.goalPos.minus(pose.position);
+        goalVector = Robot.Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
 
         double p = 0.75; //fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
-        double h = StarterRobot.Constants.deltaH; // Height difference from shooter to goal
+        double h = Robot.Constants.deltaH; // Height difference from shooter to goal
         double d = goalVector.norm(); // Horizontal distance
 
         double t_tot = Math.sqrt(2*h / (p*g*(1-p))); //ball trajectory time from ground to ground
@@ -225,8 +197,8 @@ public class StarterRobot {
         double change = 0;
         if (up) change += 0.001;
         if (down) change -= 0.001;
-        Constants.flywheelPower += change;
-        radps = v / wheelRadius * Constants.flywheelPower; // RPM
+        Robot.Constants.flywheelPower += change;
+        radps = v / wheelRadius * Robot.Constants.flywheelPower; // RPM
         // Set hood angle to theta (convert to servo position)
 //        hood.turnToAngle(theta);
 
@@ -251,13 +223,13 @@ public class StarterRobot {
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
                     feeders.stop();
                 }
                 break;
         }
-        telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
+        telemetry.addData("flywheel power scale factor", Robot.Constants.flywheelPower);
         telemetry.addData("State", launchState);
         telemetry.addLine("goalVector: " + goalVector.x+" "+goalVector.y);
         telemetry.addData("distance to goal", d);
@@ -287,7 +259,7 @@ public class StarterRobot {
                 telemetry.addLine(String.format("Y %6.1f   (rad)",
                         poseWorldTurret.heading.toDouble()
                 ));
-                pose = poseWorldTurret.times(new Pose2d(Constants.turretPos,0).inverse());
+                pose = poseWorldTurret.times(new Pose2d(Robot.Constants.turretPos,0).inverse());
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));

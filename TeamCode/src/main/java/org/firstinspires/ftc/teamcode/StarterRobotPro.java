@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+//Robot containing flywheel, turret, hood, feeders, drive motors, and IMU
 public class StarterRobotPro {
     Feeders feeders;
     Flywheel flywheel;
@@ -94,32 +95,6 @@ public class StarterRobotPro {
         telemetry.update();
     }
 
-    //constants
-    @Config
-    public static class Constants{
-        public final static Vector2d turretPos = new Vector2d(0,0);
-        public final static double deltaH = 50;
-        public final static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
-        public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public final static double p = 300, i = 0, d = 0, f = 10;
-        public final static double feederPower = 1.0;
-        public final static double intakePower = 1.0;
-        public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
-        public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
-        public final static double FULL_SPEED = 1.0;
-        public final static double LAUNCHER_TARGET_VELOCITY = 1125;
-        public final static double LAUNCHER_MIN_VELOCITY = 1075;
-        public final static double hoodLowAngle = 0;
-        public final static double hoodHighAngle = 90;
-        public final static double hoodScale0 = 0;
-        public final static double hoodScale1 = 1;
-        public final static double turretLeftScale0 = 0;
-        public final static double turretLeftScale1 = 1;
-        public final static double turretRightScale0 = 0;
-        public final static double turretRightScale1 = 1;
-        public final static double drivePower = 0.5;
-    }
 
     Vector2d goalVector;
     double absoluteAngleToGoal;
@@ -173,10 +148,10 @@ public class StarterRobotPro {
             }
         }
         double Motor_Rotation_power = rotate * 0.35 + imu_rotation; //0.7 //0.5
-        double Motor_power_BL = -(((newForward - newRight) - Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_BR = -((newForward + newRight + Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_FL = -(((newForward + newRight) - Motor_Rotation_power) * Constants.drivePower);
-        double Motor_power_FR = -(((newForward - newRight) + Motor_Rotation_power) * Constants.drivePower);
+        double Motor_power_BL = -(((newForward - newRight) - Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_BR = -((newForward + newRight + Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_FL = -(((newForward + newRight) - Motor_Rotation_power) * Robot.Constants.drivePower);
+        double Motor_power_FR = -(((newForward - newRight) + Motor_Rotation_power) * Robot.Constants.drivePower);
         double m = Math.max(Math.max(Math.abs(Motor_power_BL),Math.abs(Motor_power_BR)),Math.max(Math.abs(Motor_power_FL),Math.abs(Motor_power_FR)));
         if (m > 1){
             Motor_power_BL /= m;
@@ -203,14 +178,14 @@ public class StarterRobotPro {
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         // CALCULATIONS! Replace these with LUT values
         // Assume we have Vector2d goalPosition
-        goalVector = Constants.goalPos.minus(pose.position);
+        goalVector = Robot.Constants.goalPos.minus(pose.position);
 //        absoluteAngleToGoal = Math.atan2(goalVector.y, goalVector.x);
         double turretAngle = absoluteAngleToGoal - pose.heading.toDouble(); // Turret angle relative to robot's heading
         turret.turnToRobotAngle(turretAngle);
 
         double g = 386.22; // Gravity (in/s^2)
 
-        double deltaH = Constants.deltaH; // Height difference from shooter to goal
+        double deltaH = Robot.Constants.deltaH; // Height difference from shooter to goal
         double d = goalVector.norm(); // Horizontal distance
         // Calculate launch angle theta
         double theta = Math.atan(7 * deltaH / (3 * d));
@@ -242,7 +217,7 @@ public class StarterRobotPro {
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
                 // Switch state to launch when flywheel velocity is great enough
-                if (flywheel.getVel() > Constants.LAUNCHER_MIN_VELOCITY) {
+                if (flywheel.getVel() > Robot.Constants.LAUNCHER_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
@@ -252,7 +227,7 @@ public class StarterRobotPro {
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
                     // Launch ball
                     launchState = LaunchState.IDLE;
                     feeders.stop();
@@ -295,7 +270,7 @@ public class StarterRobotPro {
                 ));
 
                 // Use AprilTag detections to get turret pose relative to field
-                pose = poseWorldTurret.times(new Pose2d(Constants.turretPos,0).inverse());
+                pose = poseWorldTurret.times(new Pose2d(Robot.Constants.turretPos,0).inverse());
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));
