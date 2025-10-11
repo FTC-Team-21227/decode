@@ -27,7 +27,7 @@ public class shooter extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, Math.PI / 2), ShooterRobot.Color.RED);
+        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ 0), ShooterRobot.Color.RED);
 //        initialization();
         robot.initTeleop(telemetry);
         waitForStart();
@@ -69,7 +69,7 @@ public class shooter extends LinearOpMode {
                 robot.hood.HOOD.setPosition(hoodPos);
             }
             robot.updateLocalizer(telemetry);
-            robot.updateShooter(gamepad1.start, telemetry);
+            robot.updateShooter(gamepad1.start, gamepad1.dpad_up, gamepad1.dpad_down, telemetry);
 //            robot.flywheel.spinTo(20);
             // Telemetry lines
             telemetry.addData("turret angle", Math.toDegrees(robot.turret.getTurretRobotAngle()));

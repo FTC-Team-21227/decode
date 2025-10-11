@@ -13,7 +13,7 @@ public class hoodTest extends LinearOpMode {
     Telemetry telemetry = dashboard.getTelemetry();
     Hood hood;
 
-    double HoodAngle;
+    double HoodAngle=50;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -36,12 +36,14 @@ public class hoodTest extends LinearOpMode {
             // Telemetry lines
             telemetry.addData("Hood target angle", HoodAngle);
             telemetry.addData("Hood curr angle", hood.getAngle());
+            telemetry.addData("Hood pos", hood.HOOD.getPosition());
+            telemetry.addData("outside range", hood.commandedOutsideRange());
             telemetry.update();
         }
     }
 
     private void initialization() {
         hood = new Hood(hardwareMap);
-        HoodAngle = 0;
+        HoodAngle = 50;
     }
 }

@@ -21,6 +21,7 @@ public class Turret {
         turret.setPosition((angle-Robot.Constants.turretLowAngle)/ (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle));
     }
 
+
     /**
      * @return Turret's robot-relative angle (in radians)
      */
