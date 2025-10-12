@@ -22,7 +22,7 @@ public class Robot {
     //  Telemetry
     //  Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
-//    AprilTagMecanumDrive drive; // Not used right now
+    AprilTagMecanumDrive drive; // Not used right now
     AprilDrive drive2; // Drive base of the robot including motors, odometry, pinpoint, and camera (capable of hybrid localization)
     Intake intake; // Motor subsystem that runs continuously to spin the intake axle
     Feeder feeder; // Motor subsystem that runs occasionally to move the ball up the elevator into the flywheel

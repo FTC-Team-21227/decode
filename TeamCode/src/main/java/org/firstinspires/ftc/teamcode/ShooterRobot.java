@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-//Robot containing flywheel, turret, hood, and camera
+// Robot containing flywheel, turret, hood, and camera
 public class ShooterRobot {
     //add:
     // Red/blue pose mirroring
