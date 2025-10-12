@@ -13,36 +13,41 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-//Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
+// Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
 @Config
 public class Robot {
-    //add:
-    // Red/blue pose mirroring
-    // Lookup table functionality
-    // Turret position mapped correctly to robot pose etc.
-    // Telemetry
-    // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
+    // TODO: Red/blue pose mirroring
+    //  Lookup table functionality
+    //  Turret position mapped correctly to robot pose etc.
+    //  Telemetry
+    //  Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
-    AprilTagMecanumDrive drive; //not used right now
-    AprilDrive drive2; //the drive base of the robot including motors, odometry, pinpoint, and camera, capable of hybrid localization
-    Intake intake; //the motor subsystem that runs throughout the match to spin the intake axle
-    Feeder feeder; //the motor subsystem that runs occasionally to move the ball up the elevator into the flywheel
-    Flywheel flywheel; //the motor subsystem that spins to certain target RPM throughout the match
-    Turret turret; //the servo subsystem that turns to any robot-relative angle
-    Hood hood; //the servo subsystem that raises or lowers the hood anywhere from low to high degrees
-    AprilTagLocalization2 camera; //the camera subsystem that is used in AprilDrive and Obelisk detection
+//    AprilTagMecanumDrive drive; // Not used right now
+    AprilDrive drive2; // Drive base of the robot including motors, odometry, pinpoint, and camera (capable of hybrid localization)
+    Intake intake; // Motor subsystem that runs continuously to spin the intake axle
+    Feeder feeder; // Motor subsystem that runs occasionally to move the ball up the elevator into the flywheel
+    Flywheel flywheel; // Motor subsystem that spins to certain target RPM throughout the match
+    Turret turret; // Servo subsystem that turns to any robot-relative angle
+    Hood hood; // Servo subsystem that raises or lowers the hood anywhere from low to high degrees
+    AprilTagLocalization2 camera; // Camera subsystem that is used in AprilDrive and Obelisk detection
 
-    //enum that stores the color of the robot, accessible globally
+    // Enum that stores the color of alliance, accessible globally
     public enum Color {
         RED,
         BLUE
     }
-    public final Color color; //create an instance of the enum to initialize later
+    public final Color color; // Create an instance of the enum to initialize later
 
 
-    //initialize subsystems
+    // Initialize subsystems
+
+    /**
+     * @param hardwareMap
+     * @param initialPose robot's starting pose on the field
+     * @param color alliance color
+     */
     public Robot(HardwareMap hardwareMap, Pose2d initialPose, Color color){
-        this.color = color; //pose mirroring can occur depending on color
+        this.color = color; // Pose mirroring can occur depending on color
         switch (color){
             case RED:
                 Constants.goalPos = new Vector2d(-58.3727,55.6425);
@@ -60,40 +65,58 @@ public class Robot {
         hood = new Hood(hardwareMap);
     }
 
-
-    private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
-        //localizer functions reset with apriltags
-        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ //just use the parent constructor, we only are creating one method
+    /**
+     * Mecanum drive with AprilTag localization
+     */
+    private class AprilDrive extends MecanumDrive { // If this works, preferred over AprilTagMecanumDrive
+        // Localizer functions reset with AprilTags
+        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){
+            // Just use the parent constructor (MecanumDrive), we only are creating one method
             super(hardwareMap,initialPose);
         }
-        //relocalize method: every 10 ish seconds, use the goal AprilTag to re-define the robot's pose relative to the field.
-        //maybe want to return a boolean of successful relocalization instead of the pose, which is accessible by other means. Then we can keep trying to relocalize until we get a success.
+        // TODO: maybe want to return a boolean of successful relocalization instead of the pose, which is accessible by other means. Then we can keep trying to relocalize until we get a success.
+
+        /**
+         * This function uses AprilTag detection to determine robot's field-relative pose, updates the localizer with this pose (unless no detection), and returns the pose.
+         * We should use this every ~10 seconds, use the goal AprilTag to re-define the robot's pose relative to the field.
+         */
         @SuppressLint("DefaultLocale")
         public Pose2d relocalize(Telemetry telemetry) {
-            PoseVelocity2d vel = super.updatePoseEstimate(); //update the pinpoint velocity estimate as normal
-            //don't relocalize if the robot is moving too fast. The motion blur will cause some problems
+            PoseVelocity2d vel = super.updatePoseEstimate(); // Update the pinpoint velocity estimate as normal
+
+            // Don't relocalize if the robot is moving too fast. The motion blur will cause some problems
             if (vel.linearVel.norm() > 1.0 || Math.toDegrees(vel.angVel) > 1.0) {
                 return localizer.getPose();
             }
-            Pose2d poseWorldTurret = camera.update(telemetry); //get the pose of the turret relative to the field using the Apriltag.
+
+            // Get the pose of the turret relative to the field using the goal Apriltag detected by camera.
+            Pose2d poseWorldTurret = camera.update(telemetry);
 //            pose = new Pose2d(pose.position.minus(Constants.turretPos),pose.heading.toDouble()-turret.getTurretRobotAngle());
-            //if no pose was found, default to the pinpoint localizer relative pose.
+
+            // If no pose was found, default to the pinpoint localizer relative pose, end function.
             if (poseWorldTurret == null){
                 return localizer.getPose();
             }
-            poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble()+Math.PI/2);
-            //Pose multiplication: pWR = pWT * pRT^-1. Transforming the turret pose into the robot pose.
+            // Pose of the turret relative to field using (AprilTag detection + 90 degrees)
+            poseWorldTurret = new Pose2d(poseWorldTurret.position,poseWorldTurret.heading.toDouble() + Math.PI/2);
+
+            // Pose multiplication: pWR = pWT * pRT^-1. Transforming the turret pose into the robot pose.
+            // Uses the pose of the turret and turret's position on robot to get robot's field-relative pose
             Pose2d poseWorldRobot = poseWorldTurret.times(turret.getPoseRobotTurret().inverse());
-            localizer.setPose(poseWorldRobot); //reset the localizer pose to the current field-relative pose.
+            localizer.setPose(poseWorldRobot); // Reset the localizer pose to the current field-relative pose.
+
+            // Telemetry lines
             telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                     poseWorldRobot.position.x,
                     poseWorldRobot.position.y));
             telemetry.addLine(String.format("Pose Heading %6.1f  (rad)",
                     poseWorldRobot.heading.toDouble()
             ));
-            return poseWorldRobot; //return the pose for our needs.
+            return poseWorldRobot; // Return the pose for our needs.
         }
     }
+
+    // Shooting system state enum
     private enum LaunchState {
         IDLE,
         SPIN_UP,
@@ -101,14 +124,16 @@ public class Robot {
         LAUNCHING,
     }
     private LaunchState launchState;
+
+    // Drive with either pinpoint or AprilTag localization
     private enum DriveState {
         RELATIVE,
         ABSOLUTE // Drive with AprilTag localization for absolute position on field
     }
     private DriveState driveState;
 
-    ElapsedTime feederTimer;
-    ElapsedTime aprilTimer;
+    ElapsedTime feederTimer; // Times the shooting process
+    ElapsedTime aprilTimer; // Times the AprilTag localization process
 
     /**
      * Initialize and set motors, shooter, timers
@@ -120,38 +145,38 @@ public class Robot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
-        Constants.drivePower = 0.5;
+        Constants.drivePower = 0.5; // Power on motors
 
         telemetry.addData("Status", "Initialized");
 //        telemetry.update();
     }
 
-    //constants
+    // Robot constants
     @Config
-    public static class Constants{
-        public final static Vector2d turretPos = new Vector2d(0,0);
+    public static class Constants {
+        // SHOOTER SYSTEM CONSTANTS
+        public final static Vector2d turretPos = new Vector2d(0,0); // Turret position on robot
         public static double flywheelPower = 3;
-        public final static double deltaH = 30;
-        public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
-        public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public static double p = 300, i = 0, d = 0, f = 10;
-
-        public final static double feederPower = 1.0;
-        public final static double intakePower = 1.0;
-        public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
-        public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
-        public final static double FULL_SPEED = 1.0;
-        public final static double LAUNCHER_TARGET_VELOCITY = 1125;
-        public final static double LAUNCHER_MIN_VELOCITY = 1075;
+        public final static double deltaH = 30; // Height difference between shooter and goal
+        public static Vector2d goalPos = new Vector2d(-58.3727,55.6425); // Goal location
+        public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0); // Pose of camera compared to turret
+        public static double p = 300, i = 0, d = 0, f = 10; // PIDF constants
+        public final static double feederPower = 1.0; // Power of feeder to the elevator
+        public final static double intakePower = 1.0; // Intake rollers
+        public final static double outtakePower = -1.0; // Intake rollers
+        public final static double FEED_TIME_SECONDS = 0.20; // The feeder servos run this long when a shot is requested.
+        public final static double FLYWHEEL_STOP_SPEED = 0.0; // We send this power to the servos when we want them to stop.
+        public final static double FLYWHEEL_FULL_SPEED = 1.0;
+        public final static double FLYWHEEL_TARGET_VELOCITY = 1125;
+        public final static double FLYWHEEL_MIN_VELOCITY = 1075;
         // HOOD CONSTANTS
-        public final static double hoodLowAngle = 87*Math.PI/180; // the traj angle from horizonatla (rad) //0;
-        public final static double hoodHighAngle = 50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
+        public final static double hoodLowAngle = 87 * Math.PI / 180; // Ball trajectory angle from horizontal (rad)
+        public final static double hoodHighAngle = 50 * Math.PI / 180; // Ball trajectory angle from horizontal
         public final static double hoodScale0 = 0.27;
         public final static double hoodScale1 = 0.85;
         // TURRET CONSTANTS
-        public final static double turretHighAngle = Math.PI/2; // In rad, pos = 1
-        public final static double turretLowAngle = -11*Math.PI/6; // In rad (= -330 deg)
+        public final static double turretHighAngle = Math.PI / 2; // In rad, pos = 1 (90 deg)
+        public final static double turretLowAngle = -11 * Math.PI / 6; // In rad (-330 deg)
         public final static double turretScale0 = 0;
         public final static double turretScale1 = 1;
         public static double drivePower = 1.0;
@@ -187,54 +212,51 @@ public class Robot {
      * @param shotRequested: Boolean to start shooter state machine
      */
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
-        //replace these with LUT values
+        // TODO: Replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Pose2d pose = drive2.localizer.getPose();
-        Vector2d goalVector = Constants.goalPos.minus(pose.position);
+        Pose2d pose = drive2.localizer.getPose(); // Robot pose
+        Vector2d goalVector = Constants.goalPos.minus(pose.position); // Goal vector relative to robot pos and heading
 
-        double p = 0.9; //fraction of time along trajectory from ground to ground
-        double g = 386.22; // Gravity (in/s^2)
+        double p = 0.9; // Fraction of time along trajectory from ground to ground
+        double g = 386.22; // Gravity acceleration (in/s^2)
 
         double h = Constants.deltaH; // Height difference from shooter to goal
-        double d = goalVector.norm(); // Horizontal distance
+        double d = goalVector.norm(); // Horizontal distance from base of robot to goal
 
-        double t_tot = Math.sqrt(2*h / (p*g*(1-p))); //ball trajectory time from ground to ground
-        double theta = Math.atan(h / (d*(1-p))); //ball launch angle of elevation
-        double v = d / (p * t_tot * Math.cos(theta)); //ball launch speed
+        double time_total = Math.sqrt(2 * h / (p * g * (1 - p))); // Ball trajectory time from ground to ground
+        double theta = Math.atan(h / (d * (1 - p))); // Ball launch - angle of elevation
+        double v = d / (p * time_total * Math.cos(theta)); // Ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble(); // Relative to robot's heading
+        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble(); // Turret angle to set to face make turret face the goal
 
+        /*
+         Calculate launch angle theta
+        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
 
+         Calculate time of flight t_f
+        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
 
-        // Calculate launch angle theta
-//        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
+         Calculate initial speed v
+        double v = d / (t_f * Math.cos(theta));
 
-        // Calculate time of flight t_f
-//        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
+         Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
+         */
 
-        // Calculate initial speed v
-//        double v = d / (t_f * Math.cos(theta));
-
-        // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
         double wheelRadius = 1.89; // inches, for example
-//        double wheelCircumference = Math.PI * wheelDiameter;
-//        double change = 0;
-//        if (up) change += 0.001;
-//        if (down) change -= 0.001;
-//        StarterRobot.Constants.flywheelPower += change;
-        double radps = v / wheelRadius * Constants.flywheelPower; // RPM
-        // Set hood angle to theta (convert to servo position)
-//        hood.turnToAngle(theta);
+        /*
+        double wheelCircumference = Math.PI * wheelDiameter;
+        double change = 0;
+        if (up) change += 0.001;
+        if (down) change -= 0.001;
+        StarterRobot.Constants.flywheelPower += change;
+         */
+        double radps = v / wheelRadius * Constants.flywheelPower; // Radians per second of flywheel power
 
+        // TURN TURRET, SET FLYWHEEL RPM, AND TURN HOOD
         turret.turnToRobotAngle(turretAngle);
-        // Set flywheel RPM
-        flywheel.spinTo(radps*28/Math.PI/2);
-// Set hood angle to theta (convert to servo position)
+        flywheel.spinTo(radps * 28 / Math.PI / 2);
         hood.turnToAngle(theta);
 
-// Set flywheel RPM
-//        flywheel.spinTo(rpm);
-        //-/-///
         switch (launchState) {
             case IDLE:
                 if (shotRequested) {
@@ -261,21 +283,23 @@ public class Robot {
                 }
                 break;
         }
+
+        // Telemetry lines
         if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
-        telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
-        telemetry.addData("State", launchState);
-        telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);
-        telemetry.addData("distance to goal (inch)", d);
-        telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
-        telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()*180/Math.PI);
-        telemetry.addData("turret pos", turret.turret.getPosition());
-        telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
-        telemetry.addData("hood get angle (rad to deg)", hood.getAngle());
-        telemetry.addData("hood pos", hood.HOOD.getPosition());
-        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2);
-        telemetry.addData("targetVel (rad/s)", radps);
-        telemetry.addData("motorSpeed (tick/s)", flywheel.getVel());
-        telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel()*2*Math.PI/28);
+        telemetry.addData("Flywheel power scale factor", Constants.flywheelPower);
+        telemetry.addData("Launch State", launchState);
+        telemetry.addLine("GoalVector (inch): " + goalVector.x + " " + goalVector.y);
+        telemetry.addData("Distance to goal (inch)", d);
+        telemetry.addData("Turret target angle (deg)", turretAngle * 180 / Math.PI);
+        telemetry.addData("Turret actual angle (deg)", turret.getTurretRobotAngle() * 180 / Math.PI);
+        telemetry.addData("Turret pos", turret.turret.getPosition());
+        telemetry.addData("Hood target angle (deg)", theta * 180 / Math.PI);
+        telemetry.addData("Hood actual angle (deg)", hood.getAngle());
+        telemetry.addData("Hood pos", hood.HOOD.getPosition());
+        telemetry.addData("TargetVel (tick/s)", radps * 28 / Math.PI / 2);
+        telemetry.addData("TargetVel (rad/s)", radps);
+        telemetry.addData("Flywheel speed (tick/s)", flywheel.getVel());
+        telemetry.addData("Flywheel speed (rad/s)", flywheel.getVel() * 2 * Math.PI / 28);
 //        telemetry.update();
     }
 
@@ -312,7 +336,6 @@ public class Robot {
         return new int[]{power[0][0][0],angle[0][0][0]};
     }
 
-    //misc functions
     public Pose2d mirrorPose(Pose2d pose){
         return new Pose2d(new Vector2d(pose.position.x, -pose.position.y), new Rotation2d(pose.heading.real, -pose.heading.imag));
     }

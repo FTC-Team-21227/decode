@@ -259,6 +259,7 @@ public class MecanumDrive {
             maxPowerMag = Math.max(maxPowerMag, power.value() * Robot.Constants.drivePower);
         }
 
+        // Set wheel power
         leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag * Robot.Constants.drivePower);
         leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag * Robot.Constants.drivePower);
         rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag * Robot.Constants.drivePower);

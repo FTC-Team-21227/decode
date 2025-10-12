@@ -30,7 +30,7 @@ public class Turret {
     }
 
     /**
-     * @return Turret's pose on the robot based on its position and current heading
+     * @return Turret's robot-relative pose based on its position and current heading
      */
     public Pose2d getPoseRobotTurret() {
         return new Pose2d(Robot.Constants.turretPos,getTurretRobotAngle());

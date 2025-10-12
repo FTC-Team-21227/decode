@@ -6,7 +6,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @TeleOp
-public class fly extends LinearOpMode {
+/**
+ * 10/11/25: Runs the flywheel and prints its velocity
+ */
+public class FlywheeelTest extends LinearOpMode {
     DcMotorEx f;
     public void runOpMode(){
         f = hardwareMap.get(DcMotorEx.class, "Fly_Wheel");

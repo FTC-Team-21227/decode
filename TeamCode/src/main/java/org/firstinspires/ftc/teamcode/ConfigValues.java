@@ -5,7 +5,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 
 @Config
-public class configvalues {
+public class ConfigValues {
     public final static Vector2d turretPos = new Vector2d(0,0);
     public static double flywheelPower = 1;
     public final static double deltaH = 30;
