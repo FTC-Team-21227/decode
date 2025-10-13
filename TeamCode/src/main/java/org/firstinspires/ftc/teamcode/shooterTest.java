@@ -1,25 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-@TeleOp(name = "Flywheel Test")
-// Program used to test out flywheel speed based on robot distance and height difference from goal
+@TeleOp(name = "Shooter Test")
 public class shooterTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();
-    private Servo HoodServo;
-    private Servo TurnTable;
-    private DcMotor FlyWheelMotor;
-//    private DigitalChannel LED_DigitalChannel;
+    ShooterRobot robot;
 
     // Editable in dashboard, distance and height difference from robot to goal
     public static double distance;
@@ -31,66 +23,61 @@ public class shooterTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        initialization();
+        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ 0), ShooterRobot.Color.RED);
+//        initialization();
+        robot.initTeleop(telemetry);
         waitForStart();
+        double turretPos = 1;
+        double hoodPos = 0;
         while (opModeIsActive()) {
             // Run flywheel based on calculated velocity
-            flywheelVelocity = calcShooterVel(telemetry, distance, heightDiff);
-            setFlyWheelSpeed(flywheelVelocity, gamepad1.a);
+//            flywheelVelocity = calcShooterVel(telemetry, distance, heightDiff);
+//            setFlyWheelSpeed(flywheelVelocity, gamepad1.a);
+            if (gamepad1.a){ // Turret face forwards
+                robot.turret.turnToRobotAngle(0);
+            }
+            if (gamepad1.b){ // Turret face backwards
+                robot.turret.turnToRobotAngle(Math.PI);
+            }
+            if (gamepad1.dpad_left){ // Turret face 14 degrees
+                robot.turret.turnToRobotAngle(14 * Math.PI / 180);
+            }
+            if (gamepad1.x){ // Hood angle
+                robot.hood.turnToAngle(0);
+            }
+            if (gamepad1.y){ // Hood overhead angle
+                robot.hood.turnToAngle(45);
+            }
+            if (gamepad1.dpad_up){ // Turret turn left
+                turretPos += 0.001;
+                robot.turret.turret.setPosition(turretPos);
+            }
+            if (gamepad1.dpad_down){ // Turret turn right
+                turretPos -= 0.001;
+                robot.turret.turret.setPosition(turretPos);
+            }
+            if (gamepad1.left_bumper){ // Move hood down
+                hoodPos += 0.001;
+                robot.hood.HOOD.setPosition(hoodPos);
+            }
+            if (gamepad1.right_bumper){ // Move hood up
+                hoodPos -= 0.001;
+                robot.hood.HOOD.setPosition(hoodPos);
+            }
+            robot.updateLocalizer(telemetry);
+            robot.updateShooter(gamepad1.start, gamepad1.dpad_up, gamepad1.dpad_down, telemetry);
+//            robot.flywheel.spinTo(20);
+
             // Telemetry lines
+            telemetry.addData("turret angle", Math.toDegrees(robot.turret.getTurretRobotAngle()));
+            telemetry.addData("turret pos", robot.turret.turret.getPosition());
             telemetry.addData("Distance", distance);
             telemetry.addData("Height Diff", heightDiff);
             telemetry.addData("Flywheel Target Vel", flywheelVelocity);
-            telemetry.addData("Flywheel Cur Vel", ((DcMotorEx) FlyWheelMotor).getVelocity());
+//            telemetry.addData("Flywheel Cur Vel", ((DcMotorEx) FlyWheelMotor).getVelocity());
             telemetry.update();
 
         }
     }
 
-    /**
-     * Calculates the velocity based on height difference from shooter to goal, and distance from shooter to goal base.
-     * @return calculated velocity (double)
-     */
-    private double calcShooterVel(Telemetry telemetry, double d, double deltaH) {
-        // Given d (horizontal distance) and deltaH (height difference)
-        double g = 386.22; // in/s^2
-
-        // Calculate launch angle theta
-        double theta = Math.atan(7 * deltaH / (3 * d));
-
-        // Calculate time of flight t_f
-        double t_f = Math.sqrt(8 * deltaH / (3 * g));
-
-        // Calculate initial speed v
-
-//        // Convert v to RPM (example calibration: v = wheelCircumference * RPM / 60)
-//        double wheelDiameter = 3.78; // inches, for example
-//        double wheelCircumference = Math.PI * wheelDiameter;
-//        double rpm = (v * 60) / wheelCircumference; // RPM
-
-        return d / (t_f * Math.cos(theta)); // Velocity
-    }
-
-    private void initialization() {
-//        LED_DigitalChannel.setMode(DigitalChannel.Mode.OUTPUT);
-//        LED_DigitalChannel.setState(true);
-        FlyWheelMotor.setDirection(DcMotor.Direction.REVERSE);
-        FlyWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        FlyWheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        ((DcMotorEx) FlyWheelMotor).setVelocity(0);
-        HoodServo.setDirection(Servo.Direction.FORWARD);
-        HoodServo.scaleRange(0.27, 1);
-        HoodPosition = 0;
-        HoodServo.setPosition(HoodPosition);
-        TurnTable.setPosition(0);
-    }
-
-    /**
-     * Set flywheel to velocity (double)
-     * @param velocity velocity to set flywheel to
-     * @param shotRequested gamepad button to shoot
-     */
-    private void setFlyWheelSpeed(double velocity, boolean shotRequested) {
-        if (shotRequested) {((DcMotorEx) FlyWheelMotor).setVelocity(velocity);}
-    }
-}
+};

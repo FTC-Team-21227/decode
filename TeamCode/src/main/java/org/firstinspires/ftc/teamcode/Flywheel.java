@@ -20,6 +20,9 @@ public class Flywheel {
         FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         FLYWHEEL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(Robot.Constants.p,Robot.Constants.i,Robot.Constants.d,Robot.Constants.f));
     }
+    /**
+     * @param vel Velocity the flywheel will spin at
+     */
     public void spinTo(double vel) {
 //        if (configvalues.p != FLYWHEEL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).p || configvalues.f != FLYWHEEL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).f)
 //            FLYWHEEL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(configvalues.p, configvalues.i, configvalues.d, configvalues.f));

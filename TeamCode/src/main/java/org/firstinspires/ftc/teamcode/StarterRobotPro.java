@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -217,7 +216,7 @@ public class StarterRobotPro {
             case SPIN_UP:
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
                 // Switch state to launch when flywheel velocity is great enough
-                if (flywheel.getVel() > Robot.Constants.LAUNCHER_MIN_VELOCITY) {
+                if (flywheel.getVel() > Robot.Constants.FLYWHEEL_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
                 }
                 break;
