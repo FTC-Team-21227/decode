@@ -27,7 +27,7 @@ public class shooter extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ 0), ShooterRobot.Color.RED);
+        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ Math.PI), ShooterRobot.Color.RED);
 //        initialization();
         robot.initTeleop(telemetry);
         waitForStart();
@@ -50,16 +50,16 @@ public class shooter extends LinearOpMode {
                 robot.hood.turnToAngle(0);
             }
             if (gamepad1.y){
-                robot.hood.turnToAngle(45);
+                robot.hood.turnToAngle(45*Math.PI/180);
             }
-            if (gamepad1.dpad_up){
-                turretPos += 0.001;
-                robot.turret.turret.setPosition(turretPos);
-            }
-            if (gamepad1.dpad_down){
-                turretPos -= 0.001;
-                robot.turret.turret.setPosition(turretPos);
-            }
+//            if (gamepad1.dpad_up){
+//                turretPos += 0.001;
+//                robot.turret.turret.setPosition(turretPos);
+//            }
+//            if (gamepad1.dpad_down){
+//                turretPos -= 0.001;
+//                robot.turret.turret.setPosition(turretPos);
+//            }
             if (gamepad1.left_bumper){
                 hoodPos += 0.001;
                 robot.hood.HOOD.setPosition(hoodPos);
@@ -74,6 +74,8 @@ public class shooter extends LinearOpMode {
             // Telemetry lines
             telemetry.addData("turret angle", Math.toDegrees(robot.turret.getTurretRobotAngle()));
             telemetry.addData("turret pos", robot.turret.turret.getPosition());
+            telemetry.addData("hood angle", Math.toDegrees(robot.hood.getAngle()));
+            telemetry.addData("hood pos", robot.hood.HOOD.getPosition());
             telemetry.addData("Distance", distance);
             telemetry.addData("Height Diff", heightDiff);
             telemetry.addData("Flywheel Target Vel", flywheelVelocity);

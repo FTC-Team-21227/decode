@@ -48,7 +48,7 @@ public class Camera {
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
+            0, 0, 0, 0); // UNKNOWN CONSTANTS
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0); // UNKNOWN CONSTANTS
 

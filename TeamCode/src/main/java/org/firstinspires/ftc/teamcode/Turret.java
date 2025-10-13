@@ -8,7 +8,7 @@ public class Turret {
     Servo turret;
 
     public Turret(HardwareMap hardwareMap){
-        turret = hardwareMap.get(Servo.class, "Shooter_Angle"); // Turntable
+        turret = hardwareMap.get(Servo.class, "turret"); // Turntable
         turret.scaleRange(Robot.Constants.turretScale0,Robot.Constants.turretScale1); // 0 = +90 deg, 1 = -330 deg
     }
 

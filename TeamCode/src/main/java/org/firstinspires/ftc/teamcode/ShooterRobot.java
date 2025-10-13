@@ -116,7 +116,7 @@ public class ShooterRobot {
         // Assume we have: Vector2d goalPosition
         Vector2d goalVector = Robot.Constants.goalPos.minus(pose.position);
 
-        double p = 0.9; //fraction of time along trajectory from ground to ground
+        double p = 0.75; //fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
         double h = Robot.Constants.deltaH; // Height difference from shooter to goal
