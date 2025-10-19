@@ -20,16 +20,16 @@ public class feederTest extends LinearOpMode {
         initialization();
         waitForStart();
         while (opModeIsActive()) {
-            if (gamepad1.aWasPressed()) { // Lowest angle
+            if (gamepad1.aWasPressed()) {
                 feederPos=0;
             }
-            if (gamepad1.yWasPressed()) { // Highest angle (41 degrees)
+            if (gamepad1.yWasPressed()) {
                 feederPos=1;
             }
-            if (gamepad1.dpadUpWasPressed()) { // Increase hood position
+            if (gamepad1.dpadUpWasPressed()) {
                 feederPos += 0.01;
             }
-            if (gamepad1.dpadDownWasPressed()) { // Decrease hood position
+            if (gamepad1.dpadDownWasPressed()) {
                 feederPos -= 0.01;
             }
 //            hood.turnToAngle(HoodAngle);

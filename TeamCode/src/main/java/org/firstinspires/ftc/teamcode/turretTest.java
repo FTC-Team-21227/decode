@@ -11,11 +11,10 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class turretTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();
-    Turret turret;//    private DigitalChannel LED_DigitalChannel;
+    Turret turret;
 
     @Override
     public void runOpMode() throws InterruptedException {
- //        initialization();
         turret = new Turret(hardwareMap);
         waitForStart();
         double turretPos = 0.87;

@@ -20,8 +20,8 @@ public class Turret {
      */
     public void turnToRobotAngle(double angle) {
 //        double targetPos = angle / (2 * Math.PI);
-        angle = (AngleUnit.normalizeRadians(angle)-Robot.Constants.turretTargetRangeOffset+Math.PI)%(2*Math.PI)+Robot.Constants.turretTargetRangeOffset-Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
-        turret.setPosition(constrain((angle-Robot.Constants.turretLowAngle)/(Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
+        angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI) % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
+        turret.setPosition(constrain((angle - Robot.Constants.turretLowAngle) / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
     }
 
 
