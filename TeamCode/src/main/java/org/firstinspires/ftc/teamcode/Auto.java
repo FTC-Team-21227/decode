@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-@Autonomous(name = "Auto_Red_Goal")
+@Autonomous(name = "Auton Red Goal")
 public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
