@@ -17,7 +17,7 @@ public class Hood {
      * Sets hood position to a certain angle (relative to ground/horizontal)
      * @param angle angle in radians
      */
-    public void turnToAngle(double angle){ // Range: 50-87 degrees (ball trajectory, relative to ground)
+    public void turnToAngle(double angle){ // Range: 30-60 degrees (ball trajectory, relative to ground)
         HOOD.setPosition(constrain((angle - Robot.Constants.hoodLowAngle) / (Robot.Constants.hoodHighAngle - Robot.Constants.hoodLowAngle)));
     }
 

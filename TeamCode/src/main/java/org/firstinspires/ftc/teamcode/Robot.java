@@ -36,7 +36,7 @@ public class Robot {
     // Telemetry
     // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
-    AprilTagMecanumDrive drive; //not used right now
+//    AprilTagMecanumDrive drive; //not used right now
     AprilDrive drive2; //the drive base of the robot including motors, odometry, pinpoint, and camera, capable of hybrid localization
     Intake intake; //the motor subsystem that runs throughout the match to spin the intake axle
     Feeder feeder; //the motor subsystem that runs occasionally to move the ball up the elevator into the flywheel
@@ -61,6 +61,7 @@ public class Robot {
                 Constants.goalPos = new Vector2d(-58.3727,55.6425);
             case BLUE:
                 Constants.goalPos = new Vector2d(-58.3727,-55.6425);
+                Constants.autoGoalVector = new Vector2d(Constants.autoGoalVector.x,-Constants.autoGoalVector.y);
                 initialPose = mirrorPose(initialPose);
         }
         camera = new AprilTagLocalization2(hardwareMap);
@@ -222,6 +223,7 @@ public class Robot {
         public static double flywheelPower = 2.6;
         public final static double deltaH = 30;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
+        public static Vector2d autoGoalVector = goalPos.minus(new Vector2d(-12,15));
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public static double p = 300, i = 0, d = 0, f = 10;
 
@@ -242,8 +244,11 @@ public class Robot {
         //turret 0 = 0.48
         public final static double turretHighAngle = 123*Math.PI/180; // In rad, pos = 1
         public final static double turretLowAngle = -228*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         public final static double turretScale0 = 0.11;
         public final static double turretScale1 = 1;
+        public final static double feederScale0 = 0;
+        public final static double feederScale1 = 1;
         public static double drivePower = 1.0;
     }
 
@@ -276,7 +281,7 @@ public class Robot {
      * Includes shooter state manager.
      * @param shotRequested: Boolean to start shooter state machine
      */
-    public void updateShooter(boolean shotRequested, Telemetry telemetry) {
+    public void updateShooter(boolean shotRequested, Telemetry telemetry) { //add some params where u can hardset shooter outputs
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
         Pose2d poseRobot = drive2.localizer.getPose();
@@ -353,6 +358,7 @@ public class Robot {
                 break;
         }
         if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
+        if (turret.commandedOutsideRange()) telemetry.addLine("WARNING: turret commanded out of its range! Auto set to 0 or 1.");
         telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
         telemetry.addData("State", launchState);
         telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);

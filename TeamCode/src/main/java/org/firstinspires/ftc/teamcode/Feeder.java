@@ -12,6 +12,8 @@ public class Feeder {
 //        FEEDER.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        FEEDER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        FEEDER.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        FEEDER.setDirection(Servo.Direction.FORWARD);
+        FEEDER.scaleRange(Robot.Constants.feederScale0, Robot.Constants.feederScale1); // left = low, right = high
     }
     public void up(){
         FEEDER.setPosition(1);

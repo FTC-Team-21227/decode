@@ -20,8 +20,8 @@ public class Turret {
      */
     public void turnToRobotAngle(double angle) {
 //        double targetPos = angle / (2 * Math.PI);
-        angle = (AngleUnit.normalizeRadians(angle)+180)%360-180;
-        turret.setPosition((AngleUnit.normalizeRadians(angle)-Robot.Constants.turretLowAngle)/ (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle));
+        angle = (AngleUnit.normalizeRadians(angle)-Robot.Constants.turretTargetRangeOffset+Math.PI)%(2*Math.PI)+Robot.Constants.turretTargetRangeOffset-Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
+        turret.setPosition(constrain((angle-Robot.Constants.turretLowAngle)/(Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
     }
 
 
@@ -37,5 +37,26 @@ public class Turret {
      */
     public Pose2d getPoseRobotTurret() {
         return new Pose2d(Robot.Constants.turretPos,getTurretRobotAngle());
+    }
+
+    /**
+     * Turret will not move if set past its limit, so this function returns the closest position that is still in range
+     * @param pos original position
+     */
+    public double constrain(double pos){
+        if (pos > 1){
+            pos = 0.9999999;
+        }
+        else if (pos < 0){
+            pos = 0.0000001;
+        }
+        return pos;
+    }
+
+    /**
+     * @return true if turret target position is out of range
+     */
+    public boolean commandedOutsideRange(){
+        return (turret.getPosition()==0.9999999 || turret.getPosition()==0.0000001);
     }
 }
