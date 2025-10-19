@@ -2,18 +2,31 @@ package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
 
+import androidx.annotation.NonNull;
+
+import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.HolonomicController;
+import com.acmerobotics.roadrunner.MecanumKinematics;
+import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Pose2dDual;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.PoseVelocity2dDual;
 import com.acmerobotics.roadrunner.Rotation2d;
+import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.messages.MecanumCommandMessage;
 
 //Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
+//camera mounted on turret
 @Config
 public class Robot {
     //add:
@@ -93,6 +106,82 @@ public class Robot {
             ));
             return poseWorldRobot; //return the pose for our needs.
         }
+        /**
+         * Point-to-point action: drives the robot from the current pose to targetPose using a
+         * simple proportional controller (position + heading) and the same wheel kinematics/feedforward
+         * approach used in FollowTrajectoryAction/TurnAction.
+         *
+         * Usage: Actions.run(mecanumDrive.p2pAction(targetPose, 20.0, 1.0, Math.toRadians(3)));
+         */
+        public class P2PAction implements Action {
+            private Pose2d targetPose;
+            public P2PAction(){}
+            @Override
+            public boolean run(@NonNull TelemetryPacket p) {
+                // update local estimate
+                //targetPose = camera.getBallPose();
+                Pose2dDual<Time> targetDual = Pose2dDual.constant(targetPose, 1);  // zero velocity/accel
+
+                PoseVelocity2d robotVel = updatePoseEstimate();
+
+                PoseVelocity2dDual<Time> command = new HolonomicController(
+                        PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
+                        PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
+                ).compute(targetDual, localizer.getPose(), robotVel);
+
+                MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);
+                double voltage = voltageSensor.getVoltage();
+
+                final MotorFeedforward feedforward = new MotorFeedforward(PARAMS.kS,
+                        PARAMS.kV / PARAMS.inPerTick, PARAMS.kA / PARAMS.inPerTick);
+                double leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage;
+                double leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
+                double rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
+                double rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
+//                mecanumCommandWriter.write(new MecanumCommandMessage(
+//                        voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+//                ));
+
+                p.put("x", localizer.getPose().position.x);
+                p.put("y", localizer.getPose().position.y);
+                p.put("heading (deg)", Math.toDegrees(localizer.getPose().heading.toDouble()));
+
+                Pose2d error = targetPose.minusExp(localizer.getPose());
+                p.put("xError", error.position.x);
+                p.put("yError", error.position.y);
+                p.put("headingError (deg)", Math.toDegrees(error.heading.toDouble()));
+                if (error.position.sqrNorm() < 4 && Math.abs(error.heading.toDouble()) < 2){
+                    leftFront.setPower(0);
+                    leftBack.setPower(0);
+                    rightBack.setPower(0);
+                    rightFront.setPower(0);
+                    return false;
+                }
+
+
+                leftFront.setPower(leftFrontPower);
+                leftBack.setPower(leftBackPower);
+                rightBack.setPower(rightBackPower);
+                rightFront.setPower(rightFrontPower);
+//                Canvas c = p.fieldOverlay();
+//                drawPoseHistory(c);
+//                c.setStroke("#FF9800");
+//                Drawing.drawRobot(c, targetPose);
+//                c.setStroke("#3F51B5");
+//                Drawing.drawRobot(c, localizer.getPose());
+
+//                started = true;
+                return true;
+            }
+            @Override
+            public void preview(Canvas c) {
+                c.setStroke("#FF98007A");
+                c.fillCircle(targetPose.position.x, targetPose.position.y, 2);
+            }
+        }
+        public Action p2pAction() {
+            return new P2PAction();
+        }
     }
     private enum LaunchState {
         IDLE,
@@ -147,13 +236,13 @@ public class Robot {
         // HOOD CONSTANTS
         public final static double hoodLowAngle = 60*Math.PI/180; // the traj angle from horizonatla (rad) //0;
         public final static double hoodHighAngle = 30 * Math.PI/180; //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
-        public final static double hoodScale0 = 0; //0.27;
-        public final static double hoodScale1 = 0.95; //0.85;
+        public final static double hoodScale0 = 0.15; //0.27;
+        public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 212*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -185*Math.PI/180; // In rad (= old -330 deg)
-        public final static double turretScale0 = 0;
+        public final static double turretHighAngle = 123*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -228*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretScale0 = 0.11;
         public final static double turretScale1 = 1;
         public static double drivePower = 1.0;
     }
@@ -190,7 +279,8 @@ public class Robot {
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Pose2d pose = drive2.localizer.getPose();
+        Pose2d poseRobot = drive2.localizer.getPose();
+        Pose2d pose = new Pose2d(poseRobot.position.plus(Constants.turretPos), poseRobot.heading); //a pose with the TURRET's position and ROBOT's heading
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
         double p = 0.9; //fraction of time along trajectory from ground to ground
@@ -251,14 +341,14 @@ public class Robot {
                 break;
             case LAUNCH:
                 //if time delay enough
-                feeder.rollIn();
+                feeder.up();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
-                    feeder.stop();
+                    feeder.down();
                 }
                 break;
         }

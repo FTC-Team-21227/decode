@@ -31,7 +31,7 @@ public class shooter extends LinearOpMode {
 //        initialization();
         robot.initTeleop(telemetry);
         waitForStart();
-        double turretPos = 1;
+        double turretPos = 0.87;
         double hoodPos = 0;
         while (opModeIsActive()) {
             // Run flywheel based on calculated velocity
@@ -52,14 +52,14 @@ public class shooter extends LinearOpMode {
             if (gamepad1.y){
                 robot.hood.turnToAngle(45*Math.PI/180);
             }
-//            if (gamepad1.dpad_up){
-//                turretPos += 0.001;
-//                robot.turret.turret.setPosition(turretPos);
-//            }
-//            if (gamepad1.dpad_down){
-//                turretPos -= 0.001;
-//                robot.turret.turret.setPosition(turretPos);
-//            }
+            if (gamepad1.dpad_up){
+                turretPos += 0.001;
+                robot.turret.turret.setPosition(turretPos);
+            }
+            if (gamepad1.dpad_down){
+                turretPos -= 0.001;
+                robot.turret.turret.setPosition(turretPos);
+            }
             if (gamepad1.left_bumper){
                 hoodPos += 0.001;
                 robot.hood.HOOD.setPosition(hoodPos);

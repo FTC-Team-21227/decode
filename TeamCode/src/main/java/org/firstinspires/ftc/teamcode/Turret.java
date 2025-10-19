@@ -4,6 +4,8 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 public class Turret {
     Servo turret;
 
@@ -18,7 +20,8 @@ public class Turret {
      */
     public void turnToRobotAngle(double angle) {
 //        double targetPos = angle / (2 * Math.PI);
-        turret.setPosition((angle-Robot.Constants.turretLowAngle)/ (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle));
+        angle = (AngleUnit.normalizeRadians(angle)+180)%360-180;
+        turret.setPosition((AngleUnit.normalizeRadians(angle)-Robot.Constants.turretLowAngle)/ (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle));
     }
 
 

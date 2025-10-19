@@ -27,12 +27,13 @@ public class hoodTest extends LinearOpMode {
                 HoodAngle = 35;
             }
             if (gamepad1.dpadUpWasPressed()) { // Increase hood position
-                HoodAngle += 1;
+                HoodAngle += 0.01;
             }
             if (gamepad1.dpadDownWasPressed()) { // Decrease hood position
-                HoodAngle -= 1;
+                HoodAngle -= 0.01;
             }
-            hood.turnToAngle(HoodAngle);
+//            hood.turnToAngle(HoodAngle);
+            hood.HOOD.setPosition(HoodAngle);
             // Telemetry lines
             telemetry.addData("Hood target angle", HoodAngle);
             telemetry.addData("Hood curr angle", hood.getAngle());
@@ -44,6 +45,6 @@ public class hoodTest extends LinearOpMode {
 
     private void initialization() {
         hood = new Hood(hardwareMap);
-        HoodAngle = 50;
+        HoodAngle = 0;
     }
 }
