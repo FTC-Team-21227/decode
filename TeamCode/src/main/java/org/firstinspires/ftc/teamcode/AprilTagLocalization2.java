@@ -73,7 +73,7 @@ import java.util.List;
 //@Disabled
 public class AprilTagLocalization2 {
 
-    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+    private static final boolean USE_WEBCAM = true;
 
     ElapsedTime pipelineTimer = new ElapsedTime();
     double averagePipe = 0;
@@ -106,8 +106,6 @@ public class AprilTagLocalization2 {
     //TEMP CHANGE
     private Position cameraPosition = new Position(DistanceUnit.INCH,
             -3.37, 8.25, 7.5, 0); // UNKNOWN CONSTANTS
-//    private Position cameraPosition = new Position(DistanceUnit.INCH,
-//            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0); // UNKNOWN CONSTANTS
 
@@ -131,42 +129,44 @@ public class AprilTagLocalization2 {
     public AprilTagLocalization2(HardwareMap hardwareMap){ // Running...
 
         initAprilTag(hardwareMap); // initialize AprilTag Processor
-//        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-//        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        /*
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         // Wait for the DS start button to be touched.
 
-//        waitForStart();
+        waitForStart();
 
-//        while (opModeIsActive()) { // while the AprilTagLocalization is running
-//
-//            telemetryAprilTag();
-//            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-//
-//            // Push telemetry to the Driver Station.
-//            telemetry.update();
-//            FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
-////            camera.openCameraDevice();
-////            camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-//            if (!currentDetections.isEmpty())
-//            {
-//                TelemetryPacket packet = new TelemetryPacket();
-////                packet.put();
-//            }
-//
-//            // Save CPU resources; can resume streaming when needed.
-//            if (gamepad1.dpad_down) {
-//                visionPortal.stopStreaming();
-//            } else if (gamepad1.dpad_up) {
-//                visionPortal.resumeStreaming();
-//            }
-//
-//            // Share the CPU.
-//            sleep(20);
-//        }
+        while (opModeIsActive()) { // while the AprilTagLocalization is running
 
-        // Save more CPU resources when camera is no longer needed.
-//        visionPortal.close();
+            telemetryAprilTag();
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+
+            // Push telemetry to the Driver Station.
+            telemetry.update();
+            FtcDashboard.getInstance().startCameraStream(visionPortal, 10);
+            camera.openCameraDevice();
+            camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+            if (!currentDetections.isEmpty())
+            {
+                TelemetryPacket packet = new TelemetryPacket();
+                packet.put();
+            }
+
+            // Save CPU resources; can resume streaming when needed.
+            if (gamepad1.dpad_down) {
+                visionPortal.stopStreaming();
+            } else if (gamepad1.dpad_up) {
+                visionPortal.resumeStreaming();
+            }
+
+            // Share the CPU.
+            sleep(20);
+        }
+
+         Save more CPU resources when camera is no longer needed.
+        visionPortal.close();
+         */
 
     }   // end method runOpMode()
 
@@ -178,28 +178,30 @@ public class AprilTagLocalization2 {
     {
         return tag.id;
     }
-
-//    public double getYaw()
-//    {
-//        initAprilTag();
-//        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-////        currentDetections.sort((a, b) -> Double.compare(b.ftcPose.range, a.ftcPose.range));
-//        AprilTagDetection cur_tag = currentDetections.get(0);
-//        return cur_tag.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
-//    }
+/*
+    public double getYaw()
+    {
+        initAprilTag();
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+//        currentDetections.sort((a, b) -> Double.compare(b.ftcPose.range, a.ftcPose.range));
+        AprilTagDetection cur_tag = currentDetections.get(0);
+        return cur_tag.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
+    }
+ */
 
     private void initAprilTag(HardwareMap hardwareMap) {
 
         // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder()
-
-                // The following default settings are available to un-comment and edit as needed.
-                //.setDrawAxes(false)
-                //.setDrawCubeProjection(false)
-                //.setDrawTagOutline(true)
-                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
-                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+/*
+                 The following default settings are available to un-comment and edit as needed.
+                .setDrawAxes(false)
+                .setDrawCubeProjection(false)
+                .setDrawTagOutline(true)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                .setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
+                .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+ */
                 .setCameraPose(cameraPosition, cameraOrientation)
 
                 // == CAMERA CALIBRATION ==
@@ -329,9 +331,9 @@ public class AprilTagLocalization2 {
 
 
     /**
-     * Update the Pose of the TURRET CENTER relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
+     * Update the Pose of the CAMERA relative to the field in Official FTC Global Field Coordinates using the Goal Apriltag.
      * FUTURE IMPROVEMENT: Only use the correct goal color apriltag to localize.
-     * @return robotPose, which is the position of the TURRET relative to the field
+     * @return robotPose, which is the position of the CAMERA relative to the field
      */
     public Pose2d update(Telemetry telemetry
     ) {

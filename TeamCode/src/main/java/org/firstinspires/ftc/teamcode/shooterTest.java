@@ -13,7 +13,7 @@ public class shooterTest extends LinearOpMode {
     Telemetry telemetry = dashboard.getTelemetry();
     ShooterRobot robot;
 
-    // Editable in dashboard, distance and height difference from robot to goal
+    // Distance and height difference from robot to goal
     public static double distance;
     public static double heightDiff;
 
@@ -42,7 +42,7 @@ public class shooterTest extends LinearOpMode {
             if (gamepad1.dpad_left){ // Turret face 14 degrees
                 robot.turret.turnToRobotAngle(14 * Math.PI / 180);
             }
-            if (gamepad1.x){ // Hood angle
+            if (gamepad1.x){ // Hood completely down
                 robot.hood.turnToAngle(0);
             }
             if (gamepad1.y){ // Hood overhead angle

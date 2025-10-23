@@ -13,26 +13,25 @@ public class feederTest extends LinearOpMode {
     Telemetry telemetry = dashboard.getTelemetry();
     Feeder feeder;
 
-    double feederPos=0;
+    double feederPos = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initialization();
         waitForStart();
         while (opModeIsActive()) {
-            if (gamepad1.aWasPressed()) { // Lowest angle
-                feederPos=0;
+            if (gamepad1.aWasPressed()) {
+                feederPos = 0;
             }
-            if (gamepad1.yWasPressed()) { // Highest angle (41 degrees)
-                feederPos=1;
+            if (gamepad1.yWasPressed()) {
+                feederPos = 1;
             }
-            if (gamepad1.dpadUpWasPressed()) { // Increase hood position
+            if (gamepad1.dpadUpWasPressed()) {
                 feederPos += 0.01;
             }
-            if (gamepad1.dpadDownWasPressed()) { // Decrease hood position
+            if (gamepad1.dpadDownWasPressed()) {
                 feederPos -= 0.01;
             }
-//            hood.turnToAngle(HoodAngle);
             feeder.FEEDER.setPosition(feederPos);
             // Telemetry lines
             telemetry.addData("feeder target pos", feederPos);
