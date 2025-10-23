@@ -22,11 +22,17 @@ public class turretTest extends LinearOpMode {
             // Run flywheel based on calculated velocity
 //            flywheelVelocity = calcShooterVel(telemetry, distance, heightDiff);
 //            setFlyWheelSpeed(flywheelVelocity, gamepad1.a);
-            if (gamepad1.a){
+            if (gamepad1.y){
                 turret.turnToRobotAngle(0);
             }
             if (gamepad1.b){
+                turret.turnToRobotAngle(Math.PI / 2);
+            }
+            if (gamepad1.a){
                 turret.turnToRobotAngle(Math.PI);
+            }
+            if (gamepad1.x){
+                turret.turnToRobotAngle(Math.PI* 3/2);
             }
             if (gamepad1.dpad_left){
                 turret.turnToRobotAngle(14*Math.PI/180);

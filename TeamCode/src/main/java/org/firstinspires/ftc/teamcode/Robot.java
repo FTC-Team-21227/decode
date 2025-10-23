@@ -244,8 +244,8 @@ public class Robot {
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 123*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -228*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = 140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         public final static double turretScale0 = 0.11;
         public final static double turretScale1 = 1;
@@ -327,14 +327,16 @@ public class Robot {
                 break;
             case LAUNCH: // FEED BALL
                 // If time delay enough
-                feeder.up();
+                feeder.up(feeder.FR_FEEDER);
+                feeder.up(feeder.BL_FEEDER);
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING: // LAUNCH
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
-                    feeder.down();
+                    feeder.down(feeder.FR_FEEDER);
+                    feeder.down(feeder.BL_FEEDER);
                 }
                 break;
         }

@@ -144,14 +144,16 @@ public class RobotSG {
                 }
                 break;
             case LAUNCH:
-                feeder.up();
+                feeder.up(feeder.FR_FEEDER);
+                feeder.up(feeder.BL_FEEDER);
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
-                    feeder.down();
+                    feeder.down(feeder.FR_FEEDER);
+                    feeder.down(feeder.BL_FEEDER);
                 }
                 break;
         }

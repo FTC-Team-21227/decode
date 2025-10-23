@@ -12,12 +12,15 @@ public class Turret {
     public Turret(HardwareMap hardwareMap){
         turret = hardwareMap.get(Servo.class, "turret"); // Turntable
         turret.scaleRange(Robot.Constants.turretScale0,Robot.Constants.turretScale1); // 0 = +90 deg, 1 = -330 deg
+        // *** double check scaleRange
     }
 
     // Turns turret to the robot-relative angle in radians
     public void turnToRobotAngle(double angle) {
 //        double targetPos = angle / (2 * Math.PI);
-        angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI) % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
+        angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI)
+                % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
+//        angle = AngleUnit.normalizeRadians(angle);
         turret.setPosition(constrain((angle - Robot.Constants.turretLowAngle) / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
     }
 
@@ -44,6 +47,6 @@ public class Turret {
 
     // Returns true if turret target position is out of range
     public boolean commandedOutsideRange(){
-        return (turret.getPosition()==0.9999999 || turret.getPosition()==0.0000001);
+        return (turret.getPosition()>=0.9999999 || turret.getPosition()<=0.0000001); //changed to >=, <=
     }
 }
