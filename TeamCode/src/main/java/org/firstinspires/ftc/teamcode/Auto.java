@@ -15,20 +15,20 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-@Autonomous(name = "Auton Red Goal")
+@Autonomous(name = "Auto_Red_Goal")
 public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55)); // In front of goal
+        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
         MecanumDrive robot = new MecanumDrive(hardwareMap, initialPose);
 
-        TrajectoryActionBuilder tab1 = robot.actionBuilder(initialPose)
+        TrajectoryActionBuilder tab1 = robot.actionBuilder(initialPose) //first specimen
                 .strafeTo(new Vector2d(-12,46-20*Math.tan(Math.toRadians(55))))
                 .turnTo(Math.toRadians(90))
                 .strafeTo(new Vector2d(-12,45))
                 .strafeTo(new Vector2d(-12,15))
                 ;
-        TrajectoryActionBuilder tab2 = robot.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+        TrajectoryActionBuilder tab2 = robot.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
                 .strafeTo(new Vector2d(12,15))
                 .strafeTo(new Vector2d(12,45))
                 .strafeTo(new Vector2d(-12,15))
@@ -43,31 +43,29 @@ public class Auto extends LinearOpMode {
         Actions.runBlocking(
 //                new ParallelAction(
                         new SequentialAction(
-//                            new SleepAction(5), // Wait for flywheel to charge up
-                            // Give 3 seconds to shoot the first set of 3 balls
+//                            new SleepAction(5), //wait for flywheel to charge up
+                            //give 3 seconds to shoot the first set of 3 balls
                             new InstantAction(() -> shotReq.set(true)),
 //                            new SleepAction(3),
                             new InstantAction(() -> shotReq.set(false)),
-                            firstTrajectory, // Gobble up row 1
-                            // Give 3 seconds to shoot the second set of 3 balls
+                            firstTrajectory, //gobble up row 1
+                            //give 3 seconds to shoot the second set of 3 balls
                             new InstantAction(() -> shotReq.set(true)),
                             new SleepAction(3),
                             new InstantAction(() -> shotReq.set(false)),
-                            secondTrajectory, // Gobble up row 2
-                            // Give 3 seconds to shoot the third set of 3 balls
+                            secondTrajectory, //gobble up row 2
+                            //give 3 seconds to shoot the third set of 3 balls
                             new InstantAction(() -> shotReq.set(true)),
                             new SleepAction(3),
                             new InstantAction(() -> shotReq.set(false))
                         )
-                /*
-                        telemetryPacket -> {
-                            robot.controlIntake(false,false,true);
-                            robot.updateShooter(shotReq.get(),telemetry);
-                            return true;
-                        }
+//                        telemetryPacket -> {
+//                            robot.controlIntake(false,false,true);
+//                            robot.updateShooter(shotReq.get(),telemetry);
+//                            return true;
+//                        }
 
-                )
-                 */
+//                )
         );
     }
 }

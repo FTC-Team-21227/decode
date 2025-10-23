@@ -6,8 +6,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Feeder {
    Servo FEEDER;
+    //power
     public Feeder (HardwareMap hardwareMap){
-        FEEDER = hardwareMap.get(Servo.class, "feeder"); // Elevator
+        FEEDER = hardwareMap.get(Servo.class, "feeder");
 //        FEEDER.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        FEEDER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        FEEDER.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -16,6 +17,7 @@ public class Feeder {
     }
     public void up(){
         FEEDER.setPosition(1);
+
     }
     public void down(){
         FEEDER.setPosition(0);
