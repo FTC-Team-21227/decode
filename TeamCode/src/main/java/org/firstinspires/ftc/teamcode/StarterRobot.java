@@ -31,7 +31,7 @@ public class StarterRobot {
 
     //initialize subsystems
     public StarterRobot(HardwareMap hardwareMap){
-        feeders = new Feeders(hardwareMap);
+//        feeders = new Feeders(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         camera = new AprilTagLocalization2(hardwareMap);
 //        hood = new Hood(hardwareMap);

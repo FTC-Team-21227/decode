@@ -62,9 +62,9 @@ public class Robot {
                 Constants.autoGoalVector = new Vector2d(Constants.autoGoalVector.x,-Constants.autoGoalVector.y);
                 initialPose = mirrorPose(initialPose);
         }
+        intake = new Intake(hardwareMap);
         camera = new AprilTagLocalization2(hardwareMap);
         drive2 = new AprilDrive(hardwareMap, initialPose);
-        intake = new Intake(hardwareMap);
         feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
@@ -244,10 +244,10 @@ public class Robot {
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = 200*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -202*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
-        public final static double turretScale0 = 0.11;
+        public final static double turretScale0 = 0; //0.11;
         public final static double turretScale1 = 1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
@@ -284,7 +284,7 @@ public class Robot {
         Pose2d pose = new Pose2d(poseRobot.position.plus(Constants.turretPos), poseRobot.heading); // Pose with the TURRET's position and ROBOT's heading
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
-        double p = 0.9; // Fraction of time along trajectory from ground to ground
+        double p = 0.75; // Fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
 
         double deltaH = Constants.deltaH; // Height difference from shooter to goal
@@ -294,7 +294,7 @@ public class Robot {
         double theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
         double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble(); // Angle to turn turret to (relative to robot's heading)
+        double turretAngle = pose.heading.toDouble() - goalVector.angleCast().toDouble(); // Angle to turn turret to (relative to robot's heading)
         double wheelRadius = 1.89; // Inches, for example
         /*
         double wheelCircumference = Math.PI * wheelDiameter;
@@ -327,16 +327,16 @@ public class Robot {
                 break;
             case LAUNCH: // FEED BALL
                 // If time delay enough
-                feeder.up(feeder.FR_FEEDER);
-                feeder.up(feeder.BL_FEEDER);
+                feeder.upFR();
+//                feeder.upBL();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING: // LAUNCH
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
-                    feeder.down(feeder.FR_FEEDER);
-                    feeder.down(feeder.BL_FEEDER);
+                    feeder.downFR();
+//                    feeder.downBL();
                 }
                 break;
         }
@@ -369,9 +369,9 @@ public class Robot {
         switch (driveState){
             case RELATIVE:
                 drive2.updatePoseEstimate();
-                if (aprilTimer.seconds() > 10){
-                    driveState = DriveState.ABSOLUTE;
-                }
+//                if (aprilTimer.seconds() > 10){
+//                    driveState = DriveState.ABSOLUTE;
+//                }
                 break;
             case ABSOLUTE:
                 drive2.relocalize(telemetry);
