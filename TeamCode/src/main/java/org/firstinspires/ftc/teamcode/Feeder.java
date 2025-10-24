@@ -13,13 +13,13 @@ public class Feeder {
 //        FR_FEEDER.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        FR_FEEDER.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        FR_FEEDER.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        FR_FEEDER.setDirection(Servo.Direction.FORWARD);
+        FR_FEEDER.setDirection(Servo.Direction.REVERSE);
         FR_FEEDER.scaleRange(Robot.Constants.feederScale0, Robot.Constants.feederScale1); // left = low, right = high
         BL_FEEDER.setDirection(Servo.Direction.FORWARD);
         BL_FEEDER.scaleRange(Robot.Constants.feederScale0, Robot.Constants.feederScale1);
     }
     public void up(Servo feeder){
-        feeder.setPosition(0.7);
+        feeder.setPosition(0.8); // Enough to feed into flywheel
     }
     public void down(Servo feeder){
         feeder.setPosition(0);

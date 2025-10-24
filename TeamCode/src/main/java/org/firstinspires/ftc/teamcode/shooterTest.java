@@ -23,7 +23,7 @@ public class shooterTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ 0), ShooterRobot.Color.RED);
+        robot = new ShooterRobot(hardwareMap, new Pose2d(0, 0, /*Math.PI / 2*/ Math.PI), ShooterRobot.Color.RED);
 //        initialization();
         robot.initTeleop(telemetry);
         waitForStart();

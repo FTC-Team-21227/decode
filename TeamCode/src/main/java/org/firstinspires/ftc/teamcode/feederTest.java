@@ -11,7 +11,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class feederTest extends LinearOpMode {
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry telemetry = dashboard.getTelemetry();
-    Feeder bl_feeder;
     Feeder feeder;
 
     double feederPos = 0;
@@ -30,14 +29,13 @@ public class feederTest extends LinearOpMode {
                 feeder.up(feeder.FR_FEEDER);
             }
             if (gamepad1.dpadUpWasPressed()) {
-                feederPos += 0.01;
+                feeder.FR_FEEDER.setPosition(feeder.FR_FEEDER.getPosition() + 0.1);
             }
             if (gamepad1.dpadDownWasPressed()) {
-                feederPos -= 0.01;
+                feeder.FR_FEEDER.setPosition(feeder.FR_FEEDER.getPosition() - 0.1);
             }
 //            fr_feeder.FR_FEEDER.setPosition(feederPos);
             // Telemetry lines
-            telemetry.addData("feeder target pos", feederPos);
             telemetry.addData("feeder pos", feeder.FR_FEEDER.getPosition());
             telemetry.update();
         }

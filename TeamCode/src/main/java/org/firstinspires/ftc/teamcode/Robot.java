@@ -23,7 +23,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.messages.MecanumCommandMessage;
 // Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
 // Camera mounted on turret
 
@@ -190,7 +189,7 @@ public class Robot {
     private enum LaunchState {
         IDLE,
         SPIN_UP,
-        LAUNCH,
+        FEED,
         LAUNCHING,
     }
     private LaunchState launchState;
@@ -322,10 +321,10 @@ public class Robot {
             case SPIN_UP: // SPEED UP FLYWHEEL
 //                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
-                    launchState = LaunchState.LAUNCH;
+                    launchState = LaunchState.FEED;
                 }
                 break;
-            case LAUNCH: // FEED BALL
+            case FEED: // FEED BALL
                 // If time delay enough
                 feeder.up(feeder.FR_FEEDER);
                 feeder.up(feeder.BL_FEEDER);

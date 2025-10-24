@@ -21,7 +21,8 @@ public class Turret {
         angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI)
                 % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
 //        angle = AngleUnit.normalizeRadians(angle);
-        turret.setPosition(constrain((angle - Robot.Constants.turretLowAngle) / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
+        turret.setPosition(constrain((angle - Robot.Constants.turretLowAngle)
+                / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
     }
 
     // Gives turret's robot-relative angle (in radians)
