@@ -293,7 +293,8 @@ public class Robot {
         double theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
         double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() -Math.PI/2; // Angle to turn turret to (relative to robot's heading)
+        double goalVectorAngle = goalVector.angleCast().toDouble();
+        double turretAngle = goalVectorAngle - pose.heading.toDouble() -Math.PI/2; // Angle to turn turret to (relative to robot's heading)
         double wheelRadius = 1.89; // Inches, for example
         /*
         double wheelCircumference = Math.PI * wheelDiameter;
@@ -346,6 +347,7 @@ public class Robot {
         telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
         telemetry.addData("State", launchState);
         telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);
+        telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle));
         telemetry.addData("distance to goal (inch)", distance);
         telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
         telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()*180/Math.PI);
