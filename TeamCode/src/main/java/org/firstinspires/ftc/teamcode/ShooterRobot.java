@@ -26,8 +26,8 @@ public class ShooterRobot {
     Turret turret; //the 2-servo subsystem that turns to any robot-relative angle
     Hood hood; //the servo subsystem that raises or lowers the hood anywhere from 0 to 90 degrees
     AprilTagLocalization2 camera; //the camera subsystem that is used in AprilDrive and Obelisk detection
+    Feeder feeder;
     //enum that stores the color of the robot, accessible globally
-
     public enum Color {
         RED,
         BLUE
@@ -51,6 +51,7 @@ public class ShooterRobot {
         flywheel.FLYWHEEL.setDirection(DcMotorSimple.Direction.REVERSE);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
+        feeder = new Feeder(hardwareMap);
     }
 
 
@@ -82,7 +83,7 @@ public class ShooterRobot {
     private enum LaunchState {
         IDLE,
         SPIN_UP,
-        LAUNCH,
+        FEED,
         LAUNCHING,
     }
     private LaunchState launchState;
@@ -106,12 +107,11 @@ public class ShooterRobot {
         Robot.Constants.drivePower = 0.5;
 
         telemetry.addData("Status", "Initialized");
-//        telemetry.update();
     }
 
 
     Pose2d pose;
-    public void updateShooter(boolean shotRequested, boolean up, boolean down, Telemetry telemetry) {
+    public void updateShooter(boolean shotRequested, boolean flywheelVelUp, boolean flywheelVelDown, Telemetry telemetry) {
         //replace these with LUT values
         // Assume we have: Vector2d goalPosition
         Vector2d goalVector = Robot.Constants.goalPos.minus(pose.position);
@@ -128,69 +128,53 @@ public class ShooterRobot {
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
         double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() /*- Math.PI*/; // Relative to robot's heading
 
-
-
-        // Calculate launch angle theta
-//        double theta = Math.atan(deltaH*(proportionAlongTraj+1) / (proportionAlongTraj * d));
-
-        // Calculate time of flight t_f
-//        double t_f = Math.sqrt(2 * deltaH / (g*proportionAlongTraj));
-
-        // Calculate initial speed v
-//        double v = d / (t_f * Math.cos(theta));
-
-        // Convert v (speed) to rad/s (example calibration: v = wheelRadius * rad/s)
         double wheelRadius = 1.89; // inches, for example
 //        double wheelCircumference = Math.PI * wheelDiameter;
 //        double change = 0;
-//        if (up) change += 0.001;
-//        if (down) change -= 0.001;
+//        if (flywheelVelUp) change += 0.001;
+//        if (flywheelVelDown) change -= 0.001;
 //        StarterRobot.Constants.flywheelPower += change;
         double change = 0;
-        if (up) change += 0.001;
-        if (down) change -= 0.001;
+        if (flywheelVelUp) change += 0.001;
+        if (flywheelVelDown) change -= 0.001;
         Robot.Constants.flywheelPower += change;
         double radps = v / wheelRadius * Robot.Constants.flywheelPower; // RPM
-        // Set hood angle to theta (convert to servo position)
-//        hood.turnToAngle(theta);
 
-//        telemetry.addData("hood turn to", theta*180/Math.PI);
         turret.turnToRobotAngle(turretAngle);
 //        // Set flywheel RPM
         flywheel.spinTo(radps*28/Math.PI/2);
-//// Set hood angle to theta (convert to servo position)
+// Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
 
-// Set flywheel RPM
-//        flywheel.spinTo(rpm);
-        //-/-///
         switch (launchState) {
             case IDLE:
                 if (shotRequested) {
-                    launchState = LaunchState.SPIN_UP;
-                    feederTimer.reset();
+                    launchState = ShooterRobot.LaunchState.SPIN_UP;
+                    feederTimer.reset(); // Start timing
                 }
                 break;
-            case SPIN_UP:
-//                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
-                if (flywheel.getVel() > radps*28/Math.PI/2-50) {
-                    launchState = LaunchState.LAUNCH;
+            case SPIN_UP: // SPEED UP FLYWHEEL
+                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) { // Close enough to target vel
+                    launchState = ShooterRobot.LaunchState.FEED;
                 }
                 break;
-            case LAUNCH:
-                //if time delay enough
+            case FEED: // FEED BALL
+                feeder.up(feeder.FR_FEEDER);
+//                feeder.up(feeder.BL_FEEDER);
                 feederTimer.reset();
-                launchState = LaunchState.LAUNCHING;
+                launchState = ShooterRobot.LaunchState.LAUNCHING;
                 break;
-            case LAUNCHING:
-                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
-                    launchState = LaunchState.IDLE;
+            case LAUNCHING: // LAUNCH
+                if (feederTimer.seconds() > 1) {
+                    launchState = ShooterRobot.LaunchState.IDLE;
+                    feeder.down(feeder.FR_FEEDER);
+//                    feeder.down(feeder.BL_FEEDER);
                 }
                 break;
         }
-        if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
+//        if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
         telemetry.addData("flywheel power scale factor", Robot.Constants.flywheelPower);
-        telemetry.addData("State", launchState);
+        telemetry.addData("Launch state", launchState);
         telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);
         telemetry.addData("distance to goal (inch)", d);
         telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
@@ -236,6 +220,5 @@ public class ShooterRobot {
 //                return pose;
 //                driveState = DriveState.RELATIVE;
         }
-//        return pose;
     }
 }
