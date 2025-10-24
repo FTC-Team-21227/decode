@@ -20,14 +20,33 @@ public class feederTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialization();
         waitForStart();
+        telemetry.addLine("Started!");
+        telemetry.update();
+        sleep(500);
         while (opModeIsActive()) {
-            if (gamepad1.aWasPressed()) {
+            telemetry.addData("A pressed?", gamepad1.a);
+            telemetry.addData("Y pressed?", gamepad1.y);
+            telemetry.update();
+
+            if (gamepad1.a) {
 //                feederPos = 0;
-                feeder.down(feeder.FR_FEEDER);
+//                feeder.down(feeder.FR_FEEDER);
+                feeder.upFR();
             }
-            if (gamepad1.yWasPressed()) {
+            if (gamepad1.y) {
 //                feederPos = 1;
-                feeder.up(feeder.FR_FEEDER);
+//                feeder.up(feeder.FR_FEEDER);
+                feeder.downFR();
+            }
+            if (gamepad1.x) {
+//                feederPos = 0;
+//                feeder.down(feeder.FR_FEEDER);
+                feeder.upBL();
+            }
+            if (gamepad1.b) {
+//                feederPos = 1;
+//                feeder.up(feeder.FR_FEEDER);
+                feeder.downBL();
             }
             if (gamepad1.dpadUpWasPressed()) {
                 feederPos += 0.01;
@@ -35,7 +54,11 @@ public class feederTest extends LinearOpMode {
             if (gamepad1.dpadDownWasPressed()) {
                 feederPos -= 0.01;
             }
-//            fr_feeder.FR_FEEDER.setPosition(feederPos);
+            if (gamepad1.left_bumper)
+            {
+
+            }
+//            feeder.FR_FEEDER.setPosition(feederPos);
             // Telemetry lines
             telemetry.addData("feeder target pos", feederPos);
             telemetry.addData("feeder pos", feeder.FR_FEEDER.getPosition());
