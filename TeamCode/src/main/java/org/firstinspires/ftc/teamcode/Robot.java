@@ -231,7 +231,7 @@ public class Robot {
         public final static double feederPower = 1.0;
         public final static double intakePower = 1.0;
         public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
+        public final static double FEED_TIME_SECONDS = 1.5; //The feeder servos run this long when a shot is requested.
         public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
         public final static double FULL_SPEED = 1.0;
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
@@ -243,8 +243,8 @@ public class Robot {
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 200*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -202*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = 220*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -180*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         public final static double turretScale0 = 0; //0.11;
         public final static double turretScale1 = 1;
@@ -293,7 +293,7 @@ public class Robot {
         double theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
         double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
 //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-        double turretAngle = pose.heading.toDouble() - goalVector.angleCast().toDouble(); // Angle to turn turret to (relative to robot's heading)
+        double turretAngle = goalVector.angleCast().toDouble() - pose.heading.toDouble() -Math.PI/2; // Angle to turn turret to (relative to robot's heading)
         double wheelRadius = 1.89; // Inches, for example
         /*
         double wheelCircumference = Math.PI * wheelDiameter;
@@ -357,6 +357,8 @@ public class Robot {
         telemetry.addData("targetVel (rad/s)", radps);
         telemetry.addData("motorSpeed (tick/s)", flywheel.getVel());
         telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel()*2*Math.PI/28);
+        telemetry.addData("feeder fr pos", feeder.FR_FEEDER.getPosition());
+        telemetry.addData("feeder bl pos", feeder.BL_FEEDER.getPosition());
 //        telemetry.update();
     }
 
@@ -378,6 +380,9 @@ public class Robot {
                 driveState = DriveState.RELATIVE;
                 break;
         }
+        telemetry.addData("x", drive2.localizer.getPose().position.x);
+        telemetry.addData("y", drive2.localizer.getPose().position.y);
+        telemetry.addData("heading (deg)", Math.toDegrees(drive2.localizer.getPose().heading.toDouble()));
     }
 
     public void controlIntake(boolean in, boolean out, boolean stop){
