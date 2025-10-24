@@ -188,8 +188,10 @@ public class Robot {
     }
     private enum LaunchState {
         IDLE,
-        SPIN_UP,
-        FEED,
+        SPIN_UP_FRONT,
+        SPIN_UP_BACK,
+        FEED_FRONT,
+        FEED_BACK,
         LAUNCHING,
     }
     private LaunchState launchState;
@@ -276,7 +278,7 @@ public class Robot {
     }
 
     // Calculates and sets hood angle and flywheel RPM. Includes shooter state manager.
-    public void updateShooter(boolean shotRequested, Telemetry telemetry) { // TODO: add some params where u can hardset shooter outputs
+    public void updateShooter(boolean shotRequestedFront, boolean shotRequestedBack, Telemetry telemetry) { // TODO: add some params where u can hardset shooter outputs
         // TODO: replace these with LUT values
         // Assume we have: Vector2d goalPosition
         Pose2d poseRobot = drive2.localizer.getPose();
@@ -314,21 +316,31 @@ public class Robot {
 
         switch (launchState) {
             case IDLE:
-                if (shotRequested) {
-                    launchState = LaunchState.SPIN_UP;
-                    feederTimer.reset(); // Start timing
+                if (shotRequestedFront) {
+                    launchState = LaunchState.SPIN_UP_FRONT;
+//                    feederTimer.reset(); // Start timing; not needed rn
+                }
+                else if (shotRequestedBack){
+                    launchState = LaunchState.SPIN_UP_BACK;
+//                    feederTimer.reset(); // Start timing
                 }
                 break;
-            case SPIN_UP: // SPEED UP FLYWHEEL
-//                flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
+            case SPIN_UP_FRONT: // SPEED UP FLYWHEEL
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
-                    launchState = LaunchState.FEED;
+                    launchState = LaunchState.FEED_FRONT;
                 }
                 break;
-            case FEED: // FEED BALL
-                // If time delay enough
+            case SPIN_UP_BACK: // SPEED UP FLYWHEEL
+                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
+                    launchState = LaunchState.FEED_BACK;
+                }
+                break;
+            case FEED_FRONT: // FEED BALL
                 feeder.upFR();
-//                feeder.upBL();
+                feederTimer.reset();
+                launchState = LaunchState.LAUNCHING;
+            case FEED_BACK: // FEED BALL
+                feeder.upBL();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
@@ -336,7 +348,7 @@ public class Robot {
                 if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
                     launchState = LaunchState.IDLE;
                     feeder.downFR();
-//                    feeder.downBL();
+                    feeder.downBL();
                 }
                 break;
         }
@@ -361,6 +373,7 @@ public class Robot {
         telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel()*2*Math.PI/28);
         telemetry.addData("feeder fr pos", feeder.FR_FEEDER.getPosition());
         telemetry.addData("feeder bl pos", feeder.BL_FEEDER.getPosition());
+        telemetry.addData("feeder seconds", feederTimer.seconds());
 //        telemetry.update();
     }
 
