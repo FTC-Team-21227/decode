@@ -12,7 +12,7 @@ public class Feeder {
         BL_FEEDER = hardwareMap.get(Servo.class, "bl_feeder");
         FR_FEEDER.setDirection(Servo.Direction.REVERSE);
         FR_FEEDER.scaleRange(Robot.Constants.feederScale0, Robot.Constants.feederScale1); // left = low, right = high
-        BL_FEEDER.setDirection(Servo.Direction.REVERSE);
+        BL_FEEDER.setDirection(Servo.Direction.FORWARD);
         BL_FEEDER.scaleRange(Robot.Constants.feederScale0, Robot.Constants.feederScale1);
     }
     public void up(Servo feeder){
@@ -22,10 +22,10 @@ public class Feeder {
         feeder.setPosition(0);
     }
 
-    public void upFR() { FR_FEEDER.setPosition(1); }
-    public void downFR() { FR_FEEDER.setPosition(0); }
+    public void upFR() { FR_FEEDER.setPosition(0.75); }
+    public void downFR() { FR_FEEDER.setPosition(0.45); }
 
-    public void upBL() { BL_FEEDER.setPosition(0); }
-    public void downBL() { BL_FEEDER.setPosition(0.38); }
+    public void upBL() { BL_FEEDER.setPosition(1); }
+    public void downBL() { BL_FEEDER.setPosition(0.65); }
 
 }

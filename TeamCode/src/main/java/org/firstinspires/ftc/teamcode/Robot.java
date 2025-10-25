@@ -34,7 +34,7 @@ public class Robot {
     // Turret position mapped correctly to robot pose etc.
     // Telemetry
     // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
-
+    public static double feedTime = 0.5;
     AprilDrive drive2; // Drive base of the robot (motors, odometry, pinpoint, and camera - capable of hybrid localization)
     Intake intake; // Motor subsystem that runs continuously throughout the match to spin the intake
     Feeder feeder; // Servo subsystem that runs occasionally to move the ball up the elevator into the flywheel
@@ -233,7 +233,7 @@ public class Robot {
         public final static double feederPower = 1.0;
         public final static double intakePower = 1.0;
         public final static double outtakePower = -1.0;
-        public final static double FEED_TIME_SECONDS = 1.5; //The feeder servos run this long when a shot is requested.
+        public final static double FEED_TIME_SECONDS = 0.5; //The feeder servos run this long when a shot is requested.
         public final static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
         public final static double FULL_SPEED = 1.0;
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
@@ -246,7 +246,7 @@ public class Robot {
         // TURRET CONSTANTS
         //turret 0 = 0.48
         public final static double turretHighAngle = 220*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -180*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretLowAngle = -175*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         public final static double turretScale0 = 0; //0.11;
         public final static double turretScale1 = 1;
@@ -310,7 +310,8 @@ public class Robot {
         double radps = vel / wheelRadius * Constants.flywheelPower; // RPM
         turret.turnToRobotAngle(turretAngle);
         // Set flywheel RPM
-        flywheel.spinTo(radps * 28 / Math.PI / 2);
+        // TODO: UNCOMMENT LATER!
+//        flywheel.spinTo(radps * 28 / Math.PI / 2);
         // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
 
@@ -326,26 +327,31 @@ public class Robot {
                 }
                 break;
             case SPIN_UP_FRONT: // SPEED UP FLYWHEEL
-                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
-                    launchState = LaunchState.FEED_FRONT;
-                }
+                // TODO: UNCOMMENT LATER!
+//                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
+//                    launchState = LaunchState.FEED_FRONT;
+//                }
+                launchState = launchState.FEED_FRONT;
                 break;
             case SPIN_UP_BACK: // SPEED UP FLYWHEEL
-                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
-                    launchState = LaunchState.FEED_BACK;
-                }
+                // TODO: UNCOMMENT LATER!
+//                if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
+//                    launchState = LaunchState.FEED_BACK;
+//                }
+                launchState = launchState.FEED_BACK;
                 break;
             case FEED_FRONT: // FEED BALL
-                feeder.upFR();
-                feederTimer.reset();
+                feeder.upFR(); // feeder starts
+                feederTimer.reset(); // feeder goes down
                 launchState = LaunchState.LAUNCHING;
+                break;
             case FEED_BACK: // FEED BALL
                 feeder.upBL();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING: // LAUNCH
-                if (feederTimer.seconds() > Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > feedTime) {
                     launchState = LaunchState.IDLE;
                     feeder.downFR();
                     feeder.downBL();

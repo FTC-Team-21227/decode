@@ -48,10 +48,10 @@ public class feederTest extends LinearOpMode {
                 feeder.downBL();
             }
             if (gamepad1.dpadUpWasPressed()) {
-                feeder.FR_FEEDER.setPosition(feeder.FR_FEEDER.getPosition() + 0.1);
+                feeder.BL_FEEDER.setPosition(feeder.BL_FEEDER.getPosition() + 0.05);
             }
             if (gamepad1.dpadDownWasPressed()) {
-                feeder.FR_FEEDER.setPosition(feeder.FR_FEEDER.getPosition() - 0.1);
+                feeder.BL_FEEDER.setPosition(feeder.BL_FEEDER.getPosition() - 0.05);
             }
             if (gamepad1.left_bumper)
             {
@@ -59,7 +59,7 @@ public class feederTest extends LinearOpMode {
             }
 //            feeder.FR_FEEDER.setPosition(feederPos);
             // Telemetry lines
-            telemetry.addData("feeder pos", feeder.FR_FEEDER.getPosition());
+            telemetry.addData("feeder pos", feeder.BL_FEEDER.getPosition());
             telemetry.update();
         }
     }

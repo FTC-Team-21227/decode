@@ -23,7 +23,7 @@ public class ShooterRobot {
     // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
 
     Flywheel flywheel; //the motor subsystem that spins to certain target RPM throughout the match
-    Turret turret; //the 2-servo subsystem that turns to any robot-relative angle
+    Turret turret; //the servo subsystem that turns to any robot-relative angle
     Hood hood; //the servo subsystem that raises or lowers the hood anywhere from 0 to 90 degrees
     AprilTagLocalization2 camera; //the camera subsystem that is used in AprilDrive and Obelisk detection
     Feeder feeder;
@@ -142,7 +142,7 @@ public class ShooterRobot {
 
         turret.turnToRobotAngle(turretAngle);
 //        // Set flywheel RPM
-        flywheel.spinTo(radps*28/Math.PI/2);
+        flywheel.spinTo(0); //radps*28/Math.PI/2
 // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
 
@@ -159,7 +159,7 @@ public class ShooterRobot {
                 }
                 break;
             case FEED: // FEED BALL
-                feeder.up(feeder.FR_FEEDER);
+                feeder.upFR();
 //                feeder.up(feeder.BL_FEEDER);
                 feederTimer.reset();
                 launchState = ShooterRobot.LaunchState.LAUNCHING;
@@ -167,7 +167,7 @@ public class ShooterRobot {
             case LAUNCHING: // LAUNCH
                 if (feederTimer.seconds() > 1) {
                     launchState = ShooterRobot.LaunchState.IDLE;
-                    feeder.down(feeder.FR_FEEDER);
+                    feeder.downFR();
 //                    feeder.down(feeder.BL_FEEDER);
                 }
                 break;
