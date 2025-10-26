@@ -29,7 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @Config
 public class Robot {
-    private static Robot instance;
+    private static Robot instance = null;
     // Red/blue pose mirroring
     // Lookup table functionality
     // Turret position mapped correctly to robot pose etc.
@@ -78,7 +78,7 @@ public class Robot {
         }
         return instance;
     }
-    private class AprilDrive extends MecanumDrive{
+    public class AprilDrive extends MecanumDrive{
         // Reset localizer functions using AprilTags
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ // Using the parent constructor since we only are creating one method
             super(hardwareMap,initialPose);
@@ -113,6 +113,12 @@ public class Robot {
                     poseWorldRobot.heading.toDouble()
             ));
             return poseWorldRobot; // Return the pose of robot
+        }
+        public void drawPose(@NonNull TelemetryPacket p){
+            Canvas c = p.fieldOverlay();
+
+            c.setStroke("#3F51B5");
+            Drawing.drawRobot(c, localizer.getPose());
         }
         /**
          * Point-to-point action: drives the robot from the current pose to targetPose using a

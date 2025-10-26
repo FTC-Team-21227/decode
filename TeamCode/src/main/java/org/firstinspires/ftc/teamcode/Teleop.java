@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -13,6 +14,7 @@ public class Teleop extends OpMode {
     Robot robot;
 //    FtcDashboard dashboard = FtcDashboard.getInstance();
 //    Telemetry telemetry = dashboard.getTelemetry();
+    TelemetryPacket p = new TelemetryPacket();
     public void init(){
         robot = new Robot(hardwareMap, new Pose2d(0,0, Math.PI), Robot.Color.RED); //start facing the goals, RED poses
         robot.initTeleop(telemetry);
@@ -23,6 +25,7 @@ public class Teleop extends OpMode {
         robot.controlIntake(gamepad1.a, gamepad1.b, gamepad1.x);
         robot.updateShooter(gamepad1.left_bumper, gamepad1.right_bumper, telemetry, false, null, gamepad1.right_trigger > 0.1);
         robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        robot.drive2.drawPose(p);
         telemetry.update();
     }
 }

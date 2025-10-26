@@ -22,9 +22,9 @@ public class Auto extends LinearOpMode {
     // === Helper: Determine desired color sequence per obelisk ID ===
     private char[] getDesiredPattern(int obeliskID) {
         switch (obeliskID) {
-            case 21: return new char[]{'G','P','P'}; // left
-            case 22: return new char[]{'P','G','P'}; // center
-            case 23: return new char[]{'P','P','G'}; // right
+            case 21: return new char[]{'G','P','P'};
+            case 22: return new char[]{'P','G','P'};
+            case 23: return new char[]{'P','P','G'};
             default: return new char[]{'G','P','P'}; // fallback
         }
     }
@@ -42,21 +42,42 @@ public class Auto extends LinearOpMode {
                 }
             }
         }
+        // Mutate order to enforce physical constraints
+        // --- Rule 1: Slot #2 cannot fire first ---
+        if (order[0] == 2) {
+            // find the first element that isn't 2 and swap
+            for (int i = order.length-1; i > 0; i--) {
+                if (order[i] != 2) {
+                    int temp = order[0];
+                    order[0] = order[i];
+                    order[i] = temp;
+                    break;
+                }
+            }
+        }
+
+        // --- Rule 2: If 2 is followed by 1, change 1 → 0 ---
+        for (int i = 0; i < order.length - 1; i++) {
+            if (order[i] == 2 && order[i + 1] == 1) {
+                order[i + 1] = 0;
+            }
+        }
         return order;
     }
-
+    int[] Order;
     // === Helper: Build the actual firing sequence based on color order ===
     private Action shootSequence(AtomicBoolean shotReqFR, AtomicBoolean shotReqBL,
                                  char[] queue, int obeliskID) {
 
         char[] desired = getDesiredPattern(obeliskID);
-        int[] order = computeFireOrder(queue, desired);
+        Order = computeFireOrder(queue, desired);
 
         ArrayList<Action> actions = new ArrayList<>();
         for (int i = 0; i <= 2; i++) {
-            int feeder = order[i];
+            int feeder = Order[i];
+            //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0.
             actions.add(new InstantAction(() -> {
-                if (feeder == 1) shotReqFR.set(true);  // 1 = front/right feeder
+                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1 = front/right feeder
                 else shotReqBL.set(true);               // 0, 2 = back/left feeder
             }));
             actions.add(new SleepAction(1)); // time to shoot
@@ -178,8 +199,9 @@ public class Auto extends LinearOpMode {
                             new InstantAction(() -> detectOb.set(false)),
                             turnGoal,
                             // FIRE ROUND 1 (based on detected obelisk)
-                            new InstantAction(() -> id.set(robot.camera.detectObelisk(telemetry, detectOb.get()))),
-                            new InstantAction(() -> telemetry.addData("Obelisk Detected", id.get())),
+                            new InstantAction(() ->{id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
+                                                    telemetry.addData("Obelisk Detected", id.get());
+                                                    telemetry.update();}),
                             shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
 
@@ -187,12 +209,12 @@ public class Auto extends LinearOpMode {
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
 
-                            // Update internal ball order after intaking
+                            // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
-                                // Example: assume collected GPP for second round
-                                currentQueue[0] = 'G';
+                                // Example: assume collected PPG for second round
+                                currentQueue[0] = 'P';
                                 currentQueue[1] = 'P';
-                                currentQueue[2] = 'P';
+                                currentQueue[2] = 'G';
                             }),
 
                             shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
@@ -215,6 +237,7 @@ public class Auto extends LinearOpMode {
                         robot.controlIntake(intake.get(), false, !intake.get());
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), telemetry, true, Robot.Constants.autoShotPose, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
+                        telemetryPacket.put("order", Order[0] + ", " + Order[1] + ", " + Order[2]);
                         return true;
                     }
 
