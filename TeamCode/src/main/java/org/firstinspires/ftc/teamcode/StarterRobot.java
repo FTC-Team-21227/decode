@@ -223,7 +223,7 @@ public class StarterRobot {
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > Robot.Constants.feedTime) {
                     launchState = LaunchState.IDLE;
                     feeders.stop();
                 }
@@ -259,7 +259,7 @@ public class StarterRobot {
                 telemetry.addLine(String.format("Y %6.1f   (rad)",
                         poseWorldTurret.heading.toDouble()
                 ));
-                pose = poseWorldTurret.times(new Pose2d(Robot.Constants.turretPos,0).inverse());
+                pose = poseWorldTurret.times(Robot.Constants.turretPos).inverse();
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));

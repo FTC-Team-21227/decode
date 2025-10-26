@@ -31,7 +31,7 @@ public class Turret {
 
     // Gives turret's robot-relative pose based on its position and current heading
     public Pose2d getPoseRobotTurret() {
-        return new Pose2d(Robot.Constants.turretPos,getTurretRobotAngle());
+        return new Pose2d(Robot.Constants.turretPos.position,getTurretRobotAngle());
     }
 
     // Function returns the closest position that is still in range (turret will not move if not in range)

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -20,7 +21,7 @@ public class Teleop extends OpMode {
     public void loop(){
         robot.updateLocalizer(telemetry);
         robot.controlIntake(gamepad1.a, gamepad1.b, gamepad1.x);
-        robot.updateShooter(gamepad1.left_bumper, gamepad1.right_bumper, telemetry);
+        robot.updateShooter(gamepad1.left_bumper, gamepad1.right_bumper, telemetry, false, null, gamepad1.right_trigger > 0.1);
         robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         telemetry.update();
     }

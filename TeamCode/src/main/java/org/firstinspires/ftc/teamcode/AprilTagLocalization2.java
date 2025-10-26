@@ -326,6 +326,46 @@ public class AprilTagLocalization2 {
         }
         return Double.NaN;
     }   // end method telemetryAprilTag()
+    public int detectObelisk(Telemetry telemetry, boolean detect
+    ) {
+        if (!detect) return 21;
+        telemetry.addData("FPS", visionPortal.getFps());
+        pipelineTimer.reset();
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+        // Step through the list of detections and display info for each one.
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                // Only use tags that don't have Obelisk in them
+                if (detection.metadata.name.contains("Obelisk")) {
+                    double time = pipelineTimer.milliseconds();
+                    averagePipe = (averagePipe*successfulDetections + time)/(successfulDetections+1);
+                    successfulDetections++;
+                    telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
+                    telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
+                    telemetry.update();
+                    return detection.id;
+                }
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }   // end for() loop
+
+        // Add "key" information to telemetry
+//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.update();
+
+        if (!currentDetections.isEmpty())
+        {
+            AprilTagDetection detection = currentDetections.get(0);
+            return detection.id;
+        }
+        return 21;
+    }   // end method telemetryAprilTag()
 
 
     /**

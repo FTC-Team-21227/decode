@@ -19,7 +19,7 @@ public class RobotSG {
     // Telemetry
     // Some way to carry the information over to teleop, not have to reinitialize
     private static RobotSG instance;
-    AprilTagMecanumDrive drive;
+//    AprilTagMecanumDrive drive;
     AprilDrive drive2;
     Intake intake;
     Feeder feeder;
@@ -30,7 +30,7 @@ public class RobotSG {
     //initialize subsystems
     private RobotSG(HardwareMap hardwareMap, Pose2d initialPose){
         camera = new Camera(hardwareMap);
-        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
+//        drive = new AprilTagMecanumDrive(hardwareMap, initialPose, camera);
         drive2 = new AprilDrive(hardwareMap, initialPose);
         intake = new Intake(hardwareMap);
         feeder = new Feeder(hardwareMap);
@@ -128,7 +128,7 @@ public class RobotSG {
     //queuer/state machine
     public void updateShooter(boolean shotRequested, Telemetry telemetry) {
         //replace these with LUT values
-        turret.turnToRobotAngle(drive.localizer.getPose().heading.toDouble());
+        turret.turnToRobotAngle(drive2.localizer.getPose().heading.toDouble());
         flywheel.spinTo(Constants.LAUNCHER_TARGET_VELOCITY);
         //-/-///
         switch (launchState) {

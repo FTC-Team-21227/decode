@@ -226,7 +226,7 @@ public class StarterRobotPro {
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > Robot.Constants.FEED_TIME_SECONDS) {
+                if (feederTimer.seconds() > Robot.Constants.feedTime) {
                     // Launch ball
                     launchState = LaunchState.IDLE;
                     feeders.stop();
@@ -269,7 +269,7 @@ public class StarterRobotPro {
                 ));
 
                 // Use AprilTag detections to get turret pose relative to field
-                pose = poseWorldTurret.times(new Pose2d(Robot.Constants.turretPos,0).inverse());
+                pose = poseWorldTurret.times(Robot.Constants.turretPos).inverse();
                 telemetry.addLine(String.format("Pose XY %6.1f %6.1f  (inch)",
                         pose.position.x,
                         pose.position.y));
