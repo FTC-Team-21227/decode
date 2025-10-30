@@ -30,6 +30,8 @@ public class Auto extends LinearOpMode {
     }
 
     // === Helper: Compute mapping from internal queue → desired order ===
+    // Slots: innermost is 0, middle is 1, one in intake is 2
+    // Returns an int[] like [0, 1, 2] for firing order
     private int[] computeFireOrder(char[] queue, char[] desired) {
         boolean[] used = new boolean[queue.length];
         int[] order = new int[desired.length];
@@ -65,7 +67,7 @@ public class Auto extends LinearOpMode {
         return order;
     }
     int[] Order;
-    // === Helper: Build the actual firing sequence based on color order ===
+    // === Helper: Build the actual firing sequence of 3 balls based on color order ===
     private Action shootSequence(AtomicBoolean shotReqFR, AtomicBoolean shotReqBL,
                                  char[] queue, int obeliskID) {
 
@@ -74,13 +76,13 @@ public class Auto extends LinearOpMode {
 
         ArrayList<Action> actions = new ArrayList<>();
         for (int i = 0; i <= 2; i++) {
-            int feeder = Order[i];
-            //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0.
+            int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
+            //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
             actions.add(new InstantAction(() -> {
-                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1 = front/right feeder
-                else shotReqBL.set(true);               // 0, 2 = back/left feeder
+                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
+                else shotReqBL.set(true);               // 0 = back/left feeder
             }));
-            actions.add(new SleepAction(1)); // time to shoot
+            actions.add(new SleepAction(1)); // Wait between shots
             actions.add(new InstantAction(() -> {
                 shotReqFR.set(false);
                 shotReqBL.set(false);
@@ -96,18 +98,20 @@ public class Auto extends LinearOpMode {
         robot.initAuto(telemetry);
         MecanumDrive drive = robot.drive2;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
+        //
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .strafeTo(new Vector2d(-12,46-20*Math.tan(Math.toRadians(55))))
                 .turnTo(Math.toRadians(180))
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(180))) //first specimen
+        // Turn 90 degrees
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(180)))
                 .turnTo(Math.toRadians(90))
                 ;
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(90)))
                 .strafeTo(new Vector2d(-12,45))
                 .strafeTo(new Vector2d(-12,15))
                 ;
-        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(12,15))
                 .strafeTo(new Vector2d(12,45))
                 .strafeTo(new Vector2d(-12,15))
@@ -118,15 +122,16 @@ public class Auto extends LinearOpMode {
         Action secondTrajectory = tab2.build();
         Action thirdTrajectory = tab3.build();
 
-        char[] currentQueue = {'P','G','P'}; // Example: purple front, green middle, purple back
+        // Keeps track of robot's internal ball order based on what is intook first
+        char[] currentQueue = {'P','G','P'}; // Intake order: purple, green, purple
 
 //        Action p2p = robot.drive2.p2pAction();
         waitForStart();
 
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
-        AtomicBoolean intake = new AtomicBoolean(false);
-        AtomicInteger id = new AtomicInteger(21);
+        AtomicBoolean intake = new AtomicBoolean(false); // Intake on
+        AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
 //        shotReq.set(false);
 //        Actions.runBlocking(
@@ -197,8 +202,8 @@ public class Auto extends LinearOpMode {
                             new InstantAction(() -> detectOb.set(true)),
                             new SleepAction(0.5),
                             new InstantAction(() -> detectOb.set(false)),
-                            turnGoal,
-                            // FIRE ROUND 1 (based on detected obelisk)
+                            turnGoal, // Turn 90 degrees
+                            // FIRE ROUND 1 (detect obelisk)
                             new InstantAction(() ->{id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                                                     telemetry.addData("Obelisk Detected", id.get());
                                                     telemetry.update();}),
@@ -217,6 +222,7 @@ public class Auto extends LinearOpMode {
                                 currentQueue[2] = 'G';
                             }),
 
+                            // FIRE ROUND 2
                             shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
 
@@ -231,13 +237,14 @@ public class Auto extends LinearOpMode {
                                 currentQueue[2] = 'P';
                             }),
 
+                            // FIRE ROUND 3
                             shootSequence(shotReqFR, shotReqBL, currentQueue, id.get())
                     ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), false, !intake.get());
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), telemetry, true, Robot.Constants.autoShotPose, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
-                        telemetryPacket.put("order", Order[0] + ", " + Order[1] + ", " + Order[2]);
+                        telemetryPacket.put("order", Order[0] + ", " + Order[1] + ", " + Order[2]); // Feeder order
                         return true;
                     }
 

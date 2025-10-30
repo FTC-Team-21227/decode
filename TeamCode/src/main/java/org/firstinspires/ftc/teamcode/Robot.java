@@ -72,6 +72,7 @@ public class Robot {
         hood = new Hood(hardwareMap);
     }
 
+    // Create one instance of robot (singleton)
     public static Robot getInstance(HardwareMap hardwareMap, Pose2d initialPose, Color color){
         if (instance == null){
             instance = new Robot(hardwareMap, initialPose, color);
@@ -253,6 +254,7 @@ public class Robot {
         public static double flywheelPower = 2.8;
         public final static double deltaH = 30;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
+        // Where the robot will shoot from:
         public static Pose2d autoShotPose = new Pose2d(-12,15,Math.toRadians(90));
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
         public static double p = 300, i = 0, d = 0, f = 10;
@@ -284,24 +286,6 @@ public class Robot {
 
     // Drives the robot field-centric
     public void driveFieldCentric(double forward, double right, double rotate) {
-        // First, convert direction being asked to drive to polar coordinates
-//        double theta = Math.atan2(forward, right);
-//        double r = Math.hypot(right, forward);
-//
-//        // Second, rotate angle by the angle the robot is pointing
-//        theta = AngleUnit.normalizeRadians(theta -
-//                drive2.localizer.getPose().heading.toDouble()) - Math.PI/2;
-//
-//        // Third, convert back to cartesian
-//        double newForward = r * Math.sin(theta);
-//        double newRight = r * Math.cos(theta);
-//        drive2.setDrivePowers(new PoseVelocity2d(
-//                new Vector2d(
-//                        -newForward,
-//                        newRight
-//                ),
-//                -rotate
-//        ));
         double Heading_Angle = drive2.localizer.getPose().heading.toDouble();
         double mag = Math.sqrt(forward*forward + right*right);
         double Motor_FWD_input = forward * mag;
@@ -369,25 +353,21 @@ public class Robot {
         switch (launchState) {
             case IDLE:
                 if (shotRequestedFront) {
-                    if (feederTimer.seconds()>Constants.feedTime)
+                    if (feederTimer.seconds()>Constants.feedTime) // After feeding is done
                         launchState = LaunchState.SPIN_UP_FRONT;
-//                    feederTimer.reset(); // Start timing; not needed rn
                 }
                 else if (shotRequestedBack){
                     if (feederTimer.seconds()>Constants.feedTime)
                         launchState = LaunchState.SPIN_UP_BACK;
-//                    feederTimer.reset(); // Start timing
                 }
                 break;
             case SPIN_UP_FRONT: // SPEED UP FLYWHEEL
-                // TODO: UNCOMMENT LATER!
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
                     launchState = LaunchState.FEED_FRONT;
                 }
 //                launchState = launchState.FEED_FRONT;
                 break;
             case SPIN_UP_BACK: // SPEED UP FLYWHEEL
-                // TODO: UNCOMMENT LATER!
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50) {
                     launchState = LaunchState.FEED_BACK;
                 }
@@ -403,7 +383,7 @@ public class Robot {
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
-            case LAUNCHING: // LAUNCH
+            case LAUNCHING: // RESET EVERYTHING
                 if (feederTimer.seconds() > Constants.feedTime) {
                     launchState = LaunchState.IDLE;
                     feeder.downFR();
