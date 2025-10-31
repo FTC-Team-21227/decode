@@ -18,6 +18,7 @@ import com.acmerobotics.roadrunner.PoseVelocity2dDual;
 import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.google.gson.internal.bind.util.ISO8601Utils;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -353,7 +354,6 @@ public class Robot {
         if (down) change -= 0.001;
         StarterRobot.Constants.flywheelPower += change;
          */
-
         // Convert vel (speed) to rad/s (example calibration: vel = wheelRadius * rad/s
         double radps = vel / wheelRadius * Constants.flywheelPower; // RPM
         turret.turnToRobotAngle(turretAngle);
@@ -361,16 +361,20 @@ public class Robot {
         // TODO: UNCOMMENT LATER!
         if (humanFeed){
             flywheel.spinTo(-800);
+            //maybe also keep hood low and turret at constant pos
         }
         else flywheel.spinTo(radps * 28 / Math.PI / 2);
         // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
 
+        //use +-1 of requesting state
+
         switch (launchState) {
             case IDLE:
+                //if (shotReq) and feed timer ready => if 1 front else back
                 if (shotRequestedFront) {
                     if (feederTimer.seconds()>Constants.feedTime)
-                        launchState = LaunchState.SPIN_UP_FRONT;
+                        launchState = LaunchState.SPIN_UP_FRONT; //change req state here too
 //                    feederTimer.reset(); // Start timing; not needed rn
                 }
                 else if (shotRequestedBack){
@@ -409,6 +413,7 @@ public class Robot {
                     feeder.downFR();
                     feeder.downBL();
                     feederTimer.reset();
+                    //shotreqstate *= -1
                 }
                 break;
         }
@@ -474,6 +479,7 @@ public class Robot {
         return new int[]{power[0][0][0],angle[0][0][0]};
     }
 
+    //helpers
     public Pose2d mirrorPose(Pose2d pose){
         return new Pose2d(new Vector2d(pose.position.x, -pose.position.y), new Rotation2d(pose.heading.real, -pose.heading.imag));
     }

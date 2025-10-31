@@ -97,13 +97,13 @@ public class Auto extends LinearOpMode {
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(-12,46-20*Math.tan(Math.toRadians(55))))
+                .strafeTo(new Vector2d(-12,15))
                 .turnTo(Math.toRadians(180))
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(180))) //first specimen
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
                 .turnTo(Math.toRadians(90))
                 ;
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
                 .strafeTo(new Vector2d(-12,45))
                 .strafeTo(new Vector2d(-12,15))
                 ;
