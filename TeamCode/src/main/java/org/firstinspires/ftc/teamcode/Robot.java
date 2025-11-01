@@ -55,6 +55,7 @@ public class Robot {
     double turretAngle;
     double radps;
     double theta;
+    double chainShotCount = 1;
 
     // Enum that stores the alliance color, accessible globally
     public enum Color {
@@ -402,11 +403,25 @@ public class Robot {
         switch (launchState) {
             case IDLE:
                 if (shotReqAlt && feederTimer.seconds()>Constants.feedTime){
-                    if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
-                    else launchState = LaunchState.SPIN_UP_BACK;
-                    shotReqFeederType = !shotReqFeederType;
-                    feederTimer.reset();
+                    if (chainShotCount == 2){
+                        if (feederTimer.seconds() > Constants.feedTime + 0.6) {
+                            intake.stop();
+                            if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
+                            else launchState = LaunchState.SPIN_UP_BACK;
+                            shotReqFeederType = !shotReqFeederType;
+                            feederTimer.reset();
+                        }
+                        else if (feederTimer.seconds() > Constants.feedTime + 0.1)
+                            intake.intake();
+                    }
+                    else {
+                        if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
+                        else launchState = LaunchState.SPIN_UP_BACK;
+                        shotReqFeederType = !shotReqFeederType;
+                        feederTimer.reset();
+                    }
                 }
+                else chainShotCount = 1;
                 if (shotRequestedFront && feederTimer.seconds()>Constants.feedTime) {// After feeding is done. change req state here too
                         launchState = LaunchState.SPIN_UP_FRONT;
                         shotReqFeederType = false; //next RB will be back
@@ -449,6 +464,7 @@ public class Robot {
                     feeder.downBL();
                     feederTimer.reset();
                     intake.proceed();
+                    chainShotCount++;
                 }
                 break;
         }
