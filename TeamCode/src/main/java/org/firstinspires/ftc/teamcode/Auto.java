@@ -98,23 +98,21 @@ public class Auto extends LinearOpMode {
         robot.initAuto(telemetry);
         MecanumDrive drive = robot.drive2;
 
-        //
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(-12,46-20*Math.tan(Math.toRadians(55))))
-                .turnTo(Math.toRadians(180))
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
-        // Turn 90 degrees
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(180)))
-                .turnTo(Math.toRadians(90))
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180)))
+                .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,46-20*Math.tan(Math.toRadians(55)),Math.toRadians(90)))
-                .strafeTo(new Vector2d(-12,45))
-                .strafeTo(new Vector2d(-12,15))
+                .strafeTo(new Vector2d(-12,45)) // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(12,15))
-                .strafeTo(new Vector2d(12,45))
-                .strafeTo(new Vector2d(-12,15))
+                .strafeTo(new Vector2d(12,15)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(12,45)) // Collect artifacts
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
 
         Action firstTrajectory = tab1.build();
@@ -199,46 +197,46 @@ public class Auto extends LinearOpMode {
                 new ParallelAction(
                         new SequentialAction(
                             firstTrajectory,
-                            new InstantAction(() -> detectOb.set(true)),
-                            new SleepAction(0.5),
-                            new InstantAction(() -> detectOb.set(false)),
-                            turnGoal, // Turn 90 degrees
+//                            new InstantAction(() -> detectOb.set(true)),
+//                            new SleepAction(0.5),
+//                            new InstantAction(() -> detectOb.set(false)),
+                            turnGoal,
                             // FIRE ROUND 1 (detect obelisk)
-                            new InstantAction(() ->{id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
-                                                    telemetry.addData("Obelisk Detected", id.get());
-                                                    telemetry.update();}),
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
-                            new InstantAction(() -> intake.set(true)),
+//                            new InstantAction(() ->{id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
+//                                                    telemetry.addData("Obelisk Detected", id.get());
+//                                                    telemetry.update();}),
+//                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
+//                            new InstantAction(() -> intake.set(true)),
 
                             // COLLECT ROUND 2 BALLS
                             secondTrajectory,
-                            new InstantAction(() -> intake.set(false)),
+//                            new InstantAction(() -> intake.set(false)),
 
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
-                            new InstantAction(() -> {
-                                // Example: assume collected PPG for second round
-                                currentQueue[0] = 'P';
-                                currentQueue[1] = 'P';
-                                currentQueue[2] = 'G';
-                            }),
+//                            new InstantAction(() -> {
+//                                // Example: assume collected PPG for second round
+//                                currentQueue[0] = 'P';
+//                                currentQueue[1] = 'P';
+//                                currentQueue[2] = 'G';
+//                            }),
 
                             // FIRE ROUND 2
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
-                            new InstantAction(() -> intake.set(true)),
+//                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
+//                            new InstantAction(() -> intake.set(true)),
 
                             // COLLECT ROUND 3 BALLS
-                            thirdTrajectory,
-                            new InstantAction(() -> intake.set(false)),
-
-                            // Example: assume collected PPG for last round
-                            new InstantAction(() -> {
-                                currentQueue[0] = 'P';
-                                currentQueue[1] = 'G';
-                                currentQueue[2] = 'P';
-                            }),
+                            thirdTrajectory
+//                            new InstantAction(() -> intake.set(false)),
+//
+//                            // Example: assume collected PPG for last round
+//                            new InstantAction(() -> {
+//                                currentQueue[0] = 'P';
+//                                currentQueue[1] = 'G';
+//                                currentQueue[2] = 'P';
+//                            }),
 
                             // FIRE ROUND 3
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get())
+//                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get())
                     ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), false, !intake.get());
