@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -36,13 +37,14 @@ public class Turret {
 
     // Function returns the closest position that is still in range (turret will not move if not in range)
     public double constrain(double ogPos){
-        if (ogPos > 1){
-            ogPos = 0.9999999;
-        }
-        else if (ogPos < 0){
-            ogPos = 0.0000001;
-        }
-        return ogPos;
+//        if (ogPos > 1){
+//            ogPos = 0.9999999;
+//        }
+//        else if (ogPos < 0){
+//            ogPos = 0.0000001;
+//        }
+//
+        return Range.clip(ogPos,0,1);
     }
 
     // Returns true if turret target position is out of range

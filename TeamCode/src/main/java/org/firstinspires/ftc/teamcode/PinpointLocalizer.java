@@ -5,7 +5,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Vector2d;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+//import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -22,7 +22,7 @@ public final class PinpointLocalizer implements Localizer {
 
     public static Params PARAMS = new Params();
 
-    public final GoBildaPinpointDriver driver;
+    public final GoBildaPinpointDriver driver; //not sure is this the better driver or the qualcomm one??
     public final GoBildaPinpointDriver.EncoderDirection initialParDirection, initialPerpDirection;
 
     private Pose2d txWorldPinpoint;

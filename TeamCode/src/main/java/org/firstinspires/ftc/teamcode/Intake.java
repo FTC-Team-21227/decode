@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class Intake {
     //power
     DcMotor INTAKE;
+    double power = 0;
+    boolean paused = false;
     //power
     public Intake (HardwareMap hardwareMap){
         INTAKE = hardwareMap.get(DcMotor.class, "intake");
@@ -16,12 +18,23 @@ public class Intake {
         INTAKE.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
     public void intake(){
-        INTAKE.setPower(1);
+        if (!paused) INTAKE.setPower(1);
+        power = 1;
     }
     public void outtake(){
-        INTAKE.setPower(-1);
+        if (!paused) INTAKE.setPower(-1);
+        power = -1;
     }
     public void stop(){
+        if (!paused) INTAKE.setPower(0);
+        power = 0;
+    }
+    public void pause(){
         INTAKE.setPower(0);
+        paused = true;
+    }
+    public void proceed() {
+        INTAKE.setPower(power);
+        paused = false;
     }
 }
