@@ -405,14 +405,13 @@ public class Robot {
                 if (shotReqAlt && feederTimer.seconds()>Constants.feedTime){
                     if (chainShotCount == 2){
                         if (feederTimer.seconds() > Constants.feedTime + 0.6) {
-                            intake.stop();
                             if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                             else launchState = LaunchState.SPIN_UP_BACK;
                             shotReqFeederType = !shotReqFeederType;
                             feederTimer.reset();
                         }
-                        else if (feederTimer.seconds() > Constants.feedTime + 0.1)
-                            intake.intake();
+                        else if (feederTimer.seconds() > Constants.feedTime + 0.5) intake.stop();
+                        else intake.intake();
                     }
                     else {
                         if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
@@ -421,7 +420,7 @@ public class Robot {
                         feederTimer.reset();
                     }
                 }
-                else chainShotCount = 1;
+                else if (!shotReqAlt) chainShotCount = 1;
                 if (shotRequestedFront && feederTimer.seconds()>Constants.feedTime) {// After feeding is done. change req state here too
                         launchState = LaunchState.SPIN_UP_FRONT;
                         shotReqFeederType = false; //next RB will be back
@@ -464,7 +463,7 @@ public class Robot {
                     feeder.downBL();
                     feederTimer.reset();
                     intake.proceed();
-                    chainShotCount++;
+                    if (shotReqAlt) chainShotCount++;
                 }
                 break;
         }
@@ -609,12 +608,12 @@ public class Robot {
                 if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
                 else shotReqBL.set(true);               // 0 = back/left feeder
             }));
-            actions.add(new SleepAction(0.2)); // Wait between shots
+            actions.add(new SleepAction(0.2)); // allow an interval of requesting in case the initial request is overridden
             actions.add(new InstantAction(() -> {
                 shotReqFR.set(false);
                 shotReqBL.set(false);
             }));
-            actions.add(new SleepAction(0.8)); // Wait between shots
+            actions.add(new SleepAction(0.8)); // feeder completes the state machine
         }
         SequentialAction seq = new SequentialAction(actions);
         return seq;
