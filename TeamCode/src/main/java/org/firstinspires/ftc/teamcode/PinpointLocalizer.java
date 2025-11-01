@@ -22,7 +22,7 @@ public final class PinpointLocalizer implements Localizer {
 
     public static Params PARAMS = new Params();
 
-    public final GoBildaPinpointDriver driver;
+    public final GoBildaPinpointDriver driver; //not sure is this the better driver or the qualcomm one??
     public final GoBildaPinpointDriver.EncoderDirection initialParDirection, initialPerpDirection;
 
     private Pose2d txWorldPinpoint;

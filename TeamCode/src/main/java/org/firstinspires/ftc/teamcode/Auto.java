@@ -19,78 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Autonomous(name = "Auto_Red_Goal")
 public class Auto extends LinearOpMode {
-    // === Helper: Determine desired color sequence per obelisk ID ===
-    private char[] getDesiredPattern(int obeliskID) {
-        switch (obeliskID) {
-            case 21: return new char[]{'G','P','P'};
-            case 22: return new char[]{'P','G','P'};
-            case 23: return new char[]{'P','P','G'};
-            default: return new char[]{'G','P','P'}; // fallback
-        }
-    }
-
-    // === Helper: Compute mapping from internal queue → desired order ===
-    // Slots: innermost is 0, middle is 1, one in intake is 2
-    // Returns an int[] like [0, 1, 2] for firing order
-    private int[] computeFireOrder(char[] queue, char[] desired) {
-        boolean[] used = new boolean[queue.length];
-        int[] order = new int[desired.length];
-        for (int i = 0; i < desired.length; i++) {
-            for (int j = 0; j < queue.length; j++) {
-                if (!used[j] && queue[j] == desired[i]) {
-                    order[i] = j;
-                    used[j] = true;
-                    break;
-                }
-            }
-        }
-        // Mutate order to enforce physical constraints
-        // --- Rule 1: Slot #2 cannot fire first ---
-        if (order[0] == 2) {
-            // find the first element that isn't 2 and swap
-            for (int i = order.length-1; i > 0; i--) {
-                if (order[i] != 2) {
-                    int temp = order[0];
-                    order[0] = order[i];
-                    order[i] = temp;
-                    break;
-                }
-            }
-        }
-
-        // --- Rule 2: If 2 is followed by 1, change 1 → 0 ---
-        for (int i = 0; i < order.length - 1; i++) {
-            if (order[i] == 2 && order[i + 1] == 1) {
-                order[i + 1] = 0;
-            }
-        }
-        return order;
-    }
-    int[] Order;
-    // === Helper: Build the actual firing sequence of 3 balls based on color order ===
-    private Action shootSequence(AtomicBoolean shotReqFR, AtomicBoolean shotReqBL,
-                                 char[] queue, int obeliskID) {
-
-        char[] desired = getDesiredPattern(obeliskID);
-        Order = computeFireOrder(queue, desired);
-
-        ArrayList<Action> actions = new ArrayList<>();
-        for (int i = 0; i <= 2; i++) {
-            int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
-            //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
-            actions.add(new InstantAction(() -> {
-                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
-                else shotReqBL.set(true);               // 0 = back/left feeder
-            }));
-            actions.add(new SleepAction(1)); // Wait between shots
-            actions.add(new InstantAction(() -> {
-                shotReqFR.set(false);
-                shotReqBL.set(false);
-            }));
-        }
-        SequentialAction seq = new SequentialAction(actions);
-        return seq;
-    }
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
@@ -131,68 +59,6 @@ public class Auto extends LinearOpMode {
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
-//        shotReq.set(false);
-//        Actions.runBlocking(
-//                new ParallelAction(
-//                        new SequentialAction(
-////                            new SleepAction(5), //wait for flywheel to charge up
-//                            //give 3 seconds to shoot the first set of 3 balls
-//                            firstTrajectory, //drive to shot spot
-//                            new InstantAction(() -> detectOb.set(true)),
-//                            new SleepAction(0.5),
-//                            turnGoal,
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false)),
-//                            new InstantAction(() -> shotReqBL.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqBL.set(false)),
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false)),
-//                            new InstantAction(() -> intake.set(true)),
-////                            new InstantAction(() -> shotReq.set(false)),
-//                            secondTrajectory,
-//                            //give 3 seconds to shoot the second set of 3 balls
-//                            new InstantAction(() -> intake.set(false)),
-////                            new InstantAction(() -> shotReq.set(true)),
-////                            new SleepAction(3),
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false)),
-//                            new InstantAction(() -> shotReqBL.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqBL.set(false)),
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false)),
-//                            new InstantAction(() -> intake.set(true)),
-////                            new InstantAction(() -> shotReq.set(false)),
-//                            thirdTrajectory, //gobble up row 2
-//                            new InstantAction(() -> intake.set(false)),
-//                            //give 3 seconds to shoot the third set of 3 balls
-////                            new InstantAction(() -> shotReq.set(true)),
-////                            new SleepAction(3),
-////                            new InstantAction(() -> shotReq.set(false))
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false)),
-//                            new InstantAction(() -> shotReqBL.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqBL.set(false)),
-//                            new InstantAction(() -> shotReqFR.set(true)),
-//                            new SleepAction(1),
-//                            new InstantAction(() -> shotReqFR.set(false))
-//                        ),
-//                        telemetryPacket -> {
-//                            robot.controlIntake(intake.get(),false,!intake.get());
-//                            robot.updateShooter(shotReqFR.get(),shotReqBL.get(),telemetry, true, Robot.Constants.autoShotPose, false);
-//                            id.set(robot.camera.detectObelisk(telemetry,detectOb.get()));
-//                            return true;
-//                        }
-//
-//                )
-//        );
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -202,10 +68,7 @@ public class Auto extends LinearOpMode {
                             new InstantAction(() -> detectOb.set(false)),
                             turnGoal, // Turn 90 degrees
                             // FIRE ROUND 1 (detect obelisk)
-                            new InstantAction(() ->{id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
-                                                    telemetry.addData("Obelisk Detected", id.get());
-                                                    telemetry.update();}),
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
+                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
 
                             // COLLECT ROUND 2 BALLS
@@ -221,7 +84,7 @@ public class Auto extends LinearOpMode {
                             }),
 
                             // FIRE ROUND 2
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get()),
+                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
 
                             // COLLECT ROUND 3 BALLS
@@ -236,13 +99,15 @@ public class Auto extends LinearOpMode {
                             }),
 
                             // FIRE ROUND 3
-                            shootSequence(shotReqFR, shotReqBL, currentQueue, id.get())
+                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get())
                     ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), false, !intake.get());
-                        robot.updateShooter(shotReqFR.get(), shotReqBL.get(), telemetry, true, Robot.Constants.autoShotPose, false);
+                        robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
-                        telemetryPacket.put("order", Order[0] + ", " + Order[1] + ", " + Order[2]); // Feeder order
+                        telemetry.addData("Obelisk Detected", id.get());
+                        int[] order = Robot.Order;
+                        telemetryPacket.put("order", order[0] + ", " + order[1] + ", " + order[2]); // Feeder order
                         return true;
                     }
 
