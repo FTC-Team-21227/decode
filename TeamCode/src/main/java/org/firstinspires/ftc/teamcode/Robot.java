@@ -420,7 +420,6 @@ public class Robot {
                         // Stop pulse
                         else if (feederTimer.seconds() > Constants.feedTime + 0.5) intake.stop();
                         // Intake pulse to move ball to a spot
-                        // TODO: confused abt the alternation and maintaining the order??
                         else intake.intake();
                     }
                     else { // Only shooting one when shotReqAlt is True: normal shooting
