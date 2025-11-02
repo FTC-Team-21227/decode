@@ -46,11 +46,11 @@ public class Robot {
     Hood hood; // Servo subsystem that raises or lowers the hood
     AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
     boolean shotReqFeederType = true; // True = front feeder
-    boolean lockStarted = false;
+    boolean lockStarted = false; // Lock shooting vals to allow manual adjustment
     double turretAngle;
-    double radps;
-    double theta;
-    double chainShotCount = 1;
+    double radps; // Flywheel speed
+    double theta; // Hood angle
+    double chainShotCount = 1; // How many balls to shoot consecutively
 
     // Enum that stores the alliance color, accessible globally
     public enum Color {
@@ -337,7 +337,7 @@ public class Robot {
         // if setPose just became true, recompute next loop:
         if (!setPose) lockStarted = false;
         if (setPose){
-            pose = setRobotPose;
+            pose = setRobotPose; // Calculate shooting values on where we plan to shoot
         }
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
@@ -347,6 +347,7 @@ public class Robot {
         double distance = goalVector.norm(); // Horizontal distance
         double goalVectorAngle = goalVector.angleCast().toDouble();
 
+        //
         if (!setPose || !lockStarted) {
             lockStarted = true;
             try {
@@ -383,10 +384,13 @@ public class Robot {
             turretAngle += turretChange;
         }
 
-        // Set flywheel RPM
+        // Adjust flywheel RPM
         double delta = 0;
+        // If the flywheel power change is a big number, adjust little by little
         if (Math.abs(flywheelChange) > 0.95) delta = Math.signum(flywheelChange)*0.001;
         Constants.flywheelPower += delta;
+
+        // Spin reverse direction for human feeding (when button is held down)
         if (humanFeed){
             //maybe also keep hood low and turret at constant pos
             radps = -800 / 28.0 * Math.PI * 2;
@@ -403,24 +407,30 @@ public class Robot {
         switch (launchState) {
             case IDLE:
                 if (shotReqAlt && feederTimer.seconds()>Constants.feedTime){
-                    if (chainShotCount == 2){ // If shooting 2 artifacts in a row
+                    // If 2 artifacts to shoot consecutively
+                    if (chainShotCount == 2){
                         if (feederTimer.seconds() > Constants.feedTime + 0.6) {
                             // True = front feeder, False = back feeder
                             if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                             else launchState = LaunchState.SPIN_UP_BACK;
+                            // Alternate feeders
                             shotReqFeederType = !shotReqFeederType;
                             feederTimer.reset();
                         }
+                        // Stop pulse
                         else if (feederTimer.seconds() > Constants.feedTime + 0.5) intake.stop();
+                        // Intake pulse to move ball to a spot
+                        // TODO: confused abt the alternation and maintaining the order??
                         else intake.intake();
                     }
-                    else {
+                    else { // Only shooting one when shotReqAlt is True: normal shooting
                         if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                         else launchState = LaunchState.SPIN_UP_BACK;
                         shotReqFeederType = !shotReqFeederType;
                         feederTimer.reset();
                     }
                 }
+                // Normal shooting
                 else if (!shotReqAlt) chainShotCount = 1;
                 if (shotRequestedFront && feederTimer.seconds()>Constants.feedTime) {// After feeding is done. change req state here too
                         launchState = LaunchState.SPIN_UP_FRONT;

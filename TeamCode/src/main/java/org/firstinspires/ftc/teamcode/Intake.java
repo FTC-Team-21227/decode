@@ -17,6 +17,7 @@ public class Intake {
         INTAKE.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         INTAKE.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
+    // Modes
     public void intake(){
         if (!paused) INTAKE.setPower(1);
         power = 1;
@@ -29,6 +30,7 @@ public class Intake {
         if (!paused) INTAKE.setPower(0);
         power = 0;
     }
+    // Start and stop
     public void pause(){
         INTAKE.setPower(0);
         paused = true;
