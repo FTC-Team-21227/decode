@@ -47,7 +47,10 @@ public class MeepMeepTesting {
                 .strafeTo(new Vector2d(12,15))
                 .strafeTo(new Vector2d(12,45))
                 .strafeTo(new Vector2d(-12,15))
-                        .build());
+                .strafeTo(new Vector2d(36,15))
+                .strafeTo(new Vector2d(36,45))
+                .strafeTo(new Vector2d(-12,15))
+                .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_JUICE_DARK)
                 .setDarkMode(true)

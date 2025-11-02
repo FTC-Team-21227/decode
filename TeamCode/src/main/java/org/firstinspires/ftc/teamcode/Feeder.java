@@ -23,9 +23,9 @@ public class Feeder {
     }
 
     public void upFR() { FR_FEEDER.setPosition(0.85); }
-    public void downFR() { FR_FEEDER.setPosition(0.42); }
+    public void downFR() { FR_FEEDER.setPosition(0.44); }
 
-    public void upBL() { BL_FEEDER.setPosition(1); }
-    public void downBL() { BL_FEEDER.setPosition(0.55); }
+    public void upBL() { BL_FEEDER.setPosition(0.95); }
+    public void downBL() { BL_FEEDER.setPosition(0.6); }
 
 }

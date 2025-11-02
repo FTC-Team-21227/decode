@@ -292,8 +292,8 @@ public class Robot {
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 220*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -175*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = 355*Math.PI/180; //220*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -40*Math.PI/180;; //-175*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
         public final static double turretScale0 = 0; //0.11;
         public final static double turretScale1 = 1;
@@ -383,7 +383,6 @@ public class Robot {
             turretAngle += turretChange;
         }
         // Set flywheel RPM
-        // TODO: UNCOMMENT LATER!
         double delta = 0;
         if (Math.abs(flywheelChange) > 0.95) delta = Math.signum(flywheelChange)*0.001;
         Constants.flywheelPower += delta;
@@ -393,6 +392,7 @@ public class Robot {
             theta = Math.PI/2;
             turretAngle = 0;
         }
+        // TODO: UNCOMMENT LATER!
         flywheel.spinTo(radps * 28 / Math.PI / 2);
         // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta);
@@ -432,6 +432,7 @@ public class Robot {
                         feederTimer.reset();
                 }
                 break;
+            // TODO: UNCOMMENT LATER!
             case SPIN_UP_FRONT: // SPEED UP FLYWHEEL
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50 || feederTimer.seconds() > Constants.spinUpTimeout) {
                     launchState = LaunchState.FEED_FRONT;
