@@ -25,7 +25,7 @@ public class Auto extends LinearOpMode {
         Robot robot = Robot.getInstance(hardwareMap, initialPose, Robot.Color.RED);
         robot.initAuto(telemetry);
         MecanumDrive drive = robot.drive2;
-        
+
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 .turnTo(Math.toRadians(180)) // Face obelisk

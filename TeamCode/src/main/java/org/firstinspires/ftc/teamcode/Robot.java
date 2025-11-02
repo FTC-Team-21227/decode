@@ -32,25 +32,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 // Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
-// Camera mounted on turret
-
 
 @Config
 public class Robot {
     private static Robot instance = null;
-    // Red/blue pose mirroring
-    // Lookup table functionality
-    // Turret position mapped correctly to robot pose etc.
-    // Telemetry
-    // Some way to carry the information over to teleop, not have to reinitialize (singleton later)
-    AprilDrive drive2; // Drive base of the robot (motors, odometry, pinpoint, and camera - capable of hybrid localization)
-    Intake intake; // Motor subsystem that runs continuously throughout the match to spin the intake
-    Feeder feeder; // Servo subsystem that runs occasionally to move the ball up the elevator into the flywheel
+    // TODO: Red/blue pose mirroring
+    // TODO: Lookup table functionality
+    AprilDrive drive2; // Drive base of the robot (motors, odometry, pinpoint, and camera)
+    Intake intake; // Motor subsystem to spin the intake
+    Feeder feeder; // Servo subsystem to move the ball up the elevator into the flywheel
     Flywheel flywheel; // Motor subsystem that spins to certain target RPM throughout the match
     Turret turret; // Servo subsystem that turns to any robot-relative angle
-    Hood hood; // Servo subsystem that raises or lowers the hood anywhere from low to high degrees
-    AprilTagLocalization2 camera; // Camera subsystem that is used in AprilDrive and Obelisk detection
-    boolean shotReqFeederType = true; //true = front
+    Hood hood; // Servo subsystem that raises or lowers the hood
+    AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
+    boolean shotReqFeederType = true; // True = front feeder
     boolean lockStarted = false;
     double turretAngle;
     double radps;
@@ -96,14 +91,16 @@ public class Robot {
     public void clearInstance(){
         instance = null;
     }
+
+
     public class AprilDrive extends MecanumDrive{
         // Reset localizer functions using AprilTags
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ // Using the parent constructor since we only are creating one method
             super(hardwareMap,initialPose);
         }
 
-        // Every ~10 sec, use the goal AprilTag to re-define the robot's pose relative to the field.
-        // NOTE: Maybe want to return a boolean of successful relocalization instead of the pose, which is accessible by other means (keep trying to relocalize until we get a success)
+        // TODO: Maybe want to return a boolean of successful relocalization instead of the pose,
+        //  which is accessible by other means (keep trying to relocalize until we get a success)
         @SuppressLint("DefaultLocale")
         public Pose2d relocalize(Telemetry telemetry) {
             PoseVelocity2d vel = super.updatePoseEstimate(); // Update the pinpoint velocity estimate as normal
@@ -327,12 +324,16 @@ public class Robot {
     }
 
     // Calculates and sets hood angle and flywheel RPM. Includes shooter state manager.
-    public void updateShooter(boolean shotRequestedFront, boolean shotRequestedBack, boolean shotReqAlt, Telemetry telemetry, boolean setPose, Pose2d setRobotPose, double flywheelChange, boolean hoodUp, boolean hoodDown, boolean turretLeft, boolean turretRight, boolean humanFeed) { // TODO: add some params where u can hardset shooter outputs
+    public void updateShooter(boolean shotRequestedFront, boolean shotRequestedBack, boolean shotReqAlt,
+                              Telemetry telemetry, boolean setPose, Pose2d setRobotPose,
+                              double flywheelChange, boolean hoodUp, boolean hoodDown,
+                              boolean turretLeft, boolean turretRight, boolean humanFeed) {
+        // TODO: add some params where u can hardset shooter outputs
         // TODO: replace these with LUT values
         // Assume we have: Vector2d goalPosition
-        Pose2d poseRobot = drive2.localizer.getPose();
-//        Pose2d pose = new Pose2d(poseRobot.position.plus(Constants.turretPos), poseRobot.heading); // Pose with the TURRET's position and ROBOT's heading
-        Pose2d pose = poseRobot.times(Constants.turretPos); // Pose with the TURRET's position and ROBOT's heading
+        Pose2d poseRobot = drive2.localizer.getPose(); // Robot pose
+        Pose2d pose = poseRobot.times(Constants.turretPos); // Pose with the TURRET's position on the robot and ROBOT's heading
+
         // if setPose just became true, recompute next loop:
         if (!setPose) lockStarted = false;
         if (setPose){
@@ -340,10 +341,8 @@ public class Robot {
         }
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
-
         double p = 0.75; // Fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
-
         double deltaH = Constants.deltaH; // Height difference from shooter to goal
         double distance = goalVector.norm(); // Horizontal distance
         double goalVectorAngle = goalVector.angleCast().toDouble();
@@ -354,10 +353,9 @@ public class Robot {
                 double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
                 theta = Math.atan(deltaH / (distance * (1 - p))); // Ball launch angle of elevation
                 double vel = distance / (p * flightTime * Math.cos(theta)); // Ball launch speed
-                //        double absoluteAngleToGoal = /*Math.PI + */Constants.goalPos.minus(pose.position).angleCast().toDouble();
-                double heading = pose.heading.toDouble();
+                double heading = pose.heading.toDouble(); //
                 turretAngle = goalVectorAngle - heading; // Angle to turn turret to (relative to robot's heading)
-                double wheelRadius = 1.89; // Inches, for example
+                double wheelRadius = 1.89;
             /*
             double wheelCircumference = Math.PI * wheelDiameter;
             double change = 0;
@@ -373,17 +371,19 @@ public class Robot {
             }
         }
         else{
+            // Manually control hood
             double hoodChange = 0;
             if (hoodUp) hoodChange += 1;
             if (hoodDown) hoodChange -= 1;
             theta += hoodChange;
+            // Manually control turret
             double turretChange = 0;
             if (turretLeft) turretChange -= 1;
             if (turretRight) turretChange += 1;
             turretAngle += turretChange;
         }
+
         // Set flywheel RPM
-        // TODO: UNCOMMENT LATER!
         double delta = 0;
         if (Math.abs(flywheelChange) > 0.95) delta = Math.signum(flywheelChange)*0.001;
         Constants.flywheelPower += delta;
@@ -403,8 +403,9 @@ public class Robot {
         switch (launchState) {
             case IDLE:
                 if (shotReqAlt && feederTimer.seconds()>Constants.feedTime){
-                    if (chainShotCount == 2){
+                    if (chainShotCount == 2){ // If shooting 2 artifacts in a row
                         if (feederTimer.seconds() > Constants.feedTime + 0.6) {
+                            // True = front feeder, False = back feeder
                             if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                             else launchState = LaunchState.SPIN_UP_BACK;
                             shotReqFeederType = !shotReqFeederType;
@@ -436,13 +437,11 @@ public class Robot {
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50 || feederTimer.seconds() > Constants.spinUpTimeout) {
                     launchState = LaunchState.FEED_FRONT;
                 }
-//                launchState = launchState.FEED_FRONT;
                 break;
             case SPIN_UP_BACK: // SPEED UP FLYWHEEL
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50 || feederTimer.seconds() > Constants.spinUpTimeout) {
                     launchState = LaunchState.FEED_BACK;
                 }
-//                launchState = launchState.FEED_BACK;
                 break;
             case FEED_FRONT: // FEED BALL
                 intake.pause();
