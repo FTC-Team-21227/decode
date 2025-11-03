@@ -57,6 +57,7 @@ public class Auto extends LinearOpMode {
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
+        AtomicBoolean reverseIntake = new AtomicBoolean(false); // Intake on
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
         Actions.runBlocking(
@@ -74,7 +75,9 @@ public class Auto extends LinearOpMode {
                             // COLLECT ROUND 2 BALLS
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
-
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
                                 // Example: assume collected PPG for second round
@@ -90,6 +93,9 @@ public class Auto extends LinearOpMode {
                             // COLLECT ROUND 3 BALLS
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
                             new InstantAction(() -> {
@@ -102,7 +108,7 @@ public class Auto extends LinearOpMode {
                             Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get())
                     ),
                     telemetryPacket -> {
-                        robot.controlIntake(intake.get(), false, !intake.get());
+                        robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get());
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                         telemetry.addData("Obelisk Detected", id.get());

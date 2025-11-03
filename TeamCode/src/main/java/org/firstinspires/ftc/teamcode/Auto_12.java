@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-@Autonomous(name = "Auto_Red_Goal")
+@Autonomous(name = "Auto_Red_Goal_12")
 public class Auto_12 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

@@ -289,11 +289,11 @@ public class Robot {
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
-        public final static double turretHighAngle = 355*Math.PI/180; //220*Math.PI/180; //140*Math.PI/180; // In rad, pos = 1
-        public final static double turretLowAngle = -40*Math.PI/180;; //-175*Math.PI/180; //-208*Math.PI/180; // In rad (= old -330 deg)
+        public final static double turretHighAngle = Math.PI/2; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
+        public final static double turretLowAngle = -Math.PI/2; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
         public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
-        public final static double turretScale0 = 0; //0.11;
-        public final static double turretScale1 = 1;
+        public final static double turretScale0 = 0.206; //0; //0.25 ;//0; //0.11;
+        public final static double turretScale1 = 0.66; //1; //0.78; //0.86; //1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
         public static double drivePower = 1.0;
@@ -303,8 +303,8 @@ public class Robot {
     public void driveFieldCentric(double forward, double right, double rotate) {
         double Heading_Angle = drive2.localizer.getPose().heading.toDouble();
         double mag = Math.sqrt(forward*forward + right*right);
-        double Motor_FWD_input = forward * mag;
-        double Motor_Side_input = -right * mag;
+        double Motor_FWD_input = right * mag; //forward * mag;
+        double Motor_Side_input = forward * mag; //-right * mag;
         double Motor_fwd_power = Math.cos(Heading_Angle) * Motor_FWD_input - Math.sin(Heading_Angle) * Motor_Side_input;
         double Motor_side_power = (Math.cos(Heading_Angle) * Motor_Side_input + Math.sin(Heading_Angle) * Motor_FWD_input) * MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick; //*1.5
         double Motor_Rotation_power = rotate * 0.7; //0.5
@@ -374,13 +374,13 @@ public class Robot {
         else{
             // Manually control hood
             double hoodChange = 0;
-            if (hoodUp) hoodChange += 1;
-            if (hoodDown) hoodChange -= 1;
+            if (hoodUp) hoodChange += 0.001;
+            if (hoodDown) hoodChange -= 0.001;
             theta += hoodChange;
             // Manually control turret
             double turretChange = 0;
-            if (turretLeft) turretChange -= 1;
-            if (turretRight) turretChange += 1;
+            if (turretLeft) turretChange -= 0.001;
+            if (turretRight) turretChange += 0.001;
             turretAngle += turretChange;
         }
 
@@ -607,13 +607,13 @@ public class Robot {
             //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
             if (feeder == 2) {
                 actions.add(new InstantAction(() -> intakeAtomic.set(true)));
-                actions.add(new SleepAction(0.12));
+                actions.add(new SleepAction(0.5));
                 actions.add(new InstantAction(() -> intakeAtomic.set(false)));
                 actions.add(new SleepAction(0.08));
             }
             // then set shotReq booleans and the usual sleep/reset sequence
             actions.add(new InstantAction(() -> {
-                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
+                if (feeder == 1 /*|| feeder == 2*/) shotReqFR.set(true);  // 1, 2 = front/right feeder
                 else shotReqBL.set(true);               // 0 = back/left feeder
             }));
             actions.add(new SleepAction(0.2)); // allow an interval of requesting in case the initial request is overridden
