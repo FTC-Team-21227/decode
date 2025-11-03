@@ -27,20 +27,20 @@ public class Auto extends LinearOpMode {
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(-12,15))
-                .turnTo(Math.toRadians(180))
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
         TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
-                .turnTo(Math.toRadians(90))
+                .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,45))
-                .strafeTo(new Vector2d(-12,15))
+                .strafeTo(new Vector2d(-12,45)) // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(12,15))
-                .strafeTo(new Vector2d(12,45))
-                .strafeTo(new Vector2d(-12,15))
+                .strafeTo(new Vector2d(12,15)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(12,45)) // Collect artifacts
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
 
         Action firstTrajectory = tab1.build();

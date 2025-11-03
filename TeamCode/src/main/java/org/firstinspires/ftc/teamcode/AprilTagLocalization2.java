@@ -328,7 +328,7 @@ public class AprilTagLocalization2 {
     }   // end method telemetryAprilTag()
     public int detectObelisk(Telemetry telemetry, boolean detect
     ) {
-        if (!detect) return 21;
+        if (!detect) return 21; // Obelisk detection off
         telemetry.addData("FPS", visionPortal.getFps());
         pipelineTimer.reset();
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -364,7 +364,7 @@ public class AprilTagLocalization2 {
             AprilTagDetection detection = currentDetections.get(0);
             return detection.id;
         }
-        return 21;
+        return 21; // Default
     }   // end method telemetryAprilTag()
 
 
