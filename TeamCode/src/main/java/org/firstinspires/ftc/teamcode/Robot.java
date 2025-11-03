@@ -23,6 +23,7 @@ import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -45,6 +46,7 @@ public class Robot {
     Turret turret; // Servo subsystem that turns to any robot-relative angle
     Hood hood; // Servo subsystem that raises or lowers the hood
     AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
+    VoltageSensor voltageSensor;
     boolean shotReqFeederType = true; // True = front feeder
     boolean lockStarted = false; // Lock shooting vals to allow manual adjustment
     double turretAngle;
@@ -79,6 +81,7 @@ public class Robot {
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
+        voltageSensor = hardwareMap.get(VoltageSensor.class,"Control Hub");
     }
 
     // Create one instance of robot (singleton)
@@ -271,7 +274,7 @@ public class Robot {
         // Where the robot will shoot from:
         public static Pose2d autoShotPose = new Pose2d(-12,15,Math.toRadians(90));
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public static double p = 300, i = 0, d = 0, f = 10;
+        public static double kP = 300, kI = 0, kD = 0, kF = 10 /*kF will be removed in our new version*/, kS = 2.56, kV = 0.00479;
 
         public final static double feederPower = 1.0;
         public final static double intakePower = 1.0;
