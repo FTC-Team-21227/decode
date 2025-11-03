@@ -40,7 +40,7 @@ public class TuneFeedforward extends OpMode {
         double vel = FLYWHEEL.getVelocity();
         double bv = v.getVoltage();
         double vapp = power * bv;
-        RobotLog.dd(""+vel,""+vapp);
+        RobotLog.dd(""+vel,""+vapp); //graph vapp as y vs. vel as x
         telemetry.addData("vel", vel);
         telemetry.addData("seconds", time);
         telemetry.addData("power", power);

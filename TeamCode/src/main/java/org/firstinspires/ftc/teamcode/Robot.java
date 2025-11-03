@@ -605,7 +605,8 @@ public class Robot {
         for (int i = 0; i <= 2; i++) {
             int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
             //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
-            if (feeder == 2) {
+            //The intake pulse has been changed to always occur before the second shot. This deterministically causes slot 2 to go to slot 1 and slot 1 to go to slot 0.
+            if (i==1 /*feeder == 2*/) {
                 actions.add(new InstantAction(() -> intakeAtomic.set(true)));
                 actions.add(new SleepAction(0.5));
                 actions.add(new InstantAction(() -> intakeAtomic.set(false)));
@@ -613,7 +614,7 @@ public class Robot {
             }
             // then set shotReq booleans and the usual sleep/reset sequence
             actions.add(new InstantAction(() -> {
-                if (feeder == 1 /*|| feeder == 2*/) shotReqFR.set(true);  // 1, 2 = front/right feeder
+                if (feeder == 1 || feeder == 2) shotReqFR.set(true);  // 1, 2 = front/right feeder
                 else shotReqBL.set(true);               // 0 = back/left feeder
             }));
             actions.add(new SleepAction(0.2)); // allow an interval of requesting in case the initial request is overridden
