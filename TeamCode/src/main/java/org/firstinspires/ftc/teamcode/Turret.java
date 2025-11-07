@@ -8,10 +8,11 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Turret {
-    Servo turret;
+    CachedServo turret;
 
     public Turret(HardwareMap hardwareMap){
-        turret = hardwareMap.get(Servo.class, "turret"); // Turntable
+//        turret = hardwareMap.get(Servo.class, "turret"); // Turntable
+        turret = new CachedServo(hardwareMap.get(Servo.class,"turret"));
         turret.scaleRange(Robot.Constants.turretScale0,Robot.Constants.turretScale1); // 0 = +90 deg, 1 = -330 deg
         // *** double check scaleRange
     }
@@ -19,14 +20,17 @@ public class Turret {
     // Turns turret to the robot-relative angle in radians
     public void turnToRobotAngle(double angle) {
 //        double targetPos = angle / (2 * Math.PI);
-        angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI)
-                % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
+//        angle = (AngleUnit.normalizeRadians(angle) - Robot.Constants.turretTargetRangeOffset + Math.PI)
+//                % (2 * Math.PI) + Robot.Constants.turretTargetRangeOffset - Math.PI;//+Math.PI)%(2*Math.PI)-Math.PI;
 //        angle = AngleUnit.normalizeRadians(angle);
-        turret.setPosition(constrain((angle - Robot.Constants.turretLowAngle) / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
+        angle = AngleUnit.normalizeRadians(angle-Robot.Constants.turretTargetRangeOffset) + Robot.Constants.turretTargetRangeOffset;
+//        turret.setPosition(Range.scale(angle,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle,0,1));
+        turret.setPosition(/*constrain*/((angle - Robot.Constants.turretLowAngle) / (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle)));
     }
 
     // Gives turret's robot-relative angle (in radians)
     public double getTurretRobotAngle() {
+//        return Range.scale(turret.getPosition(), 0,1,Robot.Constants.turretLowAngle,Robot.Constants.turretHighAngle);
         return turret.getPosition() * (Robot.Constants.turretHighAngle - Robot.Constants.turretLowAngle) + Robot.Constants.turretLowAngle;
     }
 
@@ -48,7 +52,7 @@ public class Turret {
     }
 
     // Returns true if turret target position is out of range
-    public boolean commandedOutsideRange(){
-        return (turret.getPosition()>=0.9999999 || turret.getPosition()<=0.0000001); //changed to >=, <=
-    }
+//    public boolean commandedOutsideRange(){
+//        return (turret.getPosition()>=0.9999999 || turret.getPosition()<=0.0000001); //changed to >=, <=
+//    }
 }

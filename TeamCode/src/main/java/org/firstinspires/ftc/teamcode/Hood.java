@@ -5,10 +5,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class Hood {
-    Servo HOOD;
+    CachedServo HOOD;
 
     public Hood(HardwareMap hardwareMap){
-        HOOD = hardwareMap.get(Servo.class, "hood");
+//        HOOD = hardwareMap.get(Servo.class, "hood");
+        HOOD = new CachedServo(hardwareMap.get(Servo.class, "hood"));
         HOOD.setDirection(Servo.Direction.FORWARD);
         HOOD.scaleRange(Robot.Constants.hoodScale0, Robot.Constants.hoodScale1); // left = low, right = high
     }
@@ -18,7 +19,7 @@ public class Hood {
      * @param angle angle in radians
      */
     public void turnToAngle(double angle){ // Range: 30-60 degrees (ball trajectory, relative to ground)
-        HOOD.setPosition(constrain((angle - Robot.Constants.hoodLowAngle) / (Robot.Constants.hoodHighAngle - Robot.Constants.hoodLowAngle)));
+        HOOD.setPosition(/*constrain*/((angle - Robot.Constants.hoodLowAngle) / (Robot.Constants.hoodHighAngle - Robot.Constants.hoodLowAngle)));
     }
 
     /**
@@ -45,7 +46,7 @@ public class Hood {
     /**
      * @return true if hood target position is out of range
      */
-    public boolean commandedOutsideRange(){
-        return (HOOD.getPosition()==0.9999999 || HOOD.getPosition()==0.0000001);
-    }
+//    public boolean commandedOutsideRange(){
+//        return (HOOD.getPosition()==0.9999999 || HOOD.getPosition()==0.0000001);
+//    }
 }

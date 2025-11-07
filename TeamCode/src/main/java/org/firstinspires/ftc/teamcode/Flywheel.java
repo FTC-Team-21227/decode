@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.hardware.motors.GoBILDA5201Series;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -12,33 +13,46 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Flywheel {
     //pid methods
-    DcMotorEx FLYWHEEL;
+    CachedMotor FLYWHEEL;
     double targetVel;
+    double lastPower;
     PIDController pid;
     FeedforwardController f;
+    VoltageSensor v;
     //power
     public Flywheel (HardwareMap hardwareMap){
-        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "flywheel");
+//        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "flywheel");
+        FLYWHEEL = new CachedMotor(hardwareMap.get(DcMotorEx.class,"flywheel"));
+        v = hardwareMap.get(VoltageSensor.class,"Control Hub");
         FLYWHEEL.setDirection(DcMotorSimple.Direction.REVERSE);
         FLYWHEEL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        FLYWHEEL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        FLYWHEEL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(Robot.Constants.kP,Robot.Constants.kI,Robot.Constants.kD,Robot.Constants.kF));
+        FLYWHEEL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                FLYWHEEL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+//        FLYWHEEL.getMotor().setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300,Robot.Constants.kI,Robot.Constants.kD,Robot.Constants.kF));
         pid = new PIDController(Robot.Constants.kP,Robot.Constants.kI,Robot.Constants.kD);
         f = new FeedforwardController(Robot.Constants.kS,Robot.Constants.kV);
     }
     /**
      * @param vel Velocity the flywheel will spin at
      */
-    public void spinTo(double vel/*, double volts*/) {
+    public double spinTo(double vel/*, double volts*/) {
 //        if (configvalues.p != FLYWHEEL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).p || configvalues.f != FLYWHEEL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).f)
 //            FLYWHEEL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(configvalues.p, configvalues.i, configvalues.d, configvalues.f));
 
         targetVel = vel;
-        FLYWHEEL.setVelocity(targetVel);
-//        FLYWHEEL.setPower((pid.calculate(FLYWHEEL.getVelocity(), targetVel) + f.calculate(targetVel))/volts);
+        double pdds = pid.calculate(getVel(),targetVel);
+//        FLYWHEEL.getMotor().setVelocity(targetVel);
+        FLYWHEEL.setPower((pdds + f.calculate(targetVel))/v.getVoltage());
+        return pdds;
+    }
+    public void setPower(double power){
+        if (power != lastPower){
+            lastPower = power;
+            FLYWHEEL.setPower(power);
+        }
     }
     public double getVel(){
-        return FLYWHEEL.getVelocity();
+        return FLYWHEEL.getMotor().getVelocity();
     }
 }

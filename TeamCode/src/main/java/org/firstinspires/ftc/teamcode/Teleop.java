@@ -15,7 +15,7 @@ public class Teleop extends OpMode {
 //    Telemetry telemetry = dashboard.getTelemetry();
     TelemetryPacket packet = new TelemetryPacket();
     public void init(){
-        robot = new Robot(hardwareMap, new Pose2d(0,0, Math.PI), Robot.Color.RED); //start facing the goals, RED poses
+        robot = new Robot(hardwareMap, new Pose2d(0,0, Math.PI), Robot.Color.BLUE); //start facing the goals, RED poses
         robot.initTeleop(telemetry);
         telemetry.update();
     }

@@ -137,6 +137,8 @@ public class Robot {
 
             c.setStroke("#3F51B5");
             Drawing.drawRobot(c, localizer.getPose());
+            c.setStroke("#00FF00");
+            Drawing.drawRobot(c,localizer.getPose().times(Constants.turretPos));
         }
         /**
          * Point-to-point action: drives the robot from the current pose to targetPose using a
@@ -268,13 +270,13 @@ public class Robot {
     @Config
     public static class Constants{
         public final static Pose2d turretPos = new Pose2d(1.5,0,0); //1.5
-        public static double flywheelPower = 2.8;
+        public static double flywheelPower = 2.6;
         public final static double deltaH = 30;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         // Where the robot will shoot from:
         public static Pose2d autoShotPose = new Pose2d(-12,15,Math.toRadians(90));
         public final static Pose2d poseTurretCamera = new Pose2d(0, 3, 0);
-        public static double kP = 300, kI = 0, kD = 0, kF = 10 /*kF will be removed in our new version*/, kS = 2.56, kV = 0.00479;
+        public static double kP = 0.02, kI = 0, kD = 0, kF = 10 /*kF will be removed in our new version*/, kS = 0.65, kV = 0.00475;
 
         public final static double feederPower = 1.0;
         public final static double intakePower = 1.0;
@@ -286,17 +288,19 @@ public class Robot {
         public final static double LAUNCHER_TARGET_VELOCITY = 1125;
         public final static double LAUNCHER_MIN_VELOCITY = 1075;
         // HOOD CONSTANTS
-        public final static double hoodLowAngle = 60*Math.PI/180; // the traj angle from horizonatla (rad) //0;
+        public final static double hoodLowAngle = 80*Math.PI/180; // the traj angle from horizonatla (rad) //0;
         public final static double hoodHighAngle = 30 * Math.PI/180; //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
         public final static double hoodScale0 = 0.15; //0.27;
         public final static double hoodScale1 = 0.83; //1; //0.85;
         // TURRET CONSTANTS
         //turret 0 = 0.48
+        //oldest ones also work
         public final static double turretHighAngle = Math.PI/2; //164.7*Math.PI/180; //220*Math.PI/180;; //355*Math.PI/180; // //140*Math.PI/180; // In rad, pos = 1
         public final static double turretLowAngle = -Math.PI/2; //-175*Math.PI/180; //-40*Math.PI/180;; // //-208*Math.PI/180; // In rad (= old -330 deg)
-        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
-        public final static double turretScale0 = 0.206; //0; //0.25 ;//0; //0.11;
-        public final static double turretScale1 = 0.66; //1; //0.78; //0.86; //1;
+//        public final static double turretTargetRangeOffset = turretHighAngle-Math.PI; //offset from (-pi,pi)
+        public final static double turretTargetRangeOffset = (turretLowAngle + turretHighAngle )/2.0; //turretHighAngle-Math.PI; //offset from (-pi,pi) to (midpoint-pi, midpoint+pi), i.e. shift midpoint from 0 to new midpoint
+        public final static double turretScale0 = 0.218; //0; //0.25 ;//0; //0.11;
+        public final static double turretScale1 = 0.67; //1; //0.78; //0.86; //1;
         public final static double feederScale0 = 0;
         public final static double feederScale1 = 1;
         public static double drivePower = 1.0;
@@ -344,7 +348,7 @@ public class Robot {
         }
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
-        double p = 0.75; // Fraction of time along trajectory from ground to ground
+        double p = 0.6; // Fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
         double deltaH = Constants.deltaH; // Height difference from shooter to goal
         double distance = goalVector.norm(); // Horizontal distance
@@ -433,7 +437,7 @@ public class Robot {
                     }
                 }
                 // Normal shooting
-                else if (!shotReqAlt) chainShotCount = 1;
+                else if (!shotReqAlt) chainShotCount = 1; //shotReqFeederType = true;
                 if (shotRequestedFront && feederTimer.seconds()>Constants.feedTime) {// After feeding is done. change req state here too
                         launchState = LaunchState.SPIN_UP_FRONT;
                         shotReqFeederType = false; //next RB will be back
@@ -480,8 +484,8 @@ public class Robot {
         }
 
         // TELEMETRY LINES
-        if (hood.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
-        if (turret.commandedOutsideRange()) telemetry.addLine("WARNING: turret commanded out of its range! Auto set to 0 or 1.");
+        if (hood.HOOD.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
+        if (turret.turret.commandedOutsideRange()) telemetry.addLine("WARNING: turret commanded out of its range! Auto set to 0 or 1.");
         telemetry.addData("flywheel power scale factor", Constants.flywheelPower);
         telemetry.addData("State", launchState);
         telemetry.addData("Next feeder type", shotReqFeederType);
