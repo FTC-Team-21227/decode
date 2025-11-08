@@ -46,6 +46,10 @@ public class Auto_12 extends LinearOpMode {
                 .strafeTo(new Vector2d(36,45))
                 .strafeTo(new Vector2d(-12,15))
                 ;
+        TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+                .strafeTo(new Vector2d(40,26.5)) // Strafe to parking
+                ;
+        Action parkTrajectory = tabp.build();
 
         Action firstTrajectory = tab1.build();
         Action turnGoal = tab.build();
@@ -62,6 +66,7 @@ public class Auto_12 extends LinearOpMode {
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
+        AtomicBoolean reverseIntake = new AtomicBoolean(false); // Intake on
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
         Actions.runBlocking(
@@ -79,7 +84,9 @@ public class Auto_12 extends LinearOpMode {
                             // COLLECT ROUND 2 BALLS
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
-
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
                                 // Example: assume collected PPG for second round
@@ -95,6 +102,9 @@ public class Auto_12 extends LinearOpMode {
                             // COLLECT ROUND 3 BALLS
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
                             new InstantAction(() -> {
@@ -107,9 +117,12 @@ public class Auto_12 extends LinearOpMode {
                             Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
 
-                            // COLLECT ROUND 3 BALLS
+                            // COLLECT ROUND 4 BALLS
                             fourthTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
                             new InstantAction(() -> {
@@ -118,11 +131,15 @@ public class Auto_12 extends LinearOpMode {
                                 currentQueue[2] = 'P';
                             }),
 
-                            // FIRE ROUND 3
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get())
+                            // FIRE ROUND 4
+                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
+                            new InstantAction(() -> intake.set(false)),
+
+                            parkTrajectory
+                            //END
                     ),
                     telemetryPacket -> {
-                        robot.controlIntake(intake.get(), false, !intake.get());
+                        robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get());
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                         telemetry.addData("Obelisk Detected", id.get());

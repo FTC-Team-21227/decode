@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
+//import androidx.compose.ui.graphics.Canvas;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
@@ -89,6 +90,12 @@ public class Robot {
         if (instance == null){
             instance = new Robot(hardwareMap, initialPose, color);
         }
+        return instance;
+    }
+
+    public static Robot startInstance(HardwareMap hardwareMap, Pose2d initialPose, Color color)
+    {
+        instance = new Robot(hardwareMap, initialPose, color);
         return instance;
     }
     public void clearInstance(){
