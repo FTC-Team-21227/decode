@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -34,16 +35,16 @@ public class Auto extends LinearOpMode {
                 .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,45)) // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,45), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(12,15)) // Strafe right to next row of artifacts
-                .strafeTo(new Vector2d(12,45)) // Collect artifacts
+                .strafeTo(new Vector2d(15,15)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(15,42), new TranslationalVelConstraint(15)) // Collect artifacts
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
         TrajectoryActionBuilder parktab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(40,26.5)) // Strafe to parking
+                .strafeTo(new Vector2d(20,26.5)) // Strafe to parking
                 ;
 
         Action firstTrajectory = tab1.build();
@@ -80,9 +81,10 @@ public class Auto extends LinearOpMode {
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.1),
+                            new SleepAction(0.2),
                             new InstantAction(() -> reverseIntake.set(false)),
-                            // Update internal ball order after intaking. ORDER: first intook = 0 idx.
+                            new SleepAction(0.2),
+                                // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
                                 // Example: assume collected PPG for second round
                                 currentQueue[0] = 'P';
@@ -98,10 +100,11 @@ public class Auto extends LinearOpMode {
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.1),
+                            new SleepAction(0.2),
                             new InstantAction(() -> reverseIntake.set(false)),
+                            new SleepAction(0.2),
 
-                            // Example: assume collected PPG for last round
+                                // Example: assume collected PPG for last round
                             new InstantAction(() -> {
                                 currentQueue[0] = 'P';
                                 currentQueue[1] = 'G';

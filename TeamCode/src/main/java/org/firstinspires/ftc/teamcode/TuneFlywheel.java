@@ -17,12 +17,12 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
  */
 public class TuneFlywheel extends LinearOpMode {
     Flywheel f;
-//    VoltageSensor v;
+    Voltage v;
     public static int targetVel = 0;
     public void runOpMode(){
         telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry());
         f = new Flywheel(hardwareMap);
-//        v = hardwareMap.get(VoltageSensor.class,"Control Hub");
+        v = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
         waitForStart();
         while (opModeIsActive()){
             double k = 0;

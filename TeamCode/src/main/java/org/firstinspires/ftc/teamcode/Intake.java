@@ -35,6 +35,10 @@ public class Intake {
         INTAKE.setPower(0);
         paused = true;
     }
+    public void shortOuttake(){
+        INTAKE.setPower(-1);
+        paused = true;
+    }
     public void proceed() {
         INTAKE.setPower(power);
         paused = false;

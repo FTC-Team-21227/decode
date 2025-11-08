@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class FlywheeelTest extends LinearOpMode {
     DcMotorEx f;
     public void runOpMode(){
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
         f = hardwareMap.get(DcMotorEx.class, "Fly_Wheel");
         f.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         f.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
