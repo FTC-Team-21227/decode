@@ -141,7 +141,7 @@ public class Auto15 extends LinearOpMode {
                             new InstantAction(() -> intake.set(true))
                     ),
                     telemetryPacket -> {
-                        robot.controlIntake(intake.get(), false, !intake.get());
+                        robot.controlIntake(intake.get(), false, !intake.get(), false);
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                         telemetry.addData("Obelisk Detected", id.get());

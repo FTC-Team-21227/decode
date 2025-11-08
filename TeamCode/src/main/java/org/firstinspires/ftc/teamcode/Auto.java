@@ -22,7 +22,7 @@ public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Robot robot = Robot.getInstance(hardwareMap, initialPose, Robot.Color.RED);
+        Robot robot = Robot.startInstance(hardwareMap, initialPose, Robot.Color.RED);
         robot.initAuto(telemetry);
         MecanumDrive drive = robot.drive2;
 
@@ -108,7 +108,7 @@ public class Auto extends LinearOpMode {
                             Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get())
                     ),
                     telemetryPacket -> {
-                        robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get());
+                        robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get(), false);
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
                         id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                         telemetry.addData("Obelisk Detected", id.get());

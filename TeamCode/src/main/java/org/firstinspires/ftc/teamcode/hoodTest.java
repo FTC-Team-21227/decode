@@ -38,7 +38,7 @@ public class hoodTest extends LinearOpMode {
             telemetry.addData("Hood target angle", HoodAngle);
             telemetry.addData("Hood curr angle", hood.getAngle());
             telemetry.addData("Hood pos", hood.HOOD.getPosition());
-            telemetry.addData("outside range", hood.commandedOutsideRange());
+            telemetry.addData("outside range", hood.HOOD.commandedOutsideRange());
             telemetry.update();
         }
     }

@@ -8,7 +8,6 @@ import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HolonomicController;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.MecanumKinematics;
@@ -28,7 +27,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,13 +44,16 @@ public class Robot {
     Turret turret; // Servo subsystem that turns to any robot-relative angle
     Hood hood; // Servo subsystem that raises or lowers the hood
     AprilTagLocalization2 camera; // Camera subsystem used in AprilDrive and Obelisk detection
-    VoltageSensor voltageSensor;
+    Voltage voltageSensor;
     boolean shotReqFeederType = true; // True = front feeder
     boolean lockStarted = false; // Lock shooting vals to allow manual adjustment
-    double turretAngle;
+    double turretAngle; //Turret Angle
     double radps; // Flywheel speed
     double theta; // Hood angle
+    double turretAngleOffset = 0;
+    double hoodAngleOffset = 0;
     double chainShotCount = 1; // How many balls to shoot consecutively
+    double lastTime = 0;
 
     // Enum that stores the alliance color, accessible globally
     public enum Color {
@@ -74,14 +75,14 @@ public class Robot {
                 initialPose = mirrorPose(initialPose);
                 break;
         }
+        voltageSensor = new Voltage(hardwareMap.get(VoltageSensor.class,"Control Hub"));
         intake = new Intake(hardwareMap);
         camera = new AprilTagLocalization2(hardwareMap);
-        drive2 = new AprilDrive(hardwareMap, initialPose);
+        drive2 = new AprilDrive(hardwareMap, initialPose, voltageSensor);
         feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
-        voltageSensor = hardwareMap.get(VoltageSensor.class,"Control Hub");
     }
 
     // Create one instance of robot (singleton)
@@ -91,15 +92,21 @@ public class Robot {
         }
         return instance;
     }
-    public void clearInstance(){
+
+    public static Robot startInstance(HardwareMap hardwareMap, Pose2d initialPose, Color color){
+        instance = new Robot(hardwareMap, initialPose, color);
+        return instance;
+    }
+
+    public static void clearInstance(){
         instance = null;
     }
 
 
     public class AprilDrive extends MecanumDrive{
         // Reset localizer functions using AprilTags
-        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ // Using the parent constructor since we only are creating one method
-            super(hardwareMap,initialPose);
+        public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose, Voltage v){ // Using the parent constructor since we only are creating one method
+            super(hardwareMap,initialPose, v);
         }
 
         // TODO: Maybe want to return a boolean of successful relocalization instead of the pose,
@@ -225,6 +232,7 @@ public class Robot {
         SPIN_UP_BACK,
         FEED_FRONT,
         FEED_BACK,
+        FEED_DOWN,
         LAUNCHING,
     }
     private LaunchState launchState;
@@ -236,7 +244,8 @@ public class Robot {
     private DriveState driveState;
 
     ElapsedTime feederTimer;
-    ElapsedTime aprilTimer;
+    ElapsedTime aprilTimer; //gonna use aprilTimer to also track loop times. Sorry, not sorry.
+    ElapsedTime intakeTimer; //this is so cancer
 
 
     // Initialize and set motors, shooter, timers
@@ -246,6 +255,7 @@ public class Robot {
 
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
+        intakeTimer = new ElapsedTime();
 
         Constants.drivePower = 1;
 
@@ -259,6 +269,7 @@ public class Robot {
 
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
+        intakeTimer = new ElapsedTime();
 
         Constants.drivePower = 0.5;
 
@@ -378,18 +389,19 @@ public class Robot {
                 RobotLog.dd("SHOOTER CALC FAILED MATH", e.getMessage());
             }
         }
-        else{
-            // Manually control hood
-            double hoodChange = 0;
-            if (hoodUp) hoodChange += 0.001;
-            if (hoodDown) hoodChange -= 0.001;
-            theta += hoodChange;
-            // Manually control turret
-            double turretChange = 0;
-            if (turretLeft) turretChange -= 0.001;
-            if (turretRight) turretChange += 0.001;
-            turretAngle += turretChange;
-        }
+//        else{
+//
+//        }
+        // Manually control hood
+        double hoodChange = 0;
+        if (hoodUp) hoodChange += Math.PI/180;
+        if (hoodDown) hoodChange -= Math.PI/180;
+        hoodAngleOffset += hoodChange;
+        // Manually control turret
+        double turretChange = 0;
+        if (turretLeft) turretChange -= Math.PI/180;
+        if (turretRight) turretChange += Math.PI/180;
+        turretAngleOffset += turretChange;
 
         // Adjust flywheel RPM
         double delta = 0;
@@ -404,19 +416,19 @@ public class Robot {
             theta = Math.PI/2;
             turretAngle = 0;
         }
-        flywheel.spinTo(radps * 28 / Math.PI / 2);
+        flywheel.spinTo(radps * 28 / Math.PI / 2, voltageSensor);
         // Set hood angle to theta (convert to servo position)
-        hood.turnToAngle(theta);
-        turret.turnToRobotAngle(turretAngle);
+        hood.turnToAngle(theta+hoodAngleOffset);
+        turret.turnToRobotAngle(turretAngle+turretAngleOffset);
 
         //use +-1 of requesting state
 
         switch (launchState) {
             case IDLE:
-                if (shotReqAlt && feederTimer.seconds()>Constants.feedTime){
+                if (shotReqAlt /*&& feederTimer.seconds()>Constants.feedTime*/){
                     // If 2 artifacts to shoot consecutively
                     if (chainShotCount == 2){
-                        if (feederTimer.seconds() > Constants.feedTime + 0.6) {
+                        if (feederTimer.seconds() > /*Constants.feedTime + */0.6) {
                             // True = front feeder, False = back feeder
                             if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                             else launchState = LaunchState.SPIN_UP_BACK;
@@ -425,7 +437,7 @@ public class Robot {
                             feederTimer.reset();
                         }
                         // Stop pulse
-                        else if (feederTimer.seconds() > Constants.feedTime + 0.5) intake.stop();
+                        else if (feederTimer.seconds() > /*Constants.feedTime +*/ 0.5) intake.stop();
                         // Intake pulse to move ball to a spot
                         else intake.intake();
                     }
@@ -438,12 +450,12 @@ public class Robot {
                 }
                 // Normal shooting
                 else if (!shotReqAlt) chainShotCount = 1; //shotReqFeederType = true;
-                if (shotRequestedFront && feederTimer.seconds()>Constants.feedTime) {// After feeding is done. change req state here too
+                if (shotRequestedFront/* && feederTimer.seconds()>Constants.feedTime*/) {// After feeding is done. change req state here too
                         launchState = LaunchState.SPIN_UP_FRONT;
                         shotReqFeederType = false; //next RB will be back
                         feederTimer.reset();
                 }
-                else if (shotRequestedBack && feederTimer.seconds()>Constants.feedTime) {
+                else if (shotRequestedBack/* && feederTimer.seconds()>Constants.feedTime*/) {
                         launchState = LaunchState.SPIN_UP_BACK;
                         shotReqFeederType = true;
                         feederTimer.reset();
@@ -473,9 +485,15 @@ public class Robot {
                 break;
             case LAUNCHING: // RESET EVERYTHING
                 if (feederTimer.seconds() > Constants.feedTime) {
-                    launchState = LaunchState.IDLE;
+                    launchState = LaunchState.FEED_DOWN;
                     feeder.downFR();
                     feeder.downBL();
+                    feederTimer.reset();
+                }
+                break;
+            case FEED_DOWN: // RESET EVERYTHING
+                if (feederTimer.seconds() > Constants.feedTime) {
+                    launchState = LaunchState.IDLE;
                     feederTimer.reset();
                     intake.proceed();
                     if (shotReqAlt) chainShotCount++;
@@ -496,9 +514,11 @@ public class Robot {
         telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle));
         telemetry.addData("distance to goal (inch)", distance);
         telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
+        telemetry.addData("turret angle offset (rad to deg)", turretAngleOffset*180/Math.PI);
         telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()*180/Math.PI);
         telemetry.addData("turret pos", turret.turret.getPosition());
         telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
+        telemetry.addData("hood angle offset (rad to deg)", hoodAngleOffset*180/Math.PI);
         telemetry.addData("hood get angle (rad to deg)", hood.getAngle());
         telemetry.addData("hood pos", hood.HOOD.getPosition());
         telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2);
@@ -530,15 +550,29 @@ public class Robot {
                 driveState = DriveState.RELATIVE;
                 break;
         }
+        double curTime = aprilTimer.milliseconds();
+        telemetry.addData("loop time (ms)",curTime-lastTime);
+        lastTime = curTime;
         telemetry.addData("x", drive2.localizer.getPose().position.x);
         telemetry.addData("y", drive2.localizer.getPose().position.y);
         telemetry.addData("heading (deg)", Math.toDegrees(drive2.localizer.getPose().heading.toDouble()));
     }
+    public double updateVoltage(Telemetry telemetry){
+        double voltage = voltageSensor.updateVoltage();
+        telemetry.addData("volts",voltage);
+        return voltage;
+    }
 
-    public void controlIntake(boolean in, boolean out, boolean stop){
-        if (out) intake.outtake();
-        else if (in) intake.intake();
-        else if (stop) intake.stop();
+    public void controlIntake(boolean in, boolean out, boolean stop, boolean tapOut){
+        if (intakeTimer.seconds()>0.1){
+            if (out) intake.outtake();
+            else if (in) intake.intake();
+            else if (stop) intake.stop();
+        }
+        if (tapOut){
+            intake.outtake();
+            intakeTimer.reset();
+        }
     }
     // Lookup table (lut)
     public int[][][] power = {{{1}}};
