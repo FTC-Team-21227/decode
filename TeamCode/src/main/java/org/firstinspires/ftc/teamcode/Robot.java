@@ -27,6 +27,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -98,7 +99,7 @@ public class Robot {
         return instance;
     }
 
-    public static void clearInstance(){
+    public void clearInstance(){
         instance = null;
     }
 

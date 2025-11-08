@@ -42,11 +42,15 @@ public class Auto extends LinearOpMode {
                 .strafeTo(new Vector2d(12,45)) // Collect artifacts
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
+        TrajectoryActionBuilder parktab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+                .strafeTo(new Vector2d(40,26.5)) // Strafe to parking
+                ;
 
         Action firstTrajectory = tab1.build();
         Action turnGoal = tab.build();
         Action secondTrajectory = tab2.build();
         Action thirdTrajectory = tab3.build();
+        Action parkTrajectory = parktab.build();
 
         // Keeps track of robot's internal ball order based on what is intook first
         char[] currentQueue = {'P','G','P'}; // Intake order: purple, green, purple
@@ -104,8 +108,11 @@ public class Auto extends LinearOpMode {
                                 currentQueue[2] = 'P';
                             }),
 
-                            // FIRE ROUND 3
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get())
+                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
+                            new InstantAction(() -> intake.set(false)),
+
+                            parkTrajectory
+                            // END
                     ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get(), false);

@@ -64,6 +64,10 @@ public class Auto15 extends LinearOpMode {
                 .strafeTo(new Vector2d(-12, 15)) // Shooting pos
                 // TODO: Shoot here. 15/15
                 ;
+        TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+                .strafeTo(new Vector2d(40,26.5)) // Strafe to parking
+                ;
+        Action parkTrajectory = tabp.build();
 
         Action firstTrajectory = tab1.build();
         Action turnGoal = tab.build();
@@ -81,6 +85,7 @@ public class Auto15 extends LinearOpMode {
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
+        AtomicBoolean reverseIntake = new AtomicBoolean(false); // Intake on
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
         Actions.runBlocking(
@@ -97,6 +102,9 @@ public class Auto15 extends LinearOpMode {
                             // COLLECT ROW 2 BALLS
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> { // ROW 2 ORDER
                                 currentQueue[0] = 'P';
@@ -109,6 +117,9 @@ public class Auto15 extends LinearOpMode {
                             // COLLECT ROW 1 BALLS
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
                             new InstantAction(() -> { // ROW 1 ORDER
                                 currentQueue[0] = 'P';
                                 currentQueue[1] = 'P';
@@ -120,6 +131,9 @@ public class Auto15 extends LinearOpMode {
                             // COLLECT ROW 3 BALLS
                             fourthTrajectory,
                             new InstantAction(() -> intake.set(false)),
+                            new InstantAction(() -> reverseIntake.set(true)),
+                            new SleepAction(0.1),
+                            new InstantAction(() -> reverseIntake.set(false)),
                             new InstantAction(() -> { // ROW 3 ORDER
                                 currentQueue[0] = 'G';
                                 currentQueue[1] = 'P';
@@ -128,17 +142,19 @@ public class Auto15 extends LinearOpMode {
                             // FIRE ROUND 4
                             Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
                             new InstantAction(() -> intake.set(true)),
+
+                            parkTrajectory
                             // COLLECT GATE RELEASE BALLS
-                            fifthTrajectory,
-                            new InstantAction(() -> intake.set(false)),
-                            new InstantAction(() -> { // ORDER UNKNOWN
-                                currentQueue[0] = 'G';
-                                currentQueue[1] = 'P';
-                                currentQueue[2] = 'P';
-                            }),
+//                            fifthTrajectory,
+//                            new InstantAction(() -> intake.set(false)),
+//                            new InstantAction(() -> { // ORDER UNKNOWN
+//                                currentQueue[0] = 'G';
+//                                currentQueue[1] = 'P';
+//                                currentQueue[2] = 'P';
+//                            }),
                             // FIRE ROUND 5
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
-                            new InstantAction(() -> intake.set(true))
+//                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
+//                            new InstantAction(() -> intake.set(true))
                     ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), false, !intake.get(), false);
