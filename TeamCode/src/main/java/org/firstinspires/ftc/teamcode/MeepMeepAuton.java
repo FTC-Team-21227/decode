@@ -18,7 +18,7 @@ public class MeepMeepAuton extends LinearOpMode {
         Pose2d startPose = new Pose2d(0, 0, 0);
 
         // init drive
-        MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
+        MecanumDrive drive = new MecanumDrive(hardwareMap, startPose, null);
 
         // build same trajectory as your MeepMeep path
         TrajectoryActionBuilder traj = drive.actionBuilder(startPose)

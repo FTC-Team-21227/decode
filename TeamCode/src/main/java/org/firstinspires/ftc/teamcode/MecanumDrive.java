@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -89,6 +90,8 @@ public class MecanumDrive {
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
         public double headingVelGain = 0.0; // shared with turn
+
+        public Robot.Color color = Robot.Color.RED;
     }
 
     public static Params PARAMS = new Params();
@@ -218,7 +221,7 @@ public class MecanumDrive {
         }
     }
 
-    public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
+    public MecanumDrive(HardwareMap hardwareMap, Pose2d pose, Robot.Color color) {
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
 
         for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
@@ -252,6 +255,8 @@ public class MecanumDrive {
         localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
+
+        PARAMS.color = color;
     }
 
     public void setDrivePowers(PoseVelocity2d powers) {
@@ -487,18 +492,41 @@ public class MecanumDrive {
     }
 
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
-        return new TrajectoryActionBuilder(
-                TurnAction::new,
-                FollowTrajectoryAction::new,
-                new TrajectoryBuilderParams(
-                        1e-6,
-                        new ProfileParams(
-                                0.25, 0.1, 1e-2
-                        )
-                ),
-                beginPose, 0.0,
-                defaultTurnConstraints,
-                defaultVelConstraint, defaultAccelConstraint
-        );
+        if (PARAMS.color == Robot.Color.RED){
+            return new TrajectoryActionBuilder(
+                    TurnAction::new,
+                    FollowTrajectoryAction::new,
+                    new TrajectoryBuilderParams(
+                            1e-6,
+                            new ProfileParams(
+                                    0.25, 0.1, 1e-2
+                            )
+                    ),
+                    beginPose, 0.0,
+                    defaultTurnConstraints,
+                    defaultVelConstraint, defaultAccelConstraint
+            );
+        }
+        else if (PARAMS.color == Robot.Color.BLUE){
+            return new TrajectoryActionBuilder(
+                    TurnAction::new,
+                    FollowTrajectoryAction::new,
+                    new TrajectoryBuilderParams(
+                            1e-6,
+                            new ProfileParams(
+                                    0.25, 0.1, 1e-2
+                            )
+                    ),
+                    beginPose, 0.0,
+                    defaultTurnConstraints,
+                    defaultVelConstraint, defaultAccelConstraint,
+                    pose -> new Pose2dDual<>(
+                            pose.position.x, pose.position.y.unaryMinus(), pose.heading.inverse())
+            );
+        }
+        else{
+            RobotLog.a("Robot collor inaccesible in mecanum drive and cooked");
+            return null;
+        }
     }
 }

@@ -46,7 +46,7 @@ public class RobotSG {
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){
-            super(hardwareMap,initialPose);
+            super(hardwareMap,initialPose, null);
         }
         public Pose2d relocalize(Telemetry telemetry) {
             PoseVelocity2d vel = super.updatePoseEstimate();

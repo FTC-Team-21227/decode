@@ -42,7 +42,7 @@ public class Flywheel {
         targetVel = vel;
         double curVel = getVel();
         //pidf bangbang: go as fast as possible when spinning up then slow down for the last hundred ticks/s
-        if (/*Math.abs(targetVel-curVel) > 100*/ true) {
+        if (/*Math.abs(targetVel-curVel) > 300*/ true) {
             double pdds = pid.calculate(curVel, targetVel);
 //        FLYWHEEL.getMotor().setVelocity(targetVel);
             FLYWHEEL.setPower((pdds + f.calculate(targetVel)) / v.getVoltage());

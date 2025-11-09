@@ -58,7 +58,7 @@ public class ShooterRobot {
     private class AprilDrive extends MecanumDrive{ //if this works, preferred over AprilTagMecanumDrive
         //localizer functions reset with apriltags
         public AprilDrive(HardwareMap hardwareMap, Pose2d initialPose){ //just use the parent constructor, we only are creating one method
-            super(hardwareMap,initialPose);
+            super(hardwareMap,initialPose, null);
         }
         //relocalize method: every 10 ish seconds, use the goal AprilTag to re-define the robot's pose relative to the field.
         //maybe want to return a boolean of successful relocalization instead of the pose, which is accessible by other means. Then we can keep trying to relocalize until we get a success.

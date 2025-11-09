@@ -21,8 +21,8 @@ public class Auto15 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Robot robot = Robot.getInstance(hardwareMap, initialPose, Robot.Color.RED);
-        robot.initAuto(telemetry);
+        Robot robot = Robot.getInstance(initialPose, Robot.Color.RED);
+        robot.initAuto(hardwareMap, telemetry);
         MecanumDrive drive = robot.drive2;
 
 

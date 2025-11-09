@@ -15,11 +15,22 @@ public class Teleop extends OpMode {
 //    Telemetry telemetry = dashboard.getTelemetry();
     TelemetryPacket packet = new TelemetryPacket();
     public void init(){
-        robot = Robot.getInstance(hardwareMap, new Pose2d(0,0, Math.PI), Robot.Color.RED); //start facing the goals, RED poses
-        robot.initTeleop(telemetry);
+        robot = Robot.getInstance(new Pose2d(0,0, Math.PI), Robot.Color.BLUE); //start facing the goals, RED poses
+        robot.initTeleop(hardwareMap, telemetry);
+//        robot.turret.turnToRobotAngle(0);
+//        robot.hood.turnToAngle(Math.toRadians(45));
         telemetry.update();
     }
+//    double turretPos = 0.5;
     public void loop(){
+//        if (gamepad1.dpad_up){
+//            turretPos += 0.001;
+//            robot.turret.turret.setPosition(turretPos);
+//        }
+//        if (gamepad1.dpad_down){
+//            turretPos -= 0.001;
+//            robot.turret.turret.setPosition(turretPos);
+//        }
         //toggles: LB, x, y
         if (gamepad1.leftBumperWasPressed()) intake = !intake;
         if (gamepad1.xWasPressed()) setPose = !setPose;
@@ -34,6 +45,11 @@ public class Teleop extends OpMode {
         //robot.controlPark: toggle start = up/down. Everything unpowered when up.
         robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.drive2.drawPose(packet);
+//        telemetry.addLine(""+robot.turret.turret.getPosition());
+//        telemetry.addLine(""+robot.drive2.localizer.getPose().position.x + ", "+robot.drive2.localizer.getPose().position.y + ", "+robot.drive2.localizer.getPose().heading.toDouble());
+//        telemetry.addLine(""+robot.hood.HOOD.getPosition());
+//        telemetry.addLine(""+robot.flywheel.FLYWHEEL.getMotor().getDirection());
+//        telemetry.addLine(""+robot.feeder.BL_FEEDER.getPosition());
         telemetry.update();
     }
 }
