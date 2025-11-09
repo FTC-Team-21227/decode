@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.HolonomicController;
@@ -33,7 +32,6 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 // Full Robot: drive, flywheel, turret, hood, feeder, intake, camera
 
-@Config
 public class Robot {
     private static Robot instance = null;
     // TODO: Red/blue pose mirroring

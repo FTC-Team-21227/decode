@@ -80,12 +80,12 @@ public class Auto extends LinearOpMode {
                 .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,45), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(15,15)) // Strafe right to next row of artifacts
-                .strafeTo(new Vector2d(15,50), new TranslationalVelConstraint(15)) // Collect artifacts
+                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15)) // Collect artifacts
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
         TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
