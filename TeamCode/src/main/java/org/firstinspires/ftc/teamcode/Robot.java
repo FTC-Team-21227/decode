@@ -332,7 +332,7 @@ public class Robot {
     public static class Constants{
         public final static Pose2d turretPos = new Pose2d(1.5,0,0); //1.5
         public static double flywheelPower = 2.6;
-        public final static double deltaH = 32;
+        public static double deltaH = 32;
         public static Vector2d goalPos = new Vector2d(-58.3727,55.6425);
         // Where the robot will shoot from:
         public static Pose2d autoShotPose = new Pose2d(-12,15,Math.toRadians(90));
@@ -405,7 +405,7 @@ public class Robot {
 
         // if setPose just became true, recompute next loop:
         if (!setPose) lockStarted = false;
-        if (setPose){
+        if (setPose && setRobotPose != null){
             poseRobot = setRobotPose; // Calculate shooting values on where we plan to shoot
             RobotLog.a("Correct auto pose!");
         }
@@ -439,7 +439,7 @@ public class Robot {
             StarterRobot.Constants.flywheelPower += change;
              */
                 // Convert vel (speed) to rad/s (example calibration: vel = wheelRadius * rad/s
-                radps = vel / wheelRadius * Constants.flywheelPower; // RPM
+                radps = vel / wheelRadius; // RPM
             }
             catch(ArithmeticException e){
                 RobotLog.dd("SHOOTER CALC FAILED MATH", e.getMessage());
@@ -473,7 +473,7 @@ public class Robot {
             theta = Math.PI/2;
             turretAngle = 0;
         }
-        flywheel.spinTo(radps * 28 / Math.PI / 2);
+        flywheel.spinTo(radps * 28 / Math.PI / 2 * Constants.flywheelPower);
         // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta+hoodAngleOffset);
         turret.turnToRobotAngle(turretAngle+turretAngleOffset);
@@ -614,6 +614,19 @@ public class Robot {
         telemetry.addData("y", drive2.localizer.getPose().position.y);
         telemetry.addData("heading (deg)", Math.toDegrees(drive2.localizer.getPose().heading.toDouble()));
     }
+    public boolean setGoalTarget(){
+        double x = drive2.localizer.getPose().position.x;
+        boolean close = x < -10;
+        if (close){
+            Constants.goalPos = handleVector(new Vector2d(-58.3727,55.6425));
+            Constants.deltaH = 32;
+        }
+        else { //chagne to be better at far
+            Constants.goalPos = handleVector(new Vector2d(-58.3727,55.6425));
+            Constants.deltaH = 32;
+        }
+        return close;
+    }
 //    public double updateVoltage(Telemetry telemetry){
 //        double voltage = voltageSensor.updateVoltage();
 //        telemetry.addData("volts",voltage);
@@ -644,6 +657,18 @@ public class Robot {
     //helpers
     public Pose2d mirrorPose(Pose2d pose){
         return new Pose2d(new Vector2d(pose.position.x, -pose.position.y), new Rotation2d(pose.heading.real, -pose.heading.imag));
+    }
+    public Pose2d handlePose(Pose2d pose){
+        if (color == Color.BLUE){
+            return new Pose2d(new Vector2d(pose.position.x, -pose.position.y), new Rotation2d(pose.heading.real, -pose.heading.imag));
+        }
+        return pose;
+    }
+    public Vector2d handleVector(Vector2d vector){
+        if (color == Color.BLUE){
+            return new Vector2d(vector.x, -vector.y);
+        }
+        return vector;
     }
 
     // === Helper: Determine desired color sequence per obelisk ID ===
