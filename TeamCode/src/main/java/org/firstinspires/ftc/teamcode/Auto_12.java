@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -82,17 +83,17 @@ public class Auto_12 extends LinearOpMode {
                 .turnTo(Math.toRadians(90))
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,45))
+                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15))
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(15,15))
-                .strafeTo(new Vector2d(15,45))
+                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15))
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(36,15))
-                .strafeTo(new Vector2d(36,45))
+                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
