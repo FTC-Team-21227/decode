@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.config.Config;
+//import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Rotation2d;
@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 
 import java.util.Objects;
 
-@Config
+//@Config
 public final class PinpointLocalizer implements Localizer {
     public static class Params {
         public double parYTicks = -5.25/MecanumDrive.PARAMS.inPerTick; // y position of the parallel encoder (in tick units)

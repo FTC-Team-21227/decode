@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.*;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
@@ -52,7 +51,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-@Config
 public class MecanumDrive {
     public static class Params {
         // IMU orientation
