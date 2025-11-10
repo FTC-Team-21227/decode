@@ -155,7 +155,7 @@ public class Auto_12 extends LinearOpMode {
                             new SleepAction(0.5),
                             new InstantAction(() -> detectOb.set(false)),
                             turnGoal, // Turn 90 degrees
-                            // FIRE ROUND 1 (detect obelisk)
+                            // FIRE ROUND 1 (detect obelisk) PGP inside robot
                             Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue.get(), id.get()),
                             new InstantAction(() -> intake.set(true)),
 
@@ -163,7 +163,7 @@ public class Auto_12 extends LinearOpMode {
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.2),
+                            new SleepAction(0.15),
                             new InstantAction(() -> reverseIntake.set(false)),
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
@@ -182,7 +182,7 @@ public class Auto_12 extends LinearOpMode {
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.2),
+                            new SleepAction(0.15),
                             new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
@@ -201,7 +201,7 @@ public class Auto_12 extends LinearOpMode {
                             fourthTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.2),
+                            new SleepAction(0.15),
                             new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round

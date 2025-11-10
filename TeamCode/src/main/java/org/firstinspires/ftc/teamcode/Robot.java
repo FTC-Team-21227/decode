@@ -426,7 +426,7 @@ public class Robot {
         Pose2d pose = poseRobot.times(Constants.turretPos); // Pose with the TURRET's position on the robot and ROBOT's heading
         Vector2d goalVector = Constants.goalPos.minus(pose.position);
 
-        double p = 0.6; // Fraction of time along trajectory from ground to ground
+        double p = 0.65; // Fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
         double deltaH = Constants.deltaH; // Height difference from shooter to goal
         double distance = goalVector.norm(); // Horizontal distance
