@@ -18,7 +18,7 @@ public class turretTest extends LinearOpMode {
  //        initialization();
         turret = new Turret(hardwareMap);
         waitForStart();
-        double turretPos = 0;
+        double turretPos = 0.5;
         while (opModeIsActive()) {
             // Run flywheel based on calculated velocity
 //            flywheelVelocity = calcShooterVel(telemetry, distance, heightDiff);
@@ -36,6 +36,9 @@ public class turretTest extends LinearOpMode {
                 turret.turnToRobotAngle(Math.PI* 3/2);
             }
             if (gamepad1.dpad_left){
+                turret.turnToRobotAngle(Math.atan2(Robot.Constants.goalPos.minus(Robot.Constants.autoShotPose.position).x,Robot.Constants.goalPos.minus(Robot.Constants.autoShotPose.position).y)-Math.toRadians(90));
+            }
+            if (gamepad1.dpad_right){
                 turret.turnToRobotAngle(14*Math.PI/180);
             }
 

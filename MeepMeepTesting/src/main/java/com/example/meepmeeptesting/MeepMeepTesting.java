@@ -38,18 +38,10 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 18)
                 .build();
 
-        mySecondBot.runAction(mySecondBot.getDrive().actionBuilder(new Pose2d(-55, 46, Math.toRadians(-55)))
-                .strafeTo(new Vector2d(-12,15))
-                .turnTo(Math.toRadians(180))
-                .turnTo(Math.toRadians(90))
-                .strafeTo(new Vector2d(-12,45))
-                .strafeTo(new Vector2d(-12,15))
-                .strafeTo(new Vector2d(12,15))
-                .strafeTo(new Vector2d(12,45))
-                .strafeTo(new Vector2d(-12,15))
-                .strafeTo(new Vector2d(36,15))
-                .strafeTo(new Vector2d(36,45))
-                .strafeTo(new Vector2d(-12,15))
+        mySecondBot.runAction(mySecondBot.getDrive().actionBuilder(new Pose2d(60, 12, Math.toRadians(90)))
+                .strafeTo(new Vector2d(60,60))
+                .strafeTo(new Vector2d(60,12))
+                .strafeTo(new Vector2d(60,32))
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_JUICE_DARK)

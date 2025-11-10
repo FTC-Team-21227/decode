@@ -105,7 +105,7 @@ public class AprilTagLocalization2 {
      */
     //TEMP CHANGE
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            5.325, 4.75, 7.5, 0); // UNKNOWN CONSTANTS
+            5.183228346, 4.963070866, 7.79528, 0); // UNKNOWN CONSTANTS
 //    private Position cameraPosition = new Position(DistanceUnit.INCH,
 //            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,

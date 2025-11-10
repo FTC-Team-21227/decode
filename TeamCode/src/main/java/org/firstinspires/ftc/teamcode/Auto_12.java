@@ -97,7 +97,7 @@ public class Auto_12 extends LinearOpMode {
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(-6,15)) // Strafe to parking
+                .strafeTo(new Vector2d(0,15)) // Strafe to parking
                 ;
 
         ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();
@@ -163,7 +163,7 @@ public class Auto_12 extends LinearOpMode {
                             secondTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.1),
+                            new SleepAction(0.2),
                             new InstantAction(() -> reverseIntake.set(false)),
                             // Update internal ball order after intaking. ORDER: first intook = 0 idx.
                             new InstantAction(() -> {
@@ -182,7 +182,7 @@ public class Auto_12 extends LinearOpMode {
                             thirdTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.1),
+                            new SleepAction(0.2),
                             new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
@@ -201,7 +201,7 @@ public class Auto_12 extends LinearOpMode {
                             fourthTrajectory,
                             new InstantAction(() -> intake.set(false)),
                             new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.1),
+                            new SleepAction(0.2),
                             new InstantAction(() -> reverseIntake.set(false)),
 
                             // Example: assume collected PPG for last round
