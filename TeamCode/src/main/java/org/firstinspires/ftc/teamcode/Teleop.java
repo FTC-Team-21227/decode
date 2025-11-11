@@ -41,7 +41,7 @@ public class Teleop extends OpMode {
         //final version will be: LB = intake toggle, b = reverse, a = brief reverse
         robot.controlIntake(intake, gamepad1.b, !intake, gamepad1.aWasPressed());
         //final version will be: RT = front feeder, LT = back feeder, RB = alternating feeder, x = toggle setPose => shooter lock/manual control, rightstick up/down = flywheel scale, dpad up/down= hood, dpad left/right = turret, y = human feed toggle
-        robot.updateShooter(gamepad1.right_trigger > 0.1, gamepad1.left_trigger > 0.1, gamepad1.right_bumper, telemetry, setPose, Robot.Constants.autoShotPose, gamepad1.right_stick_y, gamepad1.dpad_up, gamepad1.dpad_down, gamepad1.dpad_left, gamepad1.dpad_right, human);
+        robot.updateShooter(gamepad1.right_trigger > 0.1, gamepad1.left_trigger > 0.1, gamepad1.right_bumper, telemetry, setPose, Robot.Constants.teleShotPose, gamepad1.right_stick_y, gamepad1.dpad_up, gamepad1.dpad_down, gamepad1.dpad_left, gamepad1.dpad_right, human);
         //robot.controlPark: toggle start = up/down. Everything unpowered when up.
         robot.driveFieldCentric(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         robot.drive2.drawPose(packet);

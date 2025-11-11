@@ -19,12 +19,12 @@ public class Intake {
     }
     // Modes
     public void intake(){
-        if (!paused) INTAKE.setPower(1);
-        power = 1;
+        if (!paused) INTAKE.setPower(1*Robot.Constants.intakePower);
+        power = 1*Robot.Constants.intakePower;
     }
     public void outtake(){
-        if (!paused) INTAKE.setPower(-1);
-        power = -1;
+        if (!paused) INTAKE.setPower(-1*Robot.Constants.intakePower);
+        power = -1*Robot.Constants.intakePower;
     }
     public void stop(){
         if (!paused) INTAKE.setPower(0);
@@ -36,7 +36,7 @@ public class Intake {
         paused = true;
     }
     public void shortOuttake(){
-        INTAKE.setPower(-1);
+        INTAKE.setPower(-1*Robot.Constants.intakePower);
         paused = true;
     }
     public void proceed() {
