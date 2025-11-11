@@ -272,7 +272,7 @@ public class Robot {
 
 
     // Initialize and set motors, shooter, timers
-    public void initAuto(HardwareMap hardwareMap, Telemetry telemetry) {
+    public void initAuto(HardwareMap hardwareMap, Telemetry telemetry) throws InterruptedException {
         txWorldPinpoint = new Pose2d(-57.25, 46, Math.toRadians(-50));
         intake = new Intake(hardwareMap);
         camera = new AprilTagLocalization2(hardwareMap);
@@ -286,7 +286,12 @@ public class Robot {
         launchState = LaunchState.IDLE;
         driveState = DriveState.RELATIVE;
 
+        feeder.upBL();
+        Thread.sleep(500);
         feeder.downBL();
+        Thread.sleep(500);
+        feeder.upFR();
+        Thread.sleep(500);
         feeder.downFR();
 
         feederTimer = new ElapsedTime();
@@ -699,6 +704,14 @@ public class Robot {
         char[] desired = getDesiredPattern(obeliskID);
         Order = computeFireOrder(queue, desired);
 
+        RobotLog.d("Obelisk ID: ", obeliskID);
+        RobotLog.d("Balls in robot: ");
+        display(queue);
+        RobotLog.d("balls score order: ");
+        display(desired);
+        RobotLog.d("feeders move order: ");
+        display(Order);
+
         ArrayList<Action> actions = new ArrayList<>();
         for (int i = 0; i <= 2; i++) {
             int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
@@ -725,4 +738,18 @@ public class Robot {
         SequentialAction seq = new SequentialAction(actions);
         return seq;
     }
+
+    public static void display(char[] arr) {
+        String message = "";
+        for (char j:arr) message += j + " ";
+        RobotLog.d(message);
+    }
+
+    public static void display(int[] arr) {
+        String message = "";
+        for (int j:arr) message += j + " ";
+        RobotLog.d(message);
+    }
 }
+
+

@@ -83,21 +83,28 @@ public class Auto_12 extends LinearOpMode {
                 .turnTo(Math.toRadians(90))
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(-12,51), new TranslationalVelConstraint(15)) // ROW[0]
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(15,15))
-                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(12,54), new TranslationalVelConstraint(15)) // ROW[1]
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(36,15))
-                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
-                .strafeTo(new Vector2d(-12,15))
+                .strafeTo(new Vector2d(36,50), new TranslationalVelConstraint(15)) // ROW[2]
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+                ;
+        // Tab 4 but back up before going to shooting pos to avoid bumping into row[1]
+        TrajectoryActionBuilder tab4avoid = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+                .strafeTo(new Vector2d(36,15))
+                .strafeTo(new Vector2d(36,50), new TranslationalVelConstraint(15)) // ROW[2]
+                .strafeTo(new Vector2d(36,40))
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(-6,15)) // Strafe to parking
+                .strafeTo(new Vector2d(-12,25)) // Strafe to parking
                 ;
 
         ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();
@@ -106,7 +113,7 @@ public class Auto_12 extends LinearOpMode {
         queues.add(new char[]{'P','P','G'}); queues.add(new char[]{'P','G','P'}); queues.add(new char[]{'G','P','P'});
 
         if (row == 1){
-            //trajs swap tab2 and tab3
+            // Swap tab2 and tab3
             TrajectoryActionBuilder t = trajs.get(2);
             trajs.set(2,trajs.get(3));
             trajs.set(3, t); //doesn't matter in 9 ball but matters in 12 ball
@@ -116,9 +123,9 @@ public class Auto_12 extends LinearOpMode {
             queues.set(1,q);
         }
         if (row == 2){
-            //trajs swap tab2 and tab4
+            //trajs change tab2 to tab4avoid (to avoid bumping into the rows in front)
             TrajectoryActionBuilder t = trajs.get(2);
-            trajs.set(2,trajs.get(4));
+            trajs.set(2,tab4avoid);
             trajs.set(4, t); //doesn't matter in 9 ball but matters in 12 ball
             //queues swap 0 and 2
             char[] q = queues.get(0);
