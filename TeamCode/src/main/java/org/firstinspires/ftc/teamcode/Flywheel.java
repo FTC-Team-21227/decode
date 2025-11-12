@@ -54,12 +54,15 @@ public class Flywheel {
             return power;
         }
     }
+
+    // Keep track of last power
     public void setPower(double power){
         if (power != lastPower){
             lastPower = power;
             FLYWHEEL.setPower(power);
         }
     }
+    // Return flywheel current velocity
     public double getVel(){
         return FLYWHEEL.getMotor().getVelocity();
     }
