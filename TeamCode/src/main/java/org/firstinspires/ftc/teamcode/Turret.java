@@ -49,7 +49,7 @@ public class Turret {
 //            ogPos = 0.0000001;
 //        }
 //
-        return Range.clip(ogPos,Robot.Constants.turretClip0,Robot.Constants.turretClip1);
+        return Range.clip(ogPos,Robot.Positions.turretClip0,Robot.Positions.turretClip1);
     }
 
     // Returns true if turret target position is out of range

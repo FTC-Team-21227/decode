@@ -24,10 +24,10 @@ public class Feeder {
         feeder.setPosition(0);
     }
 
-    public void upFR() { FR_FEEDER.setPosition(0.83); }
+    public void upFR() { FR_FEEDER.setPosition(0.79); }
     public void downFR() { FR_FEEDER.setPosition(0.55); }
 
-    public void upBL() { BL_FEEDER.setPosition(0.6); }
-    public void downBL() { BL_FEEDER.setPosition(0.29); } // 0.6
+    public void upBL() { BL_FEEDER.setPosition(0.59); }
+    public void downBL() { BL_FEEDER.setPosition(0.27); } // 0.6
 
 }

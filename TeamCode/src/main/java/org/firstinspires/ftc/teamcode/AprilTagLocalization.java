@@ -102,9 +102,11 @@ public class AprilTagLocalization extends LinearOpMode {
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
+            5.183228346, 4.963070866, 7.79528, 0); // UNKNOWN CONSTANTS
+    //    private Position cameraPosition = new Position(DistanceUnit.INCH,
+//            0, 8.25, 12, 0); // UNKNOWN CONSTANTS
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
-            0, -90, 0, 0); // UNKNOWN CONSTANTS
+            0, -90, 180, 0); // UNKNOWN CONSTANTS
 
     public Position getCamPos()
     {

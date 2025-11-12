@@ -16,6 +16,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-@Autonomous(name = "Auto_Red_Goal_12")
+@Autonomous(name = "Near_none_12")
 public class Auto_12 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -67,41 +68,50 @@ public class Auto_12 extends LinearOpMode {
         telemetry.addData("Color", color);
         telemetry.addData("Row Num", row);
         telemetry.addLine("If incorrect, stop and reinit");
-        telemetry.update();
 
 //        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Pose2d initialPose = new Pose2d(-57.25, 46, Math.toRadians(-50));
-        Robot robot = Robot.getInstance(initialPose, Robot.Color.RED);
-        robot.initAuto(hardwareMap, telemetry);
+
+        Pose2d initialPose = new Pose2d(-41.36, 55.81, Math.toRadians(180));
+        Robot robot = Robot.startInstance(initialPose, color);
+        robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
+        telemetry.update();
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .strafeTo(new Vector2d(-12,15))
-                .turnTo(Math.toRadians(180))
+//                .turnTo(Math.toRadians(180))
                 ;
         TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
                 .turnTo(Math.toRadians(90))
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15))
+//                .strafeTo(new Vector2d(-12,30))
+                .strafeTo(new Vector2d(-12,49)/*, new TranslationalVelConstraint(15)*/);
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90))) //first specimen
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(15,15))
-                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(13,30))
+                .strafeTo(new Vector2d(13,51)/*, new TranslationalVelConstraint(15)*/)
+                ;
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(12,51,Math.toRadians(90))) //first specimen
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(36,15))
-                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(36,30))
+                .strafeTo(new Vector2d(36,50)/*, new TranslationalVelConstraint(15)*/)
+                ;
+        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,50,Math.toRadians(90))) //first specimen
                 .strafeTo(new Vector2d(-12,15))
                 ;
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                .strafeTo(new Vector2d(0,15)) // Strafe to parking
+                .strafeTo(new Vector2d(2,15)) // Strafe to parking
                 ;
 
         ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();
         trajs.add(tab1); trajs.add(tab); trajs.add(tab2); trajs.add(tab3); trajs.add(tab4); trajs.add(tabp);
+        ArrayList<TrajectoryActionBuilder> trajs_back = new ArrayList<>();
+        trajs_back.add(tab2_back); trajs_back.add(tab3_back); trajs_back.add(tab4_back);
         ArrayList<char[]> queues = new ArrayList<>();
         queues.add(new char[]{'P','P','G'}); queues.add(new char[]{'P','G','P'}); queues.add(new char[]{'G','P','P'});
 
@@ -110,6 +120,10 @@ public class Auto_12 extends LinearOpMode {
             TrajectoryActionBuilder t = trajs.get(2);
             trajs.set(2,trajs.get(3));
             trajs.set(3, t); //doesn't matter in 9 ball but matters in 12 ball
+            //trajs back swap tab2 and tab3
+            TrajectoryActionBuilder tr = trajs_back.get(0);
+            trajs_back.set(0,trajs_back.get(1));
+            trajs_back.set(1, tr); //doesn't matter in 9 ball but matters in 12 ball
             //queues swap 0 and 1
             char[] q = queues.get(0);
             queues.set(0,queues.get(1));
@@ -120,6 +134,10 @@ public class Auto_12 extends LinearOpMode {
             TrajectoryActionBuilder t = trajs.get(2);
             trajs.set(2,trajs.get(4));
             trajs.set(4, t); //doesn't matter in 9 ball but matters in 12 ball
+            //trajs back swap tab2 and tab4
+            TrajectoryActionBuilder tr = trajs_back.get(0);
+            trajs_back.set(0,trajs_back.get(2));
+            trajs_back.set(2, tr); //doesn't matter in 9 ball but matters in 12 ball
             //queues swap 0 and 2
             char[] q = queues.get(0);
             queues.set(0,queues.get(2));
@@ -132,10 +150,11 @@ public class Auto_12 extends LinearOpMode {
         Action thirdTrajectory = trajs.get(3).build();
         Action fourthTrajectory = trajs.get(4).build();
         Action parkTrajectory = trajs.get(5).build();
+        Action secondTrajectory_back = trajs_back.get(0).build();
+        Action thirdTrajectory_back = trajs_back.get(1).build();
+        Action fourthTrajectory_back = trajs_back.get(2).build();
 
         // Keeps track of robot's internal ball order based on what is intook first
-//        char[] currentQueue = {'P','G','P'}; // Intake order: purple, green, purple
-        AtomicReference<char[]> currentQueue = new AtomicReference<>(new char[]{'P','G','P'}); // Intake order: purple, green, purple
 
 //        Action p2p = robot.drive2.p2pAction();
         waitForStart();
@@ -143,93 +162,136 @@ public class Auto_12 extends LinearOpMode {
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
+        AtomicBoolean slowIntake = new AtomicBoolean(false); // Intake on
         AtomicBoolean reverseIntake = new AtomicBoolean(false); // Intake on
+        AtomicBoolean stopIntake = new AtomicBoolean(false); // Intake on
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
+        AtomicBoolean con = new AtomicBoolean(true);
+        try {
+            Actions.runBlocking(
+                    new ParallelAction(
+                            new SequentialAction(
+                                    firstTrajectory,
+                                    new InstantAction(() -> detectOb.set(true)),
+                                    new SleepAction(0.5),
+                                    new InstantAction(() -> detectOb.set(false)),
+                                    new InstantAction(() -> con.set(false))
+                            ),
+                            telemetryPacket -> {
+                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
+                                robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0, false, false, false, false, false);
+                                int od = (robot.camera.detectObelisk(telemetry, detectOb.get()));
+                                if (od != 0) id.set(od);
+//                            robot.camera.detectObelisk(telemetry, true);
+                                telemetry.addData("Obelisk Detected", id.get());
+                                int[] order = Robot.Order;
+                                telemetryPacket.put("order", order[0] + ", " + order[1] + ", " + order[2]); // Feeder order
+                                telemetry.update();
+                                return con.get();
+                            }
+                    )
+            );
+            robot.camera.close();
+            int i = id.get();
+            RobotLog.d("obelisk id", i);
+            Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 1);
+            Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2);
+            Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3);
+            Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4);
+            Actions.runBlocking(
+                    new ParallelAction(
+                            new SequentialAction(
+                                    turnGoal, // Turn 90 degrees
+                                    // FIRE ROUND 1 (detect obelisk) PGP inside robot
+                                    new InstantAction(() ->
+                                            RobotLog.d("1st shot")),
+                                    // no AtomicReference needed
+                                    firstShot,
+                                    new InstantAction(() -> intake.set(true)),
 
-        Actions.runBlocking(
-                new ParallelAction(
-                        new SequentialAction(
-                            firstTrajectory,
-                            new InstantAction(() -> detectOb.set(true)),
-                            new SleepAction(0.5),
-                            new InstantAction(() -> detectOb.set(false)),
-                            turnGoal, // Turn 90 degrees
-                            // FIRE ROUND 1 (detect obelisk) PGP inside robot
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue.get(), id.get()),
-                            new InstantAction(() -> intake.set(true)),
+                                    // COLLECT ROUND 2 BALLS
+                                    secondTrajectory,
+                                    new ParallelAction(
+                                            secondTrajectory_back,
+                                            new SequentialAction(
+                                                    new InstantAction(() -> intake.set(false)),
+                                                    new SleepAction(0.5),
+                                                    new InstantAction(() -> reverseIntake.set(true)),
+                                                    new SleepAction(Robot.Constants.outtakePulseTime),
+                                                    new InstantAction(() -> reverseIntake.set(false)),
+                                                    new InstantAction(() -> stopIntake.set(true))
+                                            )
+                                    ),
+                                    new InstantAction(() ->
+                                            RobotLog.d("2nd shot")),
+                                    // FIRE ROUND 2
+                                    secondShot,
+                                    new InstantAction(() -> stopIntake.set(false)),
+                                    new InstantAction(() -> intake.set(true)),
 
-                            // COLLECT ROUND 2 BALLS
-                            secondTrajectory,
-                            new InstantAction(() -> intake.set(false)),
-                            new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.15),
-                            new InstantAction(() -> reverseIntake.set(false)),
-                            // Update internal ball order after intaking. ORDER: first intook = 0 idx.
-                            new InstantAction(() -> {
-                                // Example: assume collected PPG for second round
-//                                currentQueue[0] = 'P';
-//                                currentQueue[1] = 'P';
-//                                currentQueue[2] = 'G';
-                                currentQueue.set(queues.get(0));
-                            }),
+                                    // COLLECT ROUND 3 BALLS
+                                    thirdTrajectory,
+                                    new ParallelAction(
+                                            thirdTrajectory_back,
+                                            new SequentialAction(
+                                                    new InstantAction(() -> intake.set(false)),
+                                                    new SleepAction(0.5),
+                                                    new InstantAction(() -> reverseIntake.set(true)),
+                                                    new SleepAction(Robot.Constants.outtakePulseTime),
+                                                    new InstantAction(() -> reverseIntake.set(false)),
+                                                    new InstantAction(() -> stopIntake.set(true))
+                                            )
+                                    ),
+                                    new InstantAction(() ->
+                                            RobotLog.d("3rd shot")),
+                                    // FIRE ROUND 3
+                                    thirdShot,
+                                    new InstantAction(() -> stopIntake.set(false)),
+                                    new InstantAction(() -> intake.set(true)),
 
-                            // FIRE ROUND 2
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue.get(), id.get()),
-                            new InstantAction(() -> intake.set(true)),
+                                    // COLLECT ROUND 4 BALLS
+                                    fourthTrajectory,
+                                    new ParallelAction(
+                                            fourthTrajectory_back,
+                                            new SequentialAction(
+                                                    new InstantAction(() -> intake.set(false)),
+                                                    new SleepAction(0.5),
+                                                    new InstantAction(() -> reverseIntake.set(true)),
+                                                    new SleepAction(Robot.Constants.outtakePulseTime),
+                                                    new InstantAction(() -> reverseIntake.set(false)),
+                                                    new InstantAction(() -> stopIntake.set(true))
+                                            )
+                                    ),
+                                    new InstantAction(() ->
+                                            RobotLog.d("4th shot")),
+                                    // FIRE ROUND 4
+                                    fourthShot,
+                                    new InstantAction(() -> intake.set(false)),
 
-                            // COLLECT ROUND 3 BALLS
-                            thirdTrajectory,
-                            new InstantAction(() -> intake.set(false)),
-                            new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.15),
-                            new InstantAction(() -> reverseIntake.set(false)),
+                                    parkTrajectory
+                                    //END
+                            ),
+                            telemetryPacket -> {
+                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
+                                robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0, false, false, false, false, false);
+//                            id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
+                                telemetry.addData("Obelisk Detected", id.get());
+                                int[] order = Robot.Order;
+                                telemetryPacket.put("order", order[0] + ", " + order[1] + ", " + order[2]); // Feeder order
+                                telemetry.update();
+                                return true;
+                            }
 
-                            // Example: assume collected PPG for last round
-                            new InstantAction(() -> {
-//                                currentQueue[0] = 'P';
-//                                currentQueue[1] = 'G';
-//                                currentQueue[2] = 'P';
-                                currentQueue.set(queues.get(1));
-                            }),
-
-                            // FIRE ROUND 3
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue.get(), id.get()),
-                            new InstantAction(() -> intake.set(true)),
-
-                            // COLLECT ROUND 4 BALLS
-                            fourthTrajectory,
-                            new InstantAction(() -> intake.set(false)),
-                            new InstantAction(() -> reverseIntake.set(true)),
-                            new SleepAction(0.15),
-                            new InstantAction(() -> reverseIntake.set(false)),
-
-                            // Example: assume collected PPG for last round
-                            new InstantAction(() -> {
-//                                currentQueue[0] = 'G';
-//                                currentQueue[1] = 'P';
-//                                currentQueue[2] = 'P';
-                                currentQueue.set(queues.get(2));
-                            }),
-
-                            // FIRE ROUND 4
-                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue.get(), id.get()),
-                            new InstantAction(() -> intake.set(false)),
-
-                            parkTrajectory
-                            //END
-                    ),
-                    telemetryPacket -> {
-                        robot.controlIntake(intake.get(), reverseIntake.get(), !intake.get(), false);
-                        robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Constants.autoShotPose, 0,false,false,false, false, false);
-                        id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
-                        telemetry.addData("Obelisk Detected", id.get());
-                        int[] order = Robot.Order;
-                        telemetryPacket.put("order", order[0] + ", " + order[1] + ", " + order[2]); // Feeder order
-                        return true;
-                    }
-
-                )
-        );
+                    )
+            );
+        }
+        finally{
+            robot.setPose(drive.localizer.getPose());
+            MecanumDrive.PARAMS.maxWheelVel = 80;
+            MecanumDrive.PARAMS.minProfileAccel = -60;
+            MecanumDrive.PARAMS.maxProfileAccel = 80;
+            RobotLog.a("Finally");
+        }
     }
 }
