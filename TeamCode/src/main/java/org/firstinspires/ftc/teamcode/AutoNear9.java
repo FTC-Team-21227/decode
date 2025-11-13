@@ -75,7 +75,6 @@ public class AutoNear9 extends LinearOpMode {
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
-//                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
         TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) // shooting pos
                 .turnTo(Math.toRadians(90)) // Face the row of artifacts
@@ -84,7 +83,7 @@ public class AutoNear9 extends LinearOpMode {
                 .strafeTo(new Vector2d(-12,30))
                 .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90)))
                 .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
