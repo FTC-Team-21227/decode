@@ -22,9 +22,13 @@ public class Intake {
         if (!paused) INTAKE.setPower(1*Robot.Constants.intakePower);
         power = 1*Robot.Constants.intakePower;
     }
+    public void slowIntake(){
+        if (!paused) INTAKE.setPower(1*Robot.Constants.slowIntakePower);
+        power = 1*Robot.Constants.slowIntakePower;
+    }
     public void outtake(){
-        if (!paused) INTAKE.setPower(-1*Robot.Constants.intakePower);
-        power = -1*Robot.Constants.intakePower;
+        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower);
+        power = -1*Robot.Constants.outtakePower;
     }
     public void stop(){
         if (!paused) INTAKE.setPower(0);
@@ -36,7 +40,7 @@ public class Intake {
         paused = true;
     }
     public void shortOuttake(){
-        INTAKE.setPower(-1*Robot.Constants.intakePower);
+        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower);
         paused = true;
     }
     public void proceed() {

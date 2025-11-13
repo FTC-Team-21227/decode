@@ -36,6 +36,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -258,7 +259,10 @@ public class AprilTagLocalization2 {
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // End method initAprilTag()
-
+    public void close(){
+        FtcDashboard.getInstance().stopCameraStream();
+        visionPortal.close();
+    }
 
     /**
      * Add telemetry about AprilTag detections.
@@ -328,7 +332,7 @@ public class AprilTagLocalization2 {
     }   // end method telemetryAprilTag()
     public int detectObelisk(Telemetry telemetry, boolean detect
     ) {
-        if (!detect) return 21; // Obelisk detection off
+        if (!detect) return 0; // Obelisk detection off
         telemetry.addData("FPS", visionPortal.getFps());
         pipelineTimer.reset();
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -346,6 +350,7 @@ public class AprilTagLocalization2 {
                     telemetry.addLine("\nPIPELINE TIME DELAY: (ms) " + time + "\n");
                     telemetry.addLine("\nAVERAGE DELAY: (ms) " + averagePipe + "\n");
                     telemetry.update();
+                    RobotLog.dd("Yes Duddeee", " "+detection.id);
                     return detection.id;
                 }
             } else {
@@ -359,12 +364,13 @@ public class AprilTagLocalization2 {
 //        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
         telemetry.update();
 
+        RobotLog.a("At least I'm in here doing stuff.");
         if (!currentDetections.isEmpty())
         {
             AprilTagDetection detection = currentDetections.get(0);
             return detection.id;
         }
-        return 21; // Default
+        return 0; // Default
     }   // end method telemetryAprilTag()
 
 

@@ -104,7 +104,7 @@ public class ShooterRobot {
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
 
-        Robot.Constants.drivePower = 0.5;
+        Robot.Positions.drivePower = 0.5;
 
         telemetry.addData("Status", "Initialized");
     }
