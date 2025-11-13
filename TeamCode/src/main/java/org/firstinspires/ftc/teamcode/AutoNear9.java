@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AutoNear9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
+        // SET ROBOT COLOR
         Robot.Color color = Robot.Color.RED;
         boolean cont = true;
         while (cont && !isStopRequested()){
@@ -39,6 +40,7 @@ public class AutoNear9 extends LinearOpMode {
             telemetry.addLine("b = red, x = blue, start = continue");
             telemetry.update();
         }
+        // SET ROW # (0 and (1 or 2?))
         double row = 0;
         cont = true;
         while (cont && !isStopRequested()){
@@ -71,14 +73,14 @@ public class AutoNear9 extends LinearOpMode {
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .strafeTo(new Vector2d(-12,15)) // Shooting pos
 //                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) // shooting pos
                 .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(-12,30))
                 .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 ;
@@ -139,7 +141,7 @@ public class AutoNear9 extends LinearOpMode {
             queues.set(2,q);
         }
 
-        //by default: build all except tab4mysterious
+        // BUILD TRAJECTORIES by default: build all except tab4mysterious
         Action firstTrajectory = trajs.get(0).build();
         Action turnGoal = trajs.get(1).build();
         Action secondTrajectory = trajs.get(2).build();
@@ -150,10 +152,9 @@ public class AutoNear9 extends LinearOpMode {
         Action fourthTrajectory_back = trajs_back.get(2).build();
 
         // Keeps track of robot's internal ball order based on what is intook first
-
-//        Action p2p = robot.drive2.p2pAction();
         waitForStart();
 
+        // BOOLEANS
         AtomicBoolean shotReqFR = new AtomicBoolean(false);
         AtomicBoolean shotReqBL = new AtomicBoolean(false);
         AtomicBoolean intake = new AtomicBoolean(false); // Intake on
@@ -163,6 +164,8 @@ public class AutoNear9 extends LinearOpMode {
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
         AtomicBoolean con = new AtomicBoolean(true);
+
+        // OBELISK DETECTION
         try{
         Actions.runBlocking(
                 new ParallelAction(
@@ -191,10 +194,14 @@ public class AutoNear9 extends LinearOpMode {
         robot.camera.close();
         int i = id.get();
         RobotLog.d("obelisk id", i);
+
+        // SHOTS
         Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1);
         Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2);
         Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3);
         Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4);
+
+        // FINISH TRAJECTORIES
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
