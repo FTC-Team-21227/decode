@@ -14,12 +14,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// FROM BLUE LINE 15 MEEP MEEP
-@Autonomous(name = "Near_GATE_12")
-public class Auto15 extends LinearOpMode {
+
+@Autonomous(name = "Near 9")
+public class AutoNear9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Robot.Color color = Robot.Color.RED;
@@ -38,79 +39,117 @@ public class Auto15 extends LinearOpMode {
             telemetry.addLine("b = red, x = blue, start = continue");
             telemetry.update();
         }
+        double row = 0;
+        cont = true;
+        while (cont && !isStopRequested()){
+            if (gamepad1.aWasPressed()){
+                row = 0;
+            }
+            if (gamepad1.bWasPressed()){
+                row = 1;
+            }
+            if (gamepad1.yWasPressed()){
+                row = 2;
+            }
+            if (gamepad1.startWasPressed()){
+                cont = false;
+            }
+            telemetry.addData("Color", color);
+            telemetry.addData("Row Num ",row);
+            telemetry.addLine("a = 0 (near goal), b = 1 (middle), y = 2 (near loading), start = continue");
+            telemetry.update();
+        }
 
         telemetry.addData("Color", color);
+        telemetry.addData("Row Num", row);
         telemetry.addLine("If incorrect, stop and reinit");
 
+//        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
         Pose2d initialPose = new Pose2d(-41.36, 55.81, Math.toRadians(180));
-        Robot robot = Robot.startInstance(initialPose, color);
+        Robot robot = Robot.startInstance(initialPose, color /*Robot.Color.RED*/);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
-
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                // 1st Trajectory: Move out, read obelisk
-                .strafeTo(new Vector2d(-12, 15))
-//                .turnTo(Math.toRadians(180))
-                // TODO: Shoot here. 3/15
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+//                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180)))
-                // Face artifacts
-                .turnTo(Math.toRadians(90))
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
+                .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 ;
-
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                // 3rd Trajectory: collect 1st row
-                .strafeTo(new Vector2d(-7,30))
-                .strafeTo(new Vector2d(-7,49), new TranslationalVelConstraint(15))
-                // TODO: Shoot here. 9/15
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90))) //first specimen
+                .strafeTo(new Vector2d(-12,30))
+                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-7,49,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-7, 56)) // Open gate
-                .strafeTo(new Vector2d(-12,15))
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90))) //first specimen
+                .strafeTo(new Vector2d(-12,15)) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                // 3rdd Trajectory: collect 2nd row and open gate
-                .strafeTo(new Vector2d(15, 30)) // Line up with artifacts
-                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15))
-                // TODO: Shoot here. 6/15
+                .strafeTo(new Vector2d(15,30)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15)) // Collect artifacts
                 ;
-        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,51,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(-12,15))
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,51,Math.toRadians(90)))
+                .strafeTo(new Vector2d(-12,15)) // Shooting pos
                 ;
-        TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                // 4th Trajectory: collect 3rd (last) row
-                .strafeTo(new Vector2d(36, 30)) // Line up with artifacts
+        TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+                .strafeTo(new Vector2d(36,30))
                 .strafeTo(new Vector2d(36,50), new TranslationalVelConstraint(15))
-                // TODO: Shoot here. 12/15
                 ;
-        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,50,Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,50,Math.toRadians(90)))
                 .strafeTo(new Vector2d(-12,15))
                 ;
-        TrajectoryActionBuilder tab5 = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
-                // 5th Trajectory: collect 3 from gate release
-                .strafeTo(new Vector2d(20, 58)) // Collect from gate release
-                .strafeTo(new Vector2d(-12, 15)) // Shooting pos
-                // TODO: Shoot here. 15/15
-                ;
-        TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
+        TrajectoryActionBuilder parktab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(90)))
                 .strafeTo(new Vector2d(2,15)) // Strafe to parking
                 ;
-        Action parkTrajectory = tabp.build();
 
-        Action firstTrajectory = tab1.build();
-        Action turnGoal = tab.build();
-        Action secondTrajectory = tab2.build();
-        Action thirdTrajectory = tab3.build();
-        Action fourthTrajectory = tab4.build();
-        Action fifthTrajectory = tab5.build();
-        Action secondTrajectory_back = tab2_back.build();
-        Action thirdTrajectory_back = tab3_back.build();
-        Action fourthTrajectory_back = tab4_back.build();
+        ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();
+        trajs.add(tab1); trajs.add(tab); trajs.add(tab2); trajs.add(tab3); trajs.add(parktab); trajs.add(tab4Mysterious);
+        ArrayList<TrajectoryActionBuilder> trajs_back = new ArrayList<>();
+        trajs_back.add(tab2_back); trajs_back.add(tab3_back); trajs_back.add(tab4_back);
+        ArrayList<char[]> queues = new ArrayList<>();
+        queues.add(new char[]{'P','P','G'}); queues.add(new char[]{'P','G','P'}); queues.add(new char[]{'G','P','P'});
+
+        if (row == 1){
+            //trajs swap tab2 and tab3
+            TrajectoryActionBuilder t = trajs.get(2);
+            trajs.set(2,trajs.get(3));
+            trajs.set(3, t); //doesn't matter in 9 ball but matters in 12 ball
+            //trajs back swap tab2 and tab3
+            TrajectoryActionBuilder tr = trajs_back.get(0);
+            trajs_back.set(0,trajs_back.get(1));
+            trajs_back.set(1, tr); //doesn't matter in 9 ball but matters in 12 ball
+            //queues swap 0 and 1
+            char[] q = queues.get(0);
+            queues.set(0,queues.get(1));
+            queues.set(1,q);
+        }
+        if (row == 2){
+            //trajs swap tab2 and tab4Mysterious
+            TrajectoryActionBuilder t = trajs.get(2);
+            trajs.set(2,trajs.get(5));
+            trajs.set(5, t); //doesn't matter in 9 ball but matters in 12 ball
+            //trajs back swap tab2 and tab3
+            TrajectoryActionBuilder tr = trajs_back.get(0);
+            trajs_back.set(0,trajs_back.get(2));
+            trajs_back.set(2, tr); //doesn't matter in 9 ball but matters in 12 ball
+            //queues swap 0 and 2
+            char[] q = queues.get(0);
+            queues.set(0,queues.get(2));
+            queues.set(2,q);
+        }
+
+        //by default: build all except tab4mysterious
+        Action firstTrajectory = trajs.get(0).build();
+        Action turnGoal = trajs.get(1).build();
+        Action secondTrajectory = trajs.get(2).build();
+        Action thirdTrajectory = trajs.get(3).build();
+        Action parkTrajectory = trajs.get(4).build();
+        Action secondTrajectory_back = trajs_back.get(0).build();
+        Action thirdTrajectory_back = trajs_back.get(1).build();
+        Action fourthTrajectory_back = trajs_back.get(2).build();
 
         // Keeps track of robot's internal ball order based on what is intook first
-        char[] currentQueue = {'P','G','P'}; // Intake order: purple, green, purple
 
 //        Action p2p = robot.drive2.p2pAction();
         waitForStart();
@@ -124,7 +163,7 @@ public class Auto15 extends LinearOpMode {
         AtomicInteger id = new AtomicInteger(21); // Obelisk AprilTag ID #
         AtomicBoolean detectOb = new AtomicBoolean(false);
         AtomicBoolean con = new AtomicBoolean(true);
-try{
+        try{
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -153,9 +192,9 @@ try{
         int i = id.get();
         RobotLog.d("obelisk id", i);
         Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1);
-        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','P','G'}, i, 2);
-        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 3);
-        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G','P','P'}, i, 4);
+        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2);
+        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3);
+        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4);
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -163,7 +202,8 @@ try{
                                 // FIRE ROUND 1 (detect obelisk)
                                 firstShot,
                                 new InstantAction(() -> intake.set(true)),
-                                // COLLECT ROW 2 BALLS
+
+                                // COLLECT ROUND 2 BALLS
                                 secondTrajectory,
                                 new ParallelAction(
                                         secondTrajectory_back,
@@ -175,11 +215,13 @@ try{
                                                 new InstantAction(() -> stopIntake.set(true))
                                         )
                                 ),
+
                                 // FIRE ROUND 2
                                 secondShot,
                                 new InstantAction(() -> stopIntake.set(false)),
                                 new InstantAction(() -> intake.set(true)),
-                                // COLLECT ROW 1 BALLS
+
+                                // COLLECT ROUND 3 BALLS
                                 thirdTrajectory,
                                 new ParallelAction(
                                         thirdTrajectory_back,
@@ -191,38 +233,12 @@ try{
                                                 new InstantAction(() -> stopIntake.set(true))
                                         )
                                 ),
-                                // FIRE ROUND 3
+
                                 thirdShot,
-                                new InstantAction(() -> stopIntake.set(false)),
-                                new InstantAction(() -> intake.set(true)),
-                                // COLLECT ROW 3 BALLS
-                                fourthTrajectory,
-                                new ParallelAction(
-                                        fourthTrajectory_back,
-                                        new SequentialAction(
-                                                new InstantAction(() -> intake.set(false)),
-                                                new InstantAction(() -> reverseIntake.set(true)),
-                                                new SleepAction(Robot.Constants.outtakePulseTime),
-                                                new InstantAction(() -> reverseIntake.set(false)),
-                                                new InstantAction(() -> stopIntake.set(true))
-                                        )
-                                ),
-                                // FIRE ROUND 4
-                                fourthShot,
-                                new InstantAction(() -> intake.set(true)),
+                                new InstantAction(() -> intake.set(false)),
 
                                 parkTrajectory
-                                // COLLECT GATE RELEASE BALLS
-//                            fifthTrajectory,
-//                            new InstantAction(() -> intake.set(false)),
-//                            new InstantAction(() -> { // ORDER UNKNOWN
-//                                currentQueue[0] = 'G';
-//                                currentQueue[1] = 'P';
-//                                currentQueue[2] = 'P';
-//                            }),
-                                // FIRE ROUND 5
-//                            Robot.shootSequence(shotReqFR, shotReqBL, intake, currentQueue, id.get()),
-//                            new InstantAction(() -> intake.set(true))
+                                // END
                         ),
                         telemetryPacket -> {
                             robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());

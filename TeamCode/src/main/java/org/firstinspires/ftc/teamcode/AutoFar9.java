@@ -7,23 +7,21 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 
-@Autonomous(name = "Far_9")
-public class Auto_Far_Red_Goal_6 extends LinearOpMode {
+@Autonomous(name = "Far 9")
+public class AutoFar9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
+        // Setting robot color
         Robot.Color color = Robot.Color.RED;
         boolean cont = true;
         while (cont && !isStopRequested()){
@@ -55,7 +53,7 @@ public class Auto_Far_Red_Goal_6 extends LinearOpMode {
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
                 .strafeTo(new Vector2d(56,12))
                 .turnTo(Math.toRadians(120));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120))) //first specimen
@@ -78,6 +76,7 @@ public class Auto_Far_Red_Goal_6 extends LinearOpMode {
 //                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
 //                .strafeTo(new Vector2d(-12,15))
 //                ;
+        // Parking
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
                 .strafeTo(new Vector2d(56,32)) // Strafe to parking
                 ;
