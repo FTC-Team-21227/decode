@@ -72,7 +72,7 @@ public class MecanumDrive {
 
         // path profile parameters (in inches)
         public double maxWheelVel = 80;
-        public double minProfileAccel = -60;
+        public double minProfileAccel = -40;
         public double maxProfileAccel = 80;
         // turn profile parameters (in radians)
         public double maxAngVel = 1.5*Math.PI; // shared with path
@@ -488,7 +488,7 @@ public class MecanumDrive {
     }
 
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
-        if (PARAMS.color == Robot.Color.RED){
+//        if (PARAMS.color == Robot.Color.RED){
             return new TrajectoryActionBuilder(
                     TurnAction::new,
                     FollowTrajectoryAction::new,
@@ -502,27 +502,27 @@ public class MecanumDrive {
                     defaultTurnConstraints,
                     defaultVelConstraint, defaultAccelConstraint
             );
-        }
-        else if (PARAMS.color == Robot.Color.BLUE){
-            return new TrajectoryActionBuilder(
-                    TurnAction::new,
-                    FollowTrajectoryAction::new,
-                    new TrajectoryBuilderParams(
-                            1e-6,
-                            new ProfileParams(
-                                    0.25, 0.1, 1e-2
-                            )
-                    ),
-                    beginPose, 0.0,
-                    defaultTurnConstraints,
-                    defaultVelConstraint, defaultAccelConstraint,
-                    pose -> new Pose2dDual<>(
-                            pose.position.x, pose.position.y.unaryMinus(), pose.heading.inverse())
-            );
-        }
-        else{
-            RobotLog.a("Robot collor inaccesible in mecanum drive and cooked");
-            return null;
-        }
+//        }
+//        else if (PARAMS.color == Robot.Color.BLUE){
+//            return new TrajectoryActionBuilder(
+//                    TurnAction::new,
+//                    FollowTrajectoryAction::new,
+//                    new TrajectoryBuilderParams(
+//                            1e-6,
+//                            new ProfileParams(
+//                                    0.25, 0.1, 1e-2
+//                            )
+//                    ),
+//                    beginPose, 0.0,
+//                    defaultTurnConstraints,
+//                    defaultVelConstraint, defaultAccelConstraint,
+//                    pose -> new Pose2dDual<>(
+//                            pose.position.x, pose.position.y.unaryMinus(), pose.heading.inverse())
+//            );
+//        }
+//        else{
+//            RobotLog.a("Robot collor inaccesible in mecanum drive and cooked");
+//            return null;
+//        }
     }
 }

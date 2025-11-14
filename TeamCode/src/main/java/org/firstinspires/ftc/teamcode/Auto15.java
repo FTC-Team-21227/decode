@@ -136,7 +136,7 @@ try{
                         ),
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
-                        robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false, false, false);
+                        robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false, false, false, false, false, false, false, false, false);
                         int od = (robot.camera.detectObelisk(telemetry, detectOb.get()));
                         if (od != 0) id.set(od);
 //                            robot.camera.detectObelisk(telemetry, true);
@@ -152,10 +152,10 @@ try{
         robot.camera.close();
         int i = id.get();
         RobotLog.d("obelisk id", i);
-        Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1);
-        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','P','G'}, i, 2);
-        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 3);
-        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G','P','P'}, i, 4);
+        Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1, robot.opModeState);
+        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','P','G'}, i, 2, robot.opModeState);
+        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 3, robot.opModeState);
+        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G','P','P'}, i, 4, robot.opModeState);
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -226,7 +226,7 @@ try{
                         ),
                         telemetryPacket -> {
                             robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
-                            robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false, false, false);
+                            robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false, false, false,false, false, false, false,false,false, false, false);
 //                            id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                             telemetry.addData("Obelisk Detected", id.get());
                             int[] order = Robot.Order;

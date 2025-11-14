@@ -17,17 +17,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 
-@Autonomous(name = "Red_Near_9")
-public class Auto extends LinearOpMode {
+@Autonomous(name = "Blue_Near_9")
+public class Auto_Blue extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        Robot.Color color = Robot.Color.RED;
+        Robot.Color color = Robot.Color.BLUE;
         double row = 0;
         boolean cont = true;
         while (cont && !isStopRequested()){
@@ -54,43 +52,43 @@ public class Auto extends LinearOpMode {
         telemetry.addLine("If incorrect, stop and reinit");
 
 //        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Pose2d initialPose = new Pose2d(-41.36, 54.62, Math.toRadians(180));
+        Pose2d initialPose = new Pose2d(-41.36, -54.62, Math.toRadians(180));
         Robot robot = Robot.startInstance(initialPose, color /*Robot.Color.RED*/);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+                .strafeTo(new Vector2d(-12,-15)) // Shooting pos
 //                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,-15,Math.toRadians(180))) //first specimen
 //                .turnTo(Math.toRadians(90)) // Face the row of artifacts
                 .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble(), new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40));
                 ;
         TrajectoryActionBuilder tab2 = drive.actionBuilder(Robot.Constants.autoShotPose) //first specimen
-                .strafeTo(new Vector2d(-12,22), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
-                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,-22), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
+                .strafeTo(new Vector2d(-12,-49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90))) //first specimen
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,-49,Math.toRadians(-90))) //first specimen
                 .strafeTo(Robot.Constants.autoShotPose.position) // Back up to shooting pos
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(15,22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe right to next row of artifacts
-                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15)) // Collect artifacts
+                .strafeTo(new Vector2d(15,-22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(15,-51), new TranslationalVelConstraint(15)) // Collect artifacts
                 ;
-        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,51,Math.toRadians(90)))
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,-51,Math.toRadians(-90)))
                 .strafeTo(Robot.Constants.autoShotPose.position) // Shooting pos
                 ;
         TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(30,22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
-                .strafeTo(new Vector2d(30,50), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(30,-22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
+                .strafeTo(new Vector2d(30,-50), new TranslationalVelConstraint(15))
                 ;
-        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,50,Math.toRadians(90)))
+        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,-50,Math.toRadians(-90)))
                 .strafeTo(Robot.Constants.autoShotPose.position)
                 ;
         TrajectoryActionBuilder parktab = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(-50,20), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe to parking
+                .strafeTo(new Vector2d(-50,-20), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe to parking
                 ;
 
         ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();

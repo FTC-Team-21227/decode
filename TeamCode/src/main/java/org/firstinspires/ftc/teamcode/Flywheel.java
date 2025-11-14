@@ -19,6 +19,7 @@ public class Flywheel {
     PIDController pid;
     FeedforwardController f;
     VoltageSensor v;
+    public static double volts;
     //power
     public Flywheel (HardwareMap hardwareMap){
 //        FLYWHEEL = hardwareMap.get(DcMotorEx.class, "flywheel");
@@ -45,7 +46,8 @@ public class Flywheel {
         if (/*Math.abs(targetVel-curVel) > 300*/ true) {
             double pdds = pid.calculate(curVel, targetVel);
 //        FLYWHEEL.getMotor().setVelocity(targetVel);
-            FLYWHEEL.setPower((pdds + f.calculate(targetVel)) / v.getVoltage());
+            volts = v.getVoltage();
+            FLYWHEEL.setPower((pdds + f.calculate(targetVel)) / volts);
             return pdds + f.calculate(targetVel);
         }
         else{
