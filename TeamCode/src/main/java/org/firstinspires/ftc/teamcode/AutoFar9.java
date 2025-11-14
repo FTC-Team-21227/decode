@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AutoFar9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        // Setting robot color
+        // SET ROBOT COLOR
         Robot.Color color = Robot.Color.RED;
         boolean cont = true;
         while (cont && !isStopRequested()){
@@ -53,8 +53,8 @@ public class AutoFar9 extends LinearOpMode {
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(56,12))
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) // Start on far shooting zone, facing forward
+                .strafeTo(new Vector2d(56,12)) // Go forward a little 
                 .turnTo(Math.toRadians(120));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120))) //first specimen
                 .setTangent(Math.toRadians(180))
