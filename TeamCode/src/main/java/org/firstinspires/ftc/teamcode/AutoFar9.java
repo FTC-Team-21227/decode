@@ -19,13 +19,13 @@ import com.qualcomm.robotcore.util.RobotLog;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 @Autonomous(name = "Red_Far_9")
 public class Auto_Far_Red_Goal_6 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
+        // SET ROBOT COLOR
         Robot.Color color = Robot.Color.RED;
 
         MecanumDrive.PARAMS.maxWheelVel = 50;
@@ -66,6 +66,7 @@ public class Auto_Far_Red_Goal_6 extends LinearOpMode {
 //                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
 //                .strafeTo(new Vector2d(-12,15))
 //                ;
+        // Parking
         TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
                 .strafeTo(new Vector2d(56,32)) // Strafe to parking
                 ;

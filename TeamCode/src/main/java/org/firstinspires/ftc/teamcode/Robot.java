@@ -86,7 +86,7 @@ public class Robot {
 //                break;
 //        }
         if (this.color==Color.RED) {
-            driveSideSign = 1;
+            driveSideSign = -1;
             Positions.goalPos = Constants.goalPos;
             // Where the robot will shoot from:
             Positions.autoShotPose = Constants.autoShotPose;

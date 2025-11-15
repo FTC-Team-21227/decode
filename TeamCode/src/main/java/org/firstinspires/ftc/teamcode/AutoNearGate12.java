@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // FROM BLUE LINE 15 MEEP MEEP
 @Autonomous(name = "Near_GATE_12")
-public class Auto15 extends LinearOpMode {
+public class AutoNearGate12 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Robot.Color color = Robot.Color.RED;

@@ -17,16 +17,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 @Autonomous(name = "Red_Near_9")
 public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
+        // SET ROBOT COLOR
         Robot.Color color = Robot.Color.RED;
         double row = 0;
         boolean cont = true;
