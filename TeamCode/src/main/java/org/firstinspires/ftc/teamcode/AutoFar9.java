@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Autonomous(name = "Red_Far_9")
-public class Auto_Far_Red_Goal_6 extends LinearOpMode {
+public class AutoFar9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // SET ROBOT COLOR
