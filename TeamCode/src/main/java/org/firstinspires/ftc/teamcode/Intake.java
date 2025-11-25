@@ -50,10 +50,10 @@ public class Intake {
         paused = false;
     }
     public void updateComp(){
-        voltageComp = 14.0/Flywheel.volts;
-        if (voltageComp %0.1==0){
-            RobotLog.d("comp"+voltageComp);
-            RobotLog.d("volts"+Flywheel.volts);
+        voltageComp = 14.0 / Flywheel.volts;
+        if (voltageComp % 0.1 == 0){
+            RobotLog.d("comp" + voltageComp);
+            RobotLog.d("volts" + Flywheel.volts);
         }
     }
 }

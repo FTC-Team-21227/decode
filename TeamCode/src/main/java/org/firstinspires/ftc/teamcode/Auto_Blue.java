@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Autonomous(name = "Blue_Near_9")
 public class Auto_Blue extends LinearOpMode {
     @Override
+    // Choosing color and row
     public void runOpMode() throws InterruptedException {
         Robot.Color color = Robot.Color.BLUE;
         double row = 0;
@@ -51,83 +52,96 @@ public class Auto_Blue extends LinearOpMode {
         telemetry.addData("Row Num", row);
         telemetry.addLine("If incorrect, stop and reinit");
 
-//        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Pose2d initialPose = new Pose2d(-41.36, -54.62, Math.toRadians(180));
-        Robot robot = Robot.startInstance(initialPose, color /*Robot.Color.RED*/);
+        // Initialize robot, start position
+        Pose2d initialPose = new Pose2d(-41.36, -54.62, Math.toRadians(180)); // Against blue wall
+        Robot robot = Robot.startInstance(initialPose, color);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO);
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(-12,-15)) // Shooting pos
-//                .turnTo(Math.toRadians(180)) // Face obelisk
+        // Create trajectories
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
+                // Shooting pos
+                .strafeTo(new Vector2d(-12,-15))
+                // Face obelisk
+//                .turnTo(Math.toRadians(180))
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,-15,Math.toRadians(180))) //first specimen
-//                .turnTo(Math.toRadians(90)) // Face the row of artifacts
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,-15,Math.toRadians(180)))
+                // Face the row of artifacts
+//                .turnTo(Math.toRadians(90))
                 .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble(), new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40));
                 ;
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(Robot.Constants.autoShotPose) //first specimen
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(Robot.Constants.autoShotPose)
                 .strafeTo(new Vector2d(-12,-22), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
-                .strafeTo(new Vector2d(-12,-49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
+                // Collect closest row of artifacts
+                .strafeTo(new Vector2d(-12,-49), new TranslationalVelConstraint(15))
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,-49,Math.toRadians(-90))) //first specimen
-                .strafeTo(Robot.Constants.autoShotPose.position) // Back up to shooting pos
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,-49,Math.toRadians(-90)))
+                // Shooting pos
+                .strafeTo(Robot.Constants.autoShotPose.position)
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(15,-22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe right to next row of artifacts
-                .strafeTo(new Vector2d(15,-51), new TranslationalVelConstraint(15)) // Collect artifacts
+                // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(15,-22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
+                // Collect artifacts
+                .strafeTo(new Vector2d(15,-51), new TranslationalVelConstraint(15))
                 ;
         TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,-51,Math.toRadians(-90)))
-                .strafeTo(Robot.Constants.autoShotPose.position) // Shooting pos
+                // Shooting pos
+                .strafeTo(Robot.Constants.autoShotPose.position)
                 ;
         TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(Robot.Constants.autoShotPose)
                 .strafeTo(new Vector2d(30,-22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
                 .strafeTo(new Vector2d(30,-50), new TranslationalVelConstraint(15))
                 ;
         TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,-50,Math.toRadians(-90)))
+                // Shooting pos
                 .strafeTo(Robot.Constants.autoShotPose.position)
                 ;
         TrajectoryActionBuilder parktab = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(-50,-20), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe to parking
+                // Strafe to parking
+                .strafeTo(new Vector2d(-50,-20), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
                 ;
 
+        // Trajectory list
         ArrayList<TrajectoryActionBuilder> trajs = new ArrayList<>();
         trajs.add(tab1); trajs.add(tab); trajs.add(tab2); trajs.add(tab3); trajs.add(parktab); trajs.add(tab4Mysterious);
         ArrayList<TrajectoryActionBuilder> trajs_back = new ArrayList<>();
         trajs_back.add(tab2_back); trajs_back.add(tab3_back); trajs_back.add(tab4_back);
+        // Ball order
         ArrayList<char[]> queues = new ArrayList<>();
         queues.add(new char[]{'P','P','G'}); queues.add(new char[]{'P','G','P'}); queues.add(new char[]{'G','P','P'});
 
         if (row == 1){
-            //trajs swap tab2 and tab3
+            // Swap tab2 and tab3
             TrajectoryActionBuilder t = trajs.get(2);
             trajs.set(2,trajs.get(3));
-            trajs.set(3, t); //doesn't matter in 9 ball but matters in 12 ball
-            //trajs back swap tab2 and tab3
+            trajs.set(3, t); // Doesn't matter in 9 ball but matters in 12 ball
+            // Sack swap tab2back and tab3back
             TrajectoryActionBuilder tr = trajs_back.get(0);
             trajs_back.set(0,trajs_back.get(1));
-            trajs_back.set(1, tr); //doesn't matter in 9 ball but matters in 12 ball
-            //queues swap 0 and 1
+            trajs_back.set(1, tr); // Doesn't matter in 9 ball but matters in 12 ball
+            // Queues swap 0 and 1
             char[] q = queues.get(0);
             queues.set(0,queues.get(1));
             queues.set(1,q);
         }
         if (row == 2){
-            //trajs swap tab2 and tab4Mysterious
+            // Swap tab2 and tab4Mysterious
             TrajectoryActionBuilder t = trajs.get(2);
             trajs.set(2,trajs.get(5));
-            trajs.set(5, t); //doesn't matter in 9 ball but matters in 12 ball
-            //trajs back swap tab2 and tab3
+            trajs.set(5, t); // Doesn't matter in 9 ball but matters in 12 ball
+            // Swap tab2back and tab3back
             TrajectoryActionBuilder tr = trajs_back.get(0);
             trajs_back.set(0,trajs_back.get(2));
-            trajs_back.set(2, tr); //doesn't matter in 9 ball but matters in 12 ball
-            //queues swap 0 and 2
+            trajs_back.set(2, tr); // Doesn't matter in 9 ball but matters in 12 ball
+            // Queues swap 0 and 2
             char[] q = queues.get(0);
             queues.set(0,queues.get(2));
             queues.set(2,q);
         }
 
-        //by default: build all except tab4mysterious
+        // Default: Build all except tab4mysterious
         Action firstTrajectory = trajs.get(0).build();
         Action turnGoal = trajs.get(1).build();
         Action secondTrajectory = trajs.get(2).build();
@@ -138,7 +152,6 @@ public class Auto_Blue extends LinearOpMode {
         Action fourthTrajectory_back = trajs_back.get(2).build();
 
         // Keeps track of robot's internal ball order based on what is intook first
-
 //        Action p2p = robot.drive2.p2pAction();
         waitForStart();
 
@@ -152,6 +165,7 @@ public class Auto_Blue extends LinearOpMode {
         AtomicBoolean detectOb = new AtomicBoolean(false);
         AtomicBoolean con = new AtomicBoolean(true);
         try{
+            // DETECT OBELISK ID
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -164,6 +178,7 @@ public class Auto_Blue extends LinearOpMode {
                     telemetryPacket -> {
                         robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false, false, false, false, false, false,false, false, false);
+                        // Detect and set obelisk ID
                         int od = (robot.camera.detectObelisk(telemetry, detectOb.get()));
                         if (od != 0) id.set(od);
 //                            robot.camera.detectObelisk(telemetry, true);
@@ -179,15 +194,17 @@ public class Auto_Blue extends LinearOpMode {
         robot.camera.close();
         int i = id.get();
         RobotLog.d("obelisk id", i);
+        // Calculate shooting sequence
         Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1, robot.opModeState);
         Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2, robot.opModeState);
         Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3, robot.opModeState);
         Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4, robot.opModeState);
         Actions.runBlocking(
+                // REST OF THE TRAJECTORIES
                 new ParallelAction(
                         new SequentialAction(
                                 turnGoal, // Turn 90 degrees
-                                // FIRE ROUND 1 (detect obelisk)
+                                // FIRE ROUND 1
                                 firstShot,
                                 new InstantAction(() -> intake.set(true)),
 
@@ -243,7 +260,7 @@ public class Auto_Blue extends LinearOpMode {
 
                 )
         );}
-        finally{
+        finally {
             robot.setPose(drive.localizer.getPose());
             RobotLog.a("Finally");
         }
