@@ -47,5 +47,10 @@ public class LimelightApriltagTest extends OpMode{
             telemetry.addData("Ta", llResult.getTa());
             telemetry.addData("BotPose", botpose.toString());
         }
+        else {
+            telemetry.addLine("NO TAG DETECTED");
+        }
+
+        telemetry.update();
     }
 }
