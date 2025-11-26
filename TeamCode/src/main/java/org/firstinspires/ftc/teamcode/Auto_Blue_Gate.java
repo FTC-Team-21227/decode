@@ -21,8 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-@Autonomous(name = "Blue_Near_9")
-public class Auto_Blue extends LinearOpMode {
+@Autonomous(name = "Blue_Near_9_Gate")
+public class Auto_Blue_Gate extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Robot.Color color = Robot.Color.BLUE;
@@ -159,7 +159,7 @@ public class Auto_Blue extends LinearOpMode {
                         new SequentialAction(
                             firstTrajectory,
                             new InstantAction(() -> detectOb.set(true)),
-                            new SleepAction(0.2),
+                            new SleepAction(0.5),
                             new InstantAction(() -> detectOb.set(false)),
                             new InstantAction(() -> con.set(false))
                         ),
