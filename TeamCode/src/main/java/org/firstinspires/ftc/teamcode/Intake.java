@@ -21,16 +21,20 @@ public class Intake {
     }
     // Modes
     public void intake(){
-        if (!paused) INTAKE.setPower(1*Robot.Constants.intakePower * voltageComp);
-        power = 1*Robot.Constants.intakePower * voltageComp;
+        if (!paused) INTAKE.setPower(1*Robot.Constants.intakePower);
+        power = 1*Robot.Constants.intakePower;
     }
     public void slowIntake(){
-        if (!paused) INTAKE.setPower(1*Robot.Constants.slowIntakePower * voltageComp);
-        power = 1*Robot.Constants.slowIntakePower * voltageComp;
+        if (!paused) INTAKE.setPower(1*Robot.Constants.slowIntakePower);
+        power = 1*Robot.Constants.slowIntakePower;
     }
     public void outtake(){
-        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower * voltageComp);
-        power = -1*Robot.Constants.outtakePower * voltageComp;
+        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower);
+        power = -1*Robot.Constants.outtakePower;
+    }
+    public void strongOuttake(){
+        if (!paused) INTAKE.setPower(-1);
+        power = -1;
     }
     public void stop(){
         if (!paused) INTAKE.setPower(0);
@@ -42,18 +46,18 @@ public class Intake {
         paused = true;
     }
     public void shortOuttake(){
-        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower * voltageComp);
+        if (!paused) INTAKE.setPower(-1*Robot.Constants.outtakePower);
         paused = true;
     }
     public void proceed() {
         INTAKE.setPower(power * voltageComp);
         paused = false;
     }
-    public void updateComp(){
-        voltageComp = 14.0 / Flywheel.volts;
-        if (voltageComp % 0.1 == 0){
-            RobotLog.d("comp" + voltageComp);
-            RobotLog.d("volts" + Flywheel.volts);
-        }
-    }
+//    public void updateComp(){
+//        voltageComp = 14.0/Flywheel.volts;
+////        if (voltageComp %0.1==0){
+//            RobotLog.d("comp"+voltageComp);
+//            RobotLog.d("volts"+Flywheel.volts);
+////        }
+//    }
 }

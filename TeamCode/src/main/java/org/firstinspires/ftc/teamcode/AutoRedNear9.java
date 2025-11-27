@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Autonomous(name = "Red_Near_9")
-public class AutoNear9 extends LinearOpMode {
+public class AutoRedNear9 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // SET ROBOT COLOR
@@ -60,35 +60,36 @@ public class AutoNear9 extends LinearOpMode {
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(-12,15)) // Shooting pos
+                .strafeToLinearHeading(new Vector2d(-41.36,15),Math.toRadians(210)) // Shooting pos
 //                .turnTo(Math.toRadians(180)) // Face obelisk
                 ;
-        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-12,15,Math.toRadians(180))) //first specimen
+        TrajectoryActionBuilder tab = drive.actionBuilder(new Pose2d(-41.36,15,Math.toRadians(210))) //first specimen
 //                .turnTo(Math.toRadians(90)) // Face the row of artifacts
-                .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble(), new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40));
+                .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5), new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40));
                 ;
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(Robot.Constants.autoShotPose) //first specimen
-                .strafeTo(new Vector2d(-12,22), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
-                .strafeTo(new Vector2d(-12,49), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5))) //first specimen
+                .strafeToLinearHeading(new Vector2d(-12,22), Math.toRadians(90),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
+                .strafeTo(new Vector2d(-12,52), new TranslationalVelConstraint(15)) // Collect closest row of artifacts
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,49,Math.toRadians(90))) //first specimen
-                .strafeTo(Robot.Constants.autoShotPose.position) // Back up to shooting pos
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(-12,52,Math.toRadians(90))) //first specimen
+                .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5)) // Back up to shooting pos
                 ;
-        TrajectoryActionBuilder tab3 = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(15,22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe right to next row of artifacts
-                .strafeTo(new Vector2d(15,51), new TranslationalVelConstraint(15)) // Collect artifacts
+        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5)))
+                .strafeToLinearHeading(new Vector2d(13,22),Math.toRadians(90),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe right to next row of artifacts
+                .strafeTo(new Vector2d(13,56), new TranslationalVelConstraint(15)) // Collect artifacts
                 ;
-        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(15,51,Math.toRadians(90)))
-                .strafeTo(Robot.Constants.autoShotPose.position) // Shooting pos
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(13,56,Math.toRadians(90)))
+                .strafeTo(new Vector2d(13,33))
+                .strafeToLinearHeading(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5)) // Shooting pos
                 ;
-        TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(Robot.Constants.autoShotPose)
-                .strafeTo(new Vector2d(30,22),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
-                .strafeTo(new Vector2d(30,50), new TranslationalVelConstraint(15))
+        TrajectoryActionBuilder tab4Mysterious = drive.actionBuilder(new Pose2d(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5)))
+                .strafeToLinearHeading(new Vector2d(30,22),Math.toRadians(90),new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100))
+                .strafeTo(new Vector2d(30,56), new TranslationalVelConstraint(15))
                 ;
-        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,50,Math.toRadians(90)))
-                .strafeTo(Robot.Constants.autoShotPose.position)
+        TrajectoryActionBuilder tab4_back = drive.actionBuilder(new Pose2d(36,56,Math.toRadians(90)))
+                .strafeToLinearHeading(Robot.Constants.autoShotPose.position,Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5))
                 ;
-        TrajectoryActionBuilder parktab = drive.actionBuilder(Robot.Constants.autoShotPose)
+        TrajectoryActionBuilder parktab = drive.actionBuilder(new Pose2d(Robot.Constants.autoShotPose.position, Robot.Constants.autoShotPose.heading.toDouble()+Math.toRadians(1.5)))
                 .strafeTo(new Vector2d(-50,20), new TranslationalVelConstraint(100), new ProfileAccelConstraint(-40,100)) // Strafe to parking
                 ;
 
@@ -163,7 +164,7 @@ public class AutoNear9 extends LinearOpMode {
                             new InstantAction(() -> con.set(false))
                         ),
                     telemetryPacket -> {
-                        robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
+                        robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get(), false);
                         robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false, false, false, false, false, false,false, false, false);
                         int od = (robot.camera.detectObelisk(telemetry, detectOb.get()));
                         if (od != 0) id.set(od);
@@ -180,10 +181,10 @@ public class AutoNear9 extends LinearOpMode {
         robot.camera.close();
         int i = id.get();
         RobotLog.d("obelisk id", i);
-        Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1, robot.opModeState);
-        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2, robot.opModeState);
-        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3, robot.opModeState);
-        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4, robot.opModeState);
+        Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P','G','P'}, i, 1, robot.opModeState,Robot.Color.RED);
+        Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(0), i, 2, robot.opModeState,Robot.Color.RED);
+        Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(1), i, 3, robot.opModeState,Robot.Color.RED);
+        Action fourthShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, queues.get(2), i, 4, robot.opModeState,Robot.Color.RED);
         Actions.runBlocking(
                 new ParallelAction(
                         new SequentialAction(
@@ -232,7 +233,7 @@ public class AutoNear9 extends LinearOpMode {
                                 // END
                         ),
                         telemetryPacket -> {
-                            robot.controlIntake(false/*intake.get()*/, reverseIntake.get(), stopIntake.get(), false, intake.get() || slowIntake.get());
+                            robot.controlIntake(false/*intake.get()*/, reverseIntake.get(), stopIntake.get(), false, intake.get() || slowIntake.get(), false);
                             robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose, 0,false,false,false,false, false, false, false, false, false, false, false);
 //                            id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                             telemetry.addData("Obelisk Detected", id.get());

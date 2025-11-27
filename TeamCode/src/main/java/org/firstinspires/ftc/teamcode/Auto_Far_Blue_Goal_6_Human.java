@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -16,61 +14,53 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-@Autonomous(name = "Red_Far_9")
-public class AutoFar9 extends LinearOpMode {
+@Autonomous(name = "Blue_Far_9_Human")
+public class Auto_Far_Blue_Goal_6_Human extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        // SET ROBOT COLOR
-        Robot.Color color = Robot.Color.RED;
+        Robot.Color color = Robot.Color.BLUE;
 
         MecanumDrive.PARAMS.maxWheelVel = 50;
         MecanumDrive.PARAMS.minProfileAccel = -30;
         MecanumDrive.PARAMS.maxProfileAccel = 50;
         Robot.Constants.flywheelPower = 2.3;
 //        Pose2d initialPose = new Pose2d(-55, 46, Math.toRadians(-55));
-        Pose2d initialPose = new Pose2d(62, 14, Math.toRadians(180));
+        Pose2d initialPose = new Pose2d(62, -14, Math.toRadians(180));
         Robot robot = Robot.startInstance(initialPose, color);
         robot.initAuto(hardwareMap, telemetry, Robot.OpModeState.AUTO_FAR);
         telemetry.update();
         MecanumDrive drive = robot.drive2;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .strafeTo(new Vector2d(56,12))
-                .turnTo(Math.toRadians(120));
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120))) //first specimen
-                .setTangent(Math.toRadians(180))
-                .strafeToLinearHeading(new Vector2d(35,28),Math.toRadians(90))
-                .strafeTo(new Vector2d(35,60), new TranslationalVelConstraint(15))
+                .strafeTo(new Vector2d(56,-12))
+                .turnTo(Math.toRadians(-120));
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,-12,Math.toRadians(-120)))
+                .strafeToLinearHeading(new Vector2d(60,-55),Math.toRadians(-90))
+                .strafeTo(new Vector2d(60,-60))
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 35,60,Math.toRadians(90))) //first specimen
-                .strafeToLinearHeading(new Vector2d(60,12),Math.toRadians(120))
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 60,-60,Math.toRadians(-90))) //first specimen
+                .strafeTo(new Vector2d(30,-56))
+                .strafeToLinearHeading(new Vector2d(56,-12),Math.toRadians(-120))
                 ;
-        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
-                .strafeToLinearHeading(new Vector2d(60,55),Math.toRadians(90))
-                .strafeTo(new Vector2d(60,60))
-//                .strafeTo(new Vector2d(60,50))
-//                .strafeTo(new Vector2d(64,50))
-//                .strafeTo(new Vector2d(64,60))
-//                .strafeTo(new Vector2d(56,44))
-//                .strafeToLinearHeading(new Vector2d(56,12), Math.toRadians(120),  new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40))
+        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(56,-12,Math.toRadians(-120)))
+                .strafeToLinearHeading(new Vector2d(60,-55),Math.toRadians(-90))
+                .strafeTo(new Vector2d(60,-60))
                 ;
-        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(/*37*/ 60,60,Math.toRadians(90))) //first specimen
-                .strafeTo(new Vector2d(30,56))
-                .strafeToLinearHeading(new Vector2d(56,12),Math.toRadians(120))
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(/*37*/ 60,-60,Math.toRadians(-90))) //first specimen
+                .strafeTo(new Vector2d(30,-56))
+                .strafeToLinearHeading(new Vector2d(56,-12),Math.toRadians(-120))
                 ;
 //        TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(90)))
 //                .strafeTo(new Vector2d(36,15))
 //                .strafeTo(new Vector2d(36,45), new TranslationalVelConstraint(15))
 //                .strafeTo(new Vector2d(-12,15))
 //                ;
-        // Parking
-        TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
-                .strafeTo(new Vector2d(56,32)) // Strafe to parking
+        TrajectoryActionBuilder tabp = drive.actionBuilder(new Pose2d(56,-12,Math.toRadians(-120)))
+                .strafeTo(new Vector2d(56,-32)) // Strafe to parking
                 ;
 
         Action parkTrajectory = tabp.build();
@@ -122,9 +112,9 @@ public class AutoFar9 extends LinearOpMode {
             robot.camera.close();
             int i = id.get();
             RobotLog.d("obelisk id", i);
-            Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 1, Robot.OpModeState.AUTO_FAR, Robot.Color.RED);
-            Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G', 'P', 'P'}, i, 2, Robot.OpModeState.AUTO_FAR, Robot.Color.RED);
-            Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G', 'P', 'P'}, i, 3, Robot.OpModeState.AUTO_FAR, Robot.Color.RED);
+            Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 1, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
+            Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G', 'P', 'P'}, i, 2, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
+            Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 3, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
             Actions.runBlocking(
                     new ParallelAction(
                             new SequentialAction(
