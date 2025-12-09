@@ -59,5 +59,10 @@ public class LimelightApriltagTest extends OpMode{
 //            telemetry.update();
 //        }
 
+        else {
+            telemetry.addLine("NO TAG DETECTED");
+        }
+
+        telemetry.update();
     }
 }
