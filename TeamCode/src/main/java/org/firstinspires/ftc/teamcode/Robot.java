@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.HolonomicController;
@@ -21,12 +20,10 @@ import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,7 +76,8 @@ public class Robot {
     // Enum that switches between pinpoint and camera localization
     private enum DriveState {
         RELATIVE,
-        ABSOLUTE // Drive with AprilTag localization for absolute position on field
+        ABSOLUTE, // Drive with AprilTag localization for absolute position on field
+        ABSOLUTE2
     } private DriveState driveState; // Instance
 
     // Enum that stores the alliance color, accessible globally
@@ -215,11 +213,10 @@ public class Robot {
 
         // ---------------------------Draw Robot Method---------------------------------------
         public void drawPose(@NonNull TelemetryPacket p){
-            Canvas c = p.fieldOverlay();
-            c.setStroke("#3F51B5");
-            Drawing.drawRobot(c, localizer.getPose());
-            c.setStroke("#00FF00");
-            Drawing.drawRobot(c,localizer.getPose().times(Constants.turretPos));
+            p.fieldOverlay().setStroke("#3F51B5");
+            Drawing.drawRobot(p.fieldOverlay(), localizer.getPose());
+            p.fieldOverlay().setStroke("#00FF00");
+            Drawing.drawRobot(p.fieldOverlay(),localizer.getPose().times(Constants.turretPos));
         }
 
         // --------------------P2P Method-----------------------------------------------------
@@ -299,7 +296,7 @@ public class Robot {
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
 
-//        opModeState = OpModeState.AUTO;
+        this.opModeState = opModeState;
         launchState = LaunchState.IDLE;
         driveState = DriveState.RELATIVE;
 
@@ -320,12 +317,14 @@ public class Robot {
         Constants.turretAngleOffset = 0;
         Constants.hoodAngleOffset = 0;
 
-        RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
-        RobotLog.dd("auto shot pose", " " + Positions.autoShotPose.position.x + " " +  Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
-        RobotLog.dd("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " +  Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
-        RobotLog.dd("tele shot pose", " " + Positions.teleShotPose.position.x + " " +  Positions.teleShotPose .position.y + " " + Positions.teleShotPose .heading.toDouble());
-        RobotLog.dd("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
-        RobotLog.dd("deltaH"," "+Positions.deltaH);
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
+            RobotLog.dd("auto shot pose", " " + Positions.autoShotPose.position.x + " " + Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
+            RobotLog.dd("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " + Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
+            RobotLog.dd("tele shot pose", " " + Positions.teleShotPose.position.x + " " + Positions.teleShotPose.position.y + " " + Positions.teleShotPose.heading.toDouble());
+            RobotLog.dd("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
+            RobotLog.dd("deltaH", " " + Positions.deltaH);
+        }
         telemetry.addData("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
         telemetry.addData("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " +  Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
         telemetry.addData("tele shot pose", " " + Positions.teleShotPose .position.x + " " +  Positions.teleShotPose .position.y + " " + Positions.teleShotPose .heading.toDouble());
@@ -334,30 +333,34 @@ public class Robot {
         telemetry.addData("deltaH"," "+Positions.deltaH);
         telemetry.addData("Status", "Initialized"); //IMPORTANT
 //        telemetry.update();
-    }
+    } // END OF INITIALIZATION FUNCTION
 
     // -----------------------TELEOP INITIALIZATION-------------------------------------------------
     public void initTeleop(HardwareMap hardwareMap, Telemetry telemetry) {
 //        Constants.turretTargetRangeOffset = (Constants.turretLowAngle + Constants.turretHighAngle )/2.0;
+        // Initialize subsystems
         intake = new Intake(hardwareMap);
-        camera = new AprilTagLocalization2(hardwareMap);
+//        camera = new AprilTagLocalization2(hardwareMap);
         drive2 = new AprilDrive(hardwareMap, txWorldPinpoint, color);
         feeder = new Feeder(hardwareMap);
         flywheel = new Flywheel(hardwareMap);
         turret = new Turret(hardwareMap);
         hood = new Hood(hardwareMap);
 
+        // Set enums
         opModeState = OpModeState.TELEOP;
         launchState = LaunchState.IDLE;
         driveState = DriveState.RELATIVE;
 
+        // Start timers
         feederTimer = new ElapsedTime();
         aprilTimer = new ElapsedTime();
         intakeTimer = new ElapsedTime();
 
+        // Constants
         Positions.drivePower = Constants.drivePower_Tele;
         Positions.turretClip0 = Constants.turretClip0_tele;
-        Positions.turretClip1 = Constants.turretClip1_tele;
+        Positions.turretClip1 = Constants.turretClip1_tele; //CHANGE BACK
         Positions.flywheelPower = Constants.flywheelPower_Tele;
         Positions.flywheelPowerOffset = 0;
         Positions.turretAngleManualOffset = 0;
@@ -365,12 +368,56 @@ public class Robot {
         Constants.turretAngleOffset = 0;
         Constants.hoodAngleOffset = 0;
 
-        RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
-        RobotLog.dd("auto shot pose", " " + Positions.autoShotPose.position.x + " " +  Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
-        RobotLog.dd("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " +  Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
-        RobotLog.dd("tele shot pose", " " + Positions.teleShotPose .position.x + " " +  Positions.teleShotPose .position.y + " " + Positions.teleShotPose .heading.toDouble());
-        RobotLog.dd("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
-        RobotLog.dd("deltaH"," "+Positions.deltaH);
+        // Logs and telemetry
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
+            RobotLog.dd("auto shot pose", " "
+                    + Positions.autoShotPose.position.x + " "
+                    + Positions.autoShotPose.position.y + " "
+                    + Positions.autoShotPose.heading.toDouble());
+            RobotLog.dd("auto shot pose far", " "
+                    + Positions.autoShotPose_Far.position.x + " "
+                    + Positions.autoShotPose_Far.position.y + " "
+                    + Positions.autoShotPose_Far.heading.toDouble());
+            RobotLog.dd("tele shot pose", " "
+                    + Positions.teleShotPose.position.x + " "
+                    + Positions.teleShotPose.position.y + " "
+                    + Positions.teleShotPose.heading.toDouble());
+            RobotLog.dd("initial pose", " "
+                    + txWorldPinpoint.position.x + " "
+                    + txWorldPinpoint.position.y + " "
+                    + txWorldPinpoint.heading.toDouble());
+            RobotLog.dd("deltaH", " " + Positions.deltaH);
+            telemetry.addData("goal pos", " "
+                    + Positions.goalPos.x + " "
+                    + Positions.goalPos.y);
+            telemetry.addData("auto shot pose far", " "
+                    + Positions.autoShotPose_Far.position.x + " "
+                    + Positions.autoShotPose_Far.position.y + " "
+                    + Positions.autoShotPose_Far.heading.toDouble());
+            telemetry.addData("tele shot pose", " "
+                    + Positions.teleShotPose.position.x + " "
+                    + Positions.teleShotPose.position.y + " "
+                    + Positions.teleShotPose.heading.toDouble());
+            telemetry.addData("initial pose", " "
+                    + txWorldPinpoint.position.x + " "
+                    + txWorldPinpoint.position.y + " "
+                    + txWorldPinpoint.heading.toDouble());
+            telemetry.addData("auto shot pose", " "
+                    + Positions.autoShotPose.position.x + " "
+                    + Positions.autoShotPose.position.y + " "
+                    + Positions.autoShotPose.heading.toDouble());
+            telemetry.addData("deltaH", " " + Positions.deltaH);
+        }
+        telemetry.addData("Status", "Initialized"); // IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            RobotLog.dd("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
+            RobotLog.dd("auto shot pose", " " + Positions.autoShotPose.position.x + " " + Positions.autoShotPose.position.y + " " + Positions.autoShotPose.heading.toDouble());
+            RobotLog.dd("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " + Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
+            RobotLog.dd("tele shot pose", " " + Positions.teleShotPose.position.x + " " + Positions.teleShotPose.position.y + " " + Positions.teleShotPose.heading.toDouble());
+            RobotLog.dd("initial pose", " " + txWorldPinpoint.position.x + " " + txWorldPinpoint.position.y + " " + txWorldPinpoint.heading.toDouble());
+            RobotLog.dd("deltaH", " " + Positions.deltaH);
+        }
         telemetry.addData("goal pos", " " + Positions.goalPos.x + " " + Positions.goalPos.y);
         telemetry.addData("auto shot pose far", " " + Positions.autoShotPose_Far.position.x + " " +  Positions.autoShotPose_Far.position.y + " " + Positions.autoShotPose_Far.heading.toDouble());
         telemetry.addData("tele shot pose", " " + Positions.teleShotPose .position.x + " " +  Positions.teleShotPose .position.y + " " + Positions.teleShotPose .heading.toDouble());
@@ -380,15 +427,22 @@ public class Robot {
         telemetry.addData("Status", "Initialized"); //IMPORTANT
 //        RobotLog.d("dirve side sign"+driveSideSign);
 //        telemetry.update();
-    }
+    } // END OF INITIALIZATION FUNCTION
+
+    // --------------------WHEN TELEOP STARTS-------------------------------------------------------
     public void startTeleop(){
         feeder.downBL();
         feeder.downFR();
     }
-    // Constants
+
+
+    // ---------------------------ROBOT CONSTANTS CLASS---------------------------------------------
     public static class Constants{
         public final static boolean MINIMIZE_TELEMETRY = false;
-
+        public final static boolean friedFeed = true;
+        public static double flywheelPower = 2.32;
+        public static double flywheelPower_Tele = 2.32;
+        public static double hoodAngleOffset = 0;
         public final static double deltaH = 39; //height of wall = 54, height of ball exit = 18 inch - 3 inch //32; //height of turret = 8.436535433
         public final static double deltaH_far = 41;
         // GOAL POSES
@@ -400,23 +454,20 @@ public class Robot {
         public final static Pose2d teleShotPose = new Pose2d(0,0,goalPos.angleCast().toDouble()+Math.PI);
         public final static Pose2d teleShotPose_Far = new Pose2d(0,0,goalPos.angleCast().toDouble()+Math.PI);
         // FLYWHEEL
-        public static double flywheelPower = 2.3;
-        public static double flywheelPower_Tele = 2.3;
         public final static double spinUpTimeout = 2;
         public final static double kP = 0.052, kI = 0, kD = 0.000, kF = 10 /*kF will be removed in our new version*/, kS = 0.65, kV = 0.00450;
         // FEEDER
         public final static double feederPower = 1.0;
+        public final static double slowIntakePower = 0.7;
+        public final static double intakePower = 1.0;
+        public final static double outtakePower = 0.6;
+        public final static double intakePulseTime = 0.55;
+        public final static double outtakePulseTime = 0.15;
+        public final static double outtakePulseTime_Tele = 0.15;
+        public final static double intakeStabilizeTime = 0.4;
         public final static double feedTime = 0.5; //0.5; //probably increase to 0.6
         public final static double feedDownTime = 0.4; //less than feedUpTime probably
-        // INTAKE
-        public final static double intakePower = 1.0;
-        public final static double slowIntakePower = 0.85;
-        public final static double outtakePower = 0.75;
-        public final static double intakePulseTime = 0.5;
-        public final static double outtakePulseTime = 0.14;
-        public final static double intakeStabilizeTime = 0.4;
         // HOOD
-        public static double hoodAngleOffset = 0;
         public final static double hoodLowAngle = 65.36742754 * Math.PI/180; // the traj angle from horizonatla (rad) //75 //0;
         public final static double hoodHighAngle = 24.47717215 * Math.PI/180; //30 //50*Math.PI/180; //the traj angle from horizontal 55; // Highest actual degree is 41
         public final static double hoodScale0 = 0.15; //0.27;
@@ -445,9 +496,12 @@ public class Robot {
         public final static double drivePower = 1.0;
         public final static double drivePower_Tele = 1.0;
         public final static double drivePower_Slow = 0.2;
-    }
+    } // END OF CONSTANTS CLASS
 
-    public static class Positions{ //These are mobile positions, which are mirrored depending on color. Also includes scalars that are toggled between different values. For better code readability and error proofing.
+
+    // ---------------------------POSITIONS CLASS---------------------------------------------------
+    // These are mobile positions, which are mirrored depending on color. Also includes scalars that are toggled between different values. For better code readability and error proofing.
+    public static class Positions{
         public static Vector2d goalPos = Constants.goalPos;
         // Where the robot will shoot from:
         public static Pose2d autoShotPose = Constants.autoShotPose;
@@ -461,11 +515,12 @@ public class Robot {
         public static double flywheelPowerOffset = 0;
         public static double turretAngleManualOffset = 0;
         public static double hoodAngleManualOffset = 0;
-    }
+    } // END OF POSITIONS CLASS
 
 
-    // Drives the robot field-centric
+    // ---------------------------TELEOP FIELD-CENTRIC DRIVING--------------------------------------
     public boolean driveFieldCentric(double forward, double right, double rotate, boolean slowMode, boolean p2p) {
+        // Normal vs. slow mode
         if (!p2p) {
             if (slowMode) {
                 Positions.drivePower = Constants.drivePower_Slow;
@@ -478,7 +533,7 @@ public class Robot {
             double Motor_Side_input = forward * mag * driveSideSign; //-right * mag;
             double Motor_fwd_power = Math.cos(Heading_Angle) * Motor_FWD_input - Math.sin(Heading_Angle) * Motor_Side_input;
             double Motor_side_power = (Math.cos(Heading_Angle) * Motor_Side_input + Math.sin(Heading_Angle) * Motor_FWD_input) * MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick; //*1.5
-            double Motor_Rotation_power = rotate * 0.7/* * driveSideSign*/; //0.5
+            double Motor_Rotation_power = rotate * 0.9/* * driveSideSign*/; //0.5
             double Motor_power_BL = -(((Motor_fwd_power - Motor_side_power) - Motor_Rotation_power) * Positions.drivePower);
             double Motor_power_BR = -(((Motor_fwd_power + Motor_side_power) + Motor_Rotation_power) * Positions.drivePower);
             double Motor_power_FL = -(((Motor_fwd_power + Motor_side_power) - Motor_Rotation_power) * Positions.drivePower);
@@ -494,8 +549,9 @@ public class Robot {
             drive2.rightBack.setPower(Motor_power_BR / maxPowerMag);
         }
         else{
+            RobotLog.a("Robotvel: " + robotVel.linearVel.x + ", " + robotVel.linearVel.y + ", " + robotVel.angVel);
 //            drive2.runp2p(packet);
-            Pose2dDual<Time> targetDual = Pose2dDual.constant(Positions.teleShotPose, 1);  // zero velocity/accel
+            Pose2dDual<Time> targetDual = Pose2dDual.constant(Positions.teleShotPose, 0);  // zero velocity/accel
 
             PoseVelocity2dDual<Time> command = new HolonomicController(
                     MecanumDrive.PARAMS.axialGain, MecanumDrive.PARAMS.lateralGain, MecanumDrive.PARAMS.headingGain,
@@ -549,48 +605,142 @@ public class Robot {
             return true;
         }
         return false;
-    }
+    } // END OF DRIVING FUNCTION
 
+    // ------------------------TELEOP FIELD-CENTRIC DRIVING (SMOOTH)--------------------------------
+    public boolean driveFieldCentric_Smooth(double forward, double right, double rotate, boolean slowMode, boolean p2p) {
+        if (!p2p) { // NOT DURING P2P ACTION
+            if (slowMode) { // Slow drivetrain constant
+                Positions.drivePower = Constants.drivePower_Slow;
+            } else { // Normal drivetrain constant
+                Positions.drivePower = Constants.drivePower_Tele;
+            }
+            double Heading_Angle = drive2.localizer.getPose().heading.toDouble();
+            double mag = Math.sqrt(forward * forward + right * right);
+            double Motor_FWD_input = right * mag * driveSideSign; //forward * mag;
+            double Motor_Side_input = forward * mag * driveSideSign; //-right * mag;
+            double Motor_fwd_power = Math.cos(Heading_Angle) * Motor_FWD_input - Math.sin(Heading_Angle) * Motor_Side_input;
+            double Motor_side_power = (Math.cos(Heading_Angle) * Motor_Side_input + Math.sin(Heading_Angle) * Motor_FWD_input) * MecanumDrive.PARAMS.inPerTick / MecanumDrive.PARAMS.lateralInPerTick; //*1.5
+            double Motor_Rotation_power = rotate * 0.9/* * driveSideSign*/; //0.05
+            drive2.setDrivePowers(new PoseVelocity2d(
+                    new Vector2d(
+                            Motor_fwd_power,
+                            Motor_side_power
+                    ),
+                    Motor_Rotation_power
+            ));
+        }
+        else{ // P2P ACTION
+            RobotLog.a("Robotvel: " + robotVel.linearVel.x + ", " + robotVel.linearVel.y + ", " + robotVel.angVel);
+//            drive2.runp2p(packet);
+            Pose2dDual<Time> targetDual = Pose2dDual.constant(Positions.teleShotPose, 0);  // zero velocity/accel
+
+            PoseVelocity2dDual<Time> command = new HolonomicController(
+                    MecanumDrive.PARAMS.axialGain, MecanumDrive.PARAMS.lateralGain, MecanumDrive.PARAMS.headingGain,
+                    MecanumDrive.PARAMS.axialVelGain, MecanumDrive.PARAMS.lateralVelGain, MecanumDrive.PARAMS.headingVelGain
+            ).compute(targetDual, drive2.localizer.getPose(), robotVel);
+
+            MecanumKinematics.WheelVelocities<Time> wheelVels = drive2.kinematics.inverse(command);
+            double voltage = drive2.voltageSensor.getVoltage();
+
+            final MotorFeedforward feedforward = new MotorFeedforward(MecanumDrive.PARAMS.kS,
+                    MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick, MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick);
+            double leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage;
+            double leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
+            double rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
+            double rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
+//                mecanumCommandWriter.write(new MecanumCommandMessage(
+//                        voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
+//                ));
+
+//            // Telemetry lines
+//            // Robot current position
+//            packet.put("x", localizer.getPose().position.x);
+//            packet.put("y", localizer.getPose().position.y);
+//            packet.put("heading (deg)", Math.toDegrees(localizer.getPose().heading.toDouble()));
+//            // Position error
+            Pose2d error = Positions.teleShotPose.minusExp(drive2.localizer.getPose()); // Error pose based on difference between current and target pos
+//            packet.put("xError", error.position.x);
+//            packet.put("yError", error.position.y);
+//            packet.put("headingError (deg)", Math.toDegrees(error.heading.toDouble()));
+
+            // Stop adjusting if error not too large
+            if (error.position.sqrNorm() < 4 && Math.abs(error.heading.toDouble()) < 2){
+                drive2.leftFront.setPower(0);
+                drive2.leftBack.setPower(0);
+                drive2.rightBack.setPower(0);
+                drive2.rightFront.setPower(0);
+                return false;
+            }
+            // Set wheel power
+            drive2.leftFront.setPower(leftFrontPower);
+            drive2.leftBack.setPower(leftBackPower);
+            drive2.rightBack.setPower(rightBackPower);
+            drive2.rightFront.setPower(rightFrontPower);
+            /*
+                Canvas c = packet.fieldOverlay();
+                drawPoseHistory(c);
+                c.setStroke("#FF9800");
+                Drawing.drawRobot(c, targetPose);
+                c.setStroke("#3F51B5");
+                Drawing.drawRobot(c, localizer.getPose());
+
+                started = true;
+             */
+            return true;
+        }
+        return false;
+    } // END OF DRIVING FUNCTION
+
+
+    // ---------------------------SHOOTER METHOD----------------------------------------------------
     // Calculates and sets hood angle and flywheel RPM. Includes shooter state manager.
     public void updateShooter(boolean shotRequestedFront, boolean shotRequestedBack, boolean shotReqAlt,
                               Telemetry telemetry, boolean setPose, Pose2d setRobotPose,
                               double flywheelChange, boolean hoodUp, boolean hoodDown,
-                              boolean turretLeft, boolean turretRight, boolean humanFeed, boolean flywheelOff, boolean frontUp, boolean frontDown, boolean backUp, boolean backDown, boolean moveShot) {
-        // TODO: add some params where u can hardset shooter outputs - done
-        // TODO: replace these with LUT values - maybe not need rn
-        // Assume we have: Vector2d goalPosition
+                              boolean turretLeft, boolean turretRight, boolean humanFeed,
+                              boolean flywheelOff, boolean frontUp, boolean frontDown,
+                              boolean backUp, boolean backDown, boolean moveShot) {
+        // --------------------Getting robot pose and velocity----------------------
         Pose2d poseRobot = drive2.localizer.getPose(); // Robot pose
-
         Vector2d linVel = robotVel.linearVel;   // in in/s (consistent with other code)
         double angVel = robotVel.angVel;         // rad/s
 
+        // ------------------------Shooting trajectory values-----------------------
         double p = 0.65; // Fraction of time along trajectory from ground to ground
         double g = 386.22; // Gravity (in/s^2)
         double deltaH = Positions.deltaH; // Height difference from shooter to goal
         double flightTime = Math.sqrt(2 * deltaH / (p * g * (1 - p))); // Ball trajectory time from ground to ground
 
+        // ---------------------------Moving shot correction------------------------
+        // angVel thing is incorrect, the heading should be same as original but the turning should offset the virtual pose a tiny bit more.
         Pose2d correctedPoseRobot = new Pose2d(poseRobot.position.plus(linVel.times(flightTime)),poseRobot.heading.plus(angVel*flightTime));
         if (moveShot){
             poseRobot = correctedPoseRobot;
         }
 
+        // ----------------------------Locking shooter values-----------------------
         // if setPose just became true, recompute next loop:
+        // If user wants to lock shooter values, set setPose to true, and give it a Pose setRobotPose
         if (!setPose) lockStarted = false;
         if (setPose && setRobotPose != null){
             poseRobot = setRobotPose; // Calculate shooting values on where we plan to shoot
 //            RobotLog.d("Correct auto pose!");
         }
         else {
-            if (opModeState == OpModeState.AUTO)
-                RobotLog.d("This is auto right now, it's bad because it's calculating with the wrong pose");
+            if (!Constants.MINIMIZE_TELEMETRY) {
+                if (opModeState == OpModeState.AUTO)
+                    RobotLog.d("This is auto right now, it's bad because it's calculating with the wrong pose");
+            }
         }
-        Pose2d pose = poseRobot.times(Constants.turretPos); // Pose with the TURRET's position on the robot and ROBOT's heading
+
+        // Calculate shot vector using TURRET's position on the robot and ROBOT's heading---
+        Pose2d pose = poseRobot.times(Constants.turretPos); // Turret's field-relative position
         Vector2d goalVector = Positions.goalPos.minus(pose.position);
-
         double distance = goalVector.norm(); // Horizontal distance
-        double goalVectorAngle = goalVector.angleCast().toDouble();
+        double goalVectorAngle = goalVector.angleCast().toDouble(); // Angle
 
-        //
+        // -----Calculate hood angle, flywheel velocity, and turret angle--------
         if (!setPose || !lockStarted) {
             if (setPose) lockStarted = true;
             try {
@@ -610,40 +760,54 @@ public class Robot {
                 radps = vel / wheelRadius; // RPM
             }
             catch(ArithmeticException e){
-                RobotLog.dd("SHOOTER CALC FAILED MATH", e.getMessage());
-                lockStarted = false;
+                if (!Constants.MINIMIZE_TELEMETRY) {
+                    RobotLog.dd("SHOOTER CALC FAILED MATH", e.getMessage());
+                    lockStarted = false;
+                }
             }
         }
-//        else{
-//
-//        }
-        if (opModeState == OpModeState.TELEOP_FAR) {
-            if (shotReqFeederType) {//front
-                Positions.flywheelPower = 2.338; //change these for teleop
-                Constants.turretAngleOffset = 5 * Math.PI / 180;
+
+        // ------Adjusting flywheel velocity and turret angle for far shooting--------
+        if (opModeState == OpModeState.TELEOP_FAR && color == Color.RED) { // Far red
+            if (shotReqFeederType) { // front
+                Positions.flywheelPower = 2.481; //change these for teleop
+                Constants.turretAngleOffset = -4 * Math.PI / 180;
             }
             else{
-                Positions.flywheelPower = 2.15;
-                Constants.turretAngleOffset = -1 * Math.PI / 180;
+                Positions.flywheelPower = 2.305;
+                Constants.turretAngleOffset = 3 * Math.PI / 180;
             }
         }
-        // Manually control hood
+        else if (opModeState == OpModeState.TELEOP_FAR && color == Color.BLUE) { // Far blue
+            if (shotReqFeederType) { // front
+                Positions.flywheelPower = 2.145; //change these for teleop
+                Constants.turretAngleOffset = -2 * Math.PI / 180;
+            }
+            else{
+                Positions.flywheelPower = 2.239;
+                Constants.turretAngleOffset = -4 * Math.PI / 180;
+            }
+        }
+
+        // -------------------------Manual adjustment-------------------------------
+        // Hood
         double hoodChange = 0;
         if (hoodUp) hoodChange -= Math.PI/180;
         if (hoodDown) hoodChange += Math.PI/180;
         Positions.hoodAngleManualOffset += hoodChange;
-        // Manually control turret
+        // Turret
         double turretChange = 0;
         if (turretLeft) turretChange -= Math.PI/180;
         if (turretRight) turretChange += Math.PI/180;
         Positions.turretAngleManualOffset += turretChange;
 
-        // Adjust flywheel RPM
+        // Flywheel RPM
         double delta = 0;
         // If the flywheel power change is a big number, adjust little by little
         if (Math.abs(flywheelChange) > 0.95) delta = Math.signum(flywheelChange)*0.001;
         Positions.flywheelPowerOffset += delta;
 
+        //-------------------------Toggles--------------------------------------
         // Spin reverse direction for human feeding (when button is held down)
         if (humanFeed){
             //maybe also keep hood low and turret at constant pos
@@ -652,33 +816,35 @@ public class Robot {
             turretAngle = 0;
         }
         if (flywheelOff){ //not actually flywheelOff but really changing the disable status
-            if (flywheel.FLYWHEEL.getMotor().isMotorEnabled())
-                flywheel.FLYWHEEL.getMotor().setMotorDisable();
-            else
-                flywheel.FLYWHEEL.getMotor().setMotorEnable();
+            flywheel.FLYWHEEL.getMotor().setPower(0);
+            telemetry.addLine("trying to 0");
         }
-        flywheel.spinTo(radps * 28 / Math.PI / 2 * (Positions.flywheelPower+Positions.flywheelPowerOffset));
+        //----Set turret, flywheel, and hood to calculated positions + offsets----
+        else {
+            flywheel.spinTo(radps * 28 / Math.PI / 2 * (Positions.flywheelPower + Positions.flywheelPowerOffset));
+        }
         // Set hood angle to theta (convert to servo position)
         hood.turnToAngle(theta+Constants.hoodAngleOffset+Positions.hoodAngleManualOffset);
         turret.turnToRobotAngle(turretAngle+Constants.turretAngleOffset+Positions.turretAngleManualOffset);
 
+        // --------------------------Feeder toggles----------------------------------
         //use +-1 of requesting state
-
         if (frontUp) feeder.upFR();
         else if (frontDown) feeder.downFR();
         else if (backUp) feeder.upBL();
         else if (backDown) feeder.downBL();
+
+        // ----------------START OF SHOOTER STATE MANAGER----------------------
         switch (launchState) {
-            case IDLE:
+            case IDLE: // ------------------------------------------------------
                 if (shotReqAlt /*&& feederTimer.seconds()>Constants.feedTime*/){
                     // If 2 artifacts to shoot consecutively
                     if (chainShotCount == 2){
-                        if (feederTimer.seconds() > /*Constants.feedTime + */Constants.intakePulseTime+Constants.intakeStabilizeTime) {
+                        if (feederTimer.seconds() > /*Constants.feedTime + */Constants.intakePulseTime + Constants.intakeStabilizeTime) {
                             // True = front feeder, False = back feeder
                             if (shotReqFeederType) launchState = LaunchState.SPIN_UP_FRONT;
                             else launchState = LaunchState.SPIN_UP_BACK;
-                            // Alternate feeders
-//                            shotReqFeederType = !shotReqFeederType;
+//                            shotReqFeederType = !shotReqFeederType; // Alternate feeders
                             feederTimer.reset();
                         }
                         // Stop pulse
@@ -708,30 +874,31 @@ public class Robot {
 //                        shotReqFeederType = true;
                         feederTimer.reset();
                 }
-                break;
-            case SPIN_UP_FRONT: // SPEED UP FLYWHEEL
+                break; // END OF IDLE STATE
+
+            case SPIN_UP_FRONT: // SPEED UP FLYWHEEL---------------------
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50 || feederTimer.seconds() > Constants.spinUpTimeout) {
                     launchState = LaunchState.FEED_FRONT;
                 }
                 break;
-            case SPIN_UP_BACK: // SPEED UP FLYWHEEL
+            case SPIN_UP_BACK: // SPEED UP FLYWHEEL---------------------
                 if (flywheel.getVel() > radps * 28 / Math.PI / 2 - 50 || feederTimer.seconds() > Constants.spinUpTimeout) {
                     launchState = LaunchState.FEED_BACK;
                 }
                 break;
-            case FEED_FRONT: // FEED BALL
+            case FEED_FRONT: // FEED BALL------------------------------------
                 intake.pause();
                 feeder.upFR(); // feeder starts
                 feederTimer.reset(); // feeder goes down
                 launchState = LaunchState.LAUNCHING;
                 break;
-            case FEED_BACK: // FEED BALL
+            case FEED_BACK: // FEED BALL--------------------------------------
                 intake.pause();
                 feeder.upBL();
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
-            case LAUNCHING: // RESET EVERYTHING
+            case LAUNCHING: // RESET EVERYTHING---------------------------------
                 if (feederTimer.seconds() > Constants.feedTime) {
                     launchState = LaunchState.FEED_DOWN;
                     feeder.downFR();
@@ -740,7 +907,7 @@ public class Robot {
                     shotReqFeederType = !shotReqFeederType;
                 }
                 break;
-            case FEED_DOWN: // RESET EVERYTHING
+            case FEED_DOWN: // RESET EVERYTHING----------------------------------
                 if (feederTimer.seconds() > Constants.feedDownTime) {
                     launchState = LaunchState.IDLE;
                     feederTimer.reset();
@@ -748,46 +915,59 @@ public class Robot {
                     if (shotReqAlt) chainShotCount++;
                 }
                 break;
-        }
+        } // --------------------END OF STATE MANAGER--------------------------------
 
-        // TELEMETRY LINES
+        // ---------------------------TELEMETRY LINES--------------------------------
         if (hood.HOOD.commandedOutsideRange()) telemetry.addLine("WARNING: hood commanded out of its range! Auto set to 0 or 1.");
         if (turret.turret.commandedOutsideRange()) telemetry.addLine("WARNING: turret commanded out of its range! Auto set to 0 or 1.");
         telemetry.addData("flywheel power scale factor", Positions.flywheelPower + Positions.flywheelPowerOffset);
         telemetry.addData("State", launchState);
         telemetry.addData("Next feeder type", shotReqFeederType);
-        telemetry.addData("human feed", humanFeed); //NOT IMPORTANT
-        telemetry.addData("setPose", setPose); //NOT IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("human feed", humanFeed); //NOT IMPORTANT
+            telemetry.addData("setPose", setPose); //NOT IMPORTANT
+        }
         telemetry.addLine("robotTurretPose (inchxinchxdeg): " + pose.position.x+" "+pose.position.y+" "+pose.heading.toDouble()); //NOT IMPORTANT
         telemetry.addLine("goalVector (inchxinch): " + goalVector.x+" "+goalVector.y);
         telemetry.addLine("goalPos (inchxinch): " + Positions.goalPos.x+" "+Positions.goalPos.y); //NOT IMPORTANT
-        telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle)); //NOT IMPORTANT
-        telemetry.addData("distance to goal (inch)", distance); //NOT IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("goalVector angle (rad to deg)", Math.toDegrees(goalVectorAngle)); //NOT IMPORTANT
+            telemetry.addData("distance to goal (inch)", distance); //NOT IMPORTANT
+        }
         telemetry.addData("turret angle (rad to deg)", turretAngle*180/Math.PI);
         telemetry.addData("turret angle offset (rad to deg)", Constants.turretAngleOffset*180/Math.PI);
         telemetry.addData("turret angle offset manual(rad to deg)", Positions.turretAngleManualOffset*180/Math.PI);
-        telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle()*180/Math.PI); //NOT IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("turret get angle (rad to deg)", turret.getTurretRobotAngle() * 180 / Math.PI); //NOT IMPORTANT
+        }
         telemetry.addData("turret pos", turret.turret.getPosition()); //NOT IMPORTANT
         telemetry.addData("hood theta (rad to deg)", theta*180/Math.PI);
         telemetry.addData("hood angle offset (rad to deg)", Constants.hoodAngleOffset*180/Math.PI);
         telemetry.addData("hood angle offset manual (rad to deg)", Positions.hoodAngleManualOffset*180/Math.PI);
-        telemetry.addData("hood get angle (rad to deg)", hood.getAngle()); //NOT IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("hood get angle (rad to deg)", hood.getAngle()); //NOT IMPORTANT
+        }
         telemetry.addData("hood pos", hood.HOOD.getPosition()); //NOT IMPORTANT
-        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2);
-        telemetry.addData("targetVel (rad/s)", radps); //NOT IMPORTANT
+        telemetry.addData("targetVel (rad/s to tick/s)", radps*28/Math.PI/2*(Positions.flywheelPower+Positions.flywheelPowerOffset));
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("targetVel (rad/s)", radps); //NOT IMPORTANT
+        }
         telemetry.addData("motorSpeed (tick/s)", flywheel.getVel());
-        telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel()*2*Math.PI/28); //NOT IMPORTANT
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            telemetry.addData("motorSpeed (tick/s to rad/s)", flywheel.getVel() * 2 * Math.PI / 28); //NOT IMPORTANT
+        }
         telemetry.addData("feeder fr pos", feeder.FR_FEEDER.getPosition());
         telemetry.addData("feeder bl pos", feeder.BL_FEEDER.getPosition());
         telemetry.addData("feeder seconds", feederTimer.seconds()); //NOT IMPORTANT
 //        telemetry.update();
-    }
+    } // -------------------------------END OF UPDATE SHOOTER---------------------------------------
 
+    // ----------------------------------LOCALIZATION CLASS-----------------------------------------
     /**
      * Returns field-relative robot pose (calculated using turret pose), or returns Pinpoint-recorded
      * pose if no AprilTag detections. Also displays pose information on telemetry.
      */
-    public void updateLocalizer(boolean relocalize, Telemetry telemetry){
+    public void updateLocalizer(boolean relocalize, boolean relocalize2, Telemetry telemetry){
         switch (driveState){
             case RELATIVE:
                 robotVel = drive2.updatePoseEstimate();
@@ -795,10 +975,21 @@ public class Robot {
 //                    driveState = DriveState.ABSOLUTE;
 //                }
                 if (relocalize) driveState = DriveState.ABSOLUTE;
+                if (relocalize2) driveState = DriveState.ABSOLUTE2;
                 break;
             case ABSOLUTE:
                 boolean success = drive2.relocalize(telemetry);
                 if (success) aprilTimer.reset();
+                driveState = DriveState.RELATIVE;
+                break;
+            case ABSOLUTE2:
+                Pose2d newPose = handlePose(new Pose2d(-51.84,51.2636,Math.toRadians(-54.2651)));
+                drive2.localizer.setPose(newPose);
+                txWorldPinpoint = newPose;
+                Constants.hoodAngleOffset = 0;
+                Constants.turretAngleOffset = 0;
+                Positions.turretAngleManualOffset = 0;
+                Positions.hoodAngleManualOffset = 0;
                 driveState = DriveState.RELATIVE;
                 break;
         }
@@ -809,7 +1000,9 @@ public class Robot {
         telemetry.addData("x", drive2.localizer.getPose().position.x); //ALL IMPORTANT
         telemetry.addData("y", drive2.localizer.getPose().position.y);
         telemetry.addData("heading (deg)", Math.toDegrees(drive2.localizer.getPose().heading.toDouble()));
-    }
+    } //----------------------------END OF LOCALIZATION CLASS---------------------------------------
+
+    // ---------------------------------------AIMING------------------------------------------------
     public boolean setGoalTarget(){
         double x = drive2.localizer.getPose().position.x;
         boolean close = x < 10;
@@ -833,14 +1026,15 @@ public class Robot {
 //        return voltage;
 //    }
 
-    public void controlIntake(boolean in, boolean out, boolean stop, boolean tapOut, boolean inSlow){
-        intake.updateComp();
-        if (intakeTimer.seconds()>0.1){
+    //------------------------------INTAKE CONTROL METHOD-------------------------------------------
+    public void controlIntake(boolean in, boolean out, boolean stop, boolean tapOut, boolean inSlow, boolean outFast){
+        if (intakeTimer.seconds() > Constants.outtakePulseTime_Tele){
             if (tapping) {intake.proceed(); tapping = false;}
             if (out) intake.outtake();
             else if (in) intake.intake();
             else if (inSlow) intake.slowIntake();
             else if (stop) intake.stop();
+            else if (outFast) intake.strongOuttake();
         }
         if (tapOut){
             intake.shortOuttake();
@@ -848,31 +1042,40 @@ public class Robot {
             tapping = true;
         }
     }
+
+    // ------------------------Update pose variable with robot's current pose-----------------------
     public void setPose(Pose2d pose){
         txWorldPinpoint = pose;
     }
 
+
     // Lookup table (lut)
+    /*
     public int[][][] power = {{{1}}};
     public int[][][] angle = {{{1}}};
     public int[] lookUp(Vector2d pos, Vector2d vel){
 
         return new int[]{power[0][0][0],angle[0][0][0]};
     }
+     */
 
-    //helpers
+    // --------------------------------HELPER CLASSES-----------------------------------------------
+    // Mirror a pose
     public Pose2d mirrorPose(Pose2d pose){
         return new Pose2d(new Vector2d(pose.position.x, -pose.position.y), new Rotation2d(pose.heading.real, -pose.heading.imag));
     }
+    // Mirror a vector
     public Vector2d mirrorVector(Vector2d vector){
         return new Vector2d(vector.x, -vector.y);
     }
+    // If blue, mirror the pose
     public Pose2d handlePose(Pose2d pose){
         if (color == Color.BLUE){
             return mirrorPose(pose);
         }
         return pose;
     }
+    // If blue, mirror the vector
     public Vector2d handleVector(Vector2d vector){
         if (color == Color.BLUE){
             return mirrorVector(vector);
@@ -880,17 +1083,19 @@ public class Robot {
         return vector;
     }
 
-    // === Helper: Determine desired color sequence per obelisk ID ===
+
+    // ------------------ CALCULATE COLOR SEQUENCE FROM OBELISK ID ---------------------------------
     public static char[] getDesiredPattern(int obeliskID) {
         switch (obeliskID) {
             case 21: return new char[]{'G','P','P'};
             case 22: return new char[]{'P','G','P'};
-            case 23: return new char[]{'P','P','G'};
+            case 23: return new char[]{'P','P''','G'};
             default: return new char[]{'G','P','P'}; // fallback
         }
     }
 
-    // === Helper: Compute mapping from internal queue → desired order ===
+
+    // ------------------------COMPUTE INTAKE FIRING ORDER -----------------------------------------
     // Slots: innermost is 0, middle is 1, one in intake is 2
     // Returns an int[] like [0, 1, 2] for firing order
     public static int[] computeFireOrder(char[] queue, char[] desired) {
@@ -933,23 +1138,28 @@ public class Robot {
         return order;
     }
     public static int[] Order = {0,1,2};
-    // === Helper: Build the actual firing sequence of 3 balls based on color order ===
+
+
+    // ------------------------CALCULATE FEEDER FIRING SEQUENCE-------------------------------------
     public static Action shootSequence(AtomicBoolean shotReqFR, AtomicBoolean shotReqBL, AtomicBoolean slowIntakeAtomic,
-                                       char[] queue, int obeliskID, int shot, OpModeState opModeState) {
+                                       char[] queue, int obeliskID, int shot, OpModeState opModeState, Color color) {
 
         char[] desired = getDesiredPattern(obeliskID);
         Order = computeFireOrder(queue, desired);
-
-        RobotLog.a("Shohtott " + shot);
-        RobotLog.d("Obelisk ID: " + obeliskID);
-        RobotLog.d("balls in robot: ");
-        display(queue);
-        RobotLog.d("balls score order: ");
-        display(desired);
-        RobotLog.d("feeders move order: ");
-        display(Order);
+        // If feeder is not working, always shoot front one first
+        if (Constants.friedFeed) Order = new int[]{1,2,0};
+        if (!Constants.MINIMIZE_TELEMETRY) {
+            RobotLog.a("Shohtott " + shot);
+            RobotLog.d("Obelisk ID: " + obeliskID);
+            RobotLog.d("balls in robot: ");
+            display(queue);
+            RobotLog.d("balls score order: ");
+            display(desired);
+            RobotLog.d("feeders move order: ");
+            display(Order);
+        }
         ArrayList<Action> actions = new ArrayList<>();
-        if (opModeState == OpModeState.AUTO_FAR) {
+        if (opModeState == OpModeState.AUTO_FAR && color == Color.RED) {
             if (Order[0] == 0) {
                 actions.add(new InstantAction(() -> Positions.flywheelPower = 2.15));
                 actions.add(new InstantAction(() -> Constants.turretAngleOffset = -1 * Math.PI / 180));
@@ -958,7 +1168,19 @@ public class Robot {
                 actions.add(new InstantAction(() -> Constants.turretAngleOffset = 5 * Math.PI / 180));
             }
         }
-        actions.add(new SleepAction(0.4));
+        else if (opModeState == OpModeState.AUTO_FAR && color == Color.BLUE) {
+//            RobotLog.a("change first");
+            if (Order[0] == 0) {
+                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.25));
+                actions.add(new InstantAction(() -> Constants.turretAngleOffset = 6 * Math.PI / 180));
+            } else if (Order[0] == 1 || Order[0] == 2) {
+                actions.add(new InstantAction(() -> Positions.flywheelPower = 2.414));
+                actions.add(new InstantAction(() -> Constants.turretAngleOffset = 8 * Math.PI / 180));
+            }
+        }
+        if (opModeState == OpModeState.AUTO || opModeState == OpModeState.AUTO_FAR) {
+            actions.add(new SleepAction(0.4));
+        }
         for (int i = 0; i <= 2; i++) {
             int feeder = Order[i]; // Go through the firing order (eg. [0, 1, 2]) and set shot requests to true
             //TODO: modify for an intake pulse when firing slot 2. This will cause slot 1 to be displaced to slot 0. (push it in one slot)
@@ -969,7 +1191,7 @@ public class Robot {
                 actions.add(new InstantAction(() -> slowIntakeAtomic.set(false)));
                 actions.add(new SleepAction(Constants.intakeStabilizeTime));
             }
-            if (i == 2){
+            if (i == 2 && (opModeState == OpModeState.AUTO || opModeState == OpModeState.AUTO_FAR)){
                 actions.add(new SleepAction(0.4));
             }
             // then set shotReq booleans and the usual sleep/reset sequence
@@ -982,7 +1204,7 @@ public class Robot {
                 shotReqFR.set(false);
                 shotReqBL.set(false);
             }));
-            if (opModeState == OpModeState.AUTO_FAR && i < 2) {
+            if (opModeState == OpModeState.AUTO_FAR && color == Color.RED && i < 2) {
                 if (Order[i + 1] == 1 || Order[i + 1] == 2) {
                     actions.add(new SleepAction(0.2));
                     actions.add(new InstantAction(() -> Positions.flywheelPower = 2.338));
@@ -991,6 +1213,18 @@ public class Robot {
                     actions.add(new SleepAction(0.2));
                     actions.add(new InstantAction(() -> Positions.flywheelPower = 2.15));
                     actions.add(new InstantAction(() -> Constants.turretAngleOffset = -1 * Math.PI / 180));
+                }
+            }
+            else if (opModeState == OpModeState.AUTO_FAR && color == Color.BLUE && i < 2) {
+//                RobotLog.a("change " + i);
+                if (Order[i + 1] == 0) {
+                    actions.add(new SleepAction(0.2));
+                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.25));
+                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = 6 * Math.PI / 180));
+                } else if (Order[i + 1] == 1 || Order[i+1] == 2) {
+                    actions.add(new SleepAction(0.2));
+                    actions.add(new InstantAction(() -> Positions.flywheelPower = 2.414));
+                    actions.add(new InstantAction(() -> Constants.turretAngleOffset = 8 * Math.PI / 180));
                 }
             }
             if (i != 2) actions.add(new SleepAction(0.6)); // feed`er completes the state machine

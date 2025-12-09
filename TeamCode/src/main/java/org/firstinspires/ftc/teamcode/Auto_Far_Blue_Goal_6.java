@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -39,21 +40,18 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
                 .turnTo(Math.toRadians(-120));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,-12,Math.toRadians(-120))) //first specimen
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(30,-35,Math.toRadians(-90)),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(30,-56),Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(35,-28),Math.toRadians(-90))
+                .strafeTo(new Vector2d(35,-60), new TranslationalVelConstraint(15))
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 30,-56,Math.toRadians(-90))) //first specimen
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 35,-60,Math.toRadians(-90))) //first specimen
                 .strafeToLinearHeading(new Vector2d(56,-12),Math.toRadians(-120))
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(56,-12,Math.toRadians(-120)))
                 .strafeToLinearHeading(new Vector2d(60,-55),Math.toRadians(-90))
                 .strafeTo(new Vector2d(60,-60))
-//                .strafeTo(new Vector2d(60,50))
-//                .strafeTo(new Vector2d(64,50))
-//                .strafeTo(new Vector2d(64,60))
-//                .strafeTo(new Vector2d(56,44))
+                ;
+        TrajectoryActionBuilder tab3_back = drive.actionBuilder(new Pose2d(/*37*/ 60,-60,Math.toRadians(-90))) //first specimen
                 .strafeTo(new Vector2d(30,-56))
-//                .strafeToLinearHeading(new Vector2d(56,12), Math.toRadians(120),  new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40))
                 .strafeToLinearHeading(new Vector2d(56,-12),Math.toRadians(-120))
                 ;
 //        TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(90)))
@@ -71,6 +69,7 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
         Action secondTrajectory = tab2.build();
         Action secondTrajectory_back = tab2_back.build();
         Action thirdTrajectory = tab3.build();
+        Action thirdTrajectory_back = tab3_back.build();
 
         // Keeps track of robot's internal ball order based on what is intook first
 
@@ -96,7 +95,7 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
                                     new InstantAction(() -> con.set(false))
                             ),
                             telemetryPacket -> {
-                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
+                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get(), false);
                                 robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose_Far, 0, false,false, false, false, false, false, false, false, false, false, false);
                                 int od = (robot.camera.detectObelisk(telemetry, detectOb.get()));
                                 if (od != 0) id.set(od);
@@ -113,9 +112,9 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
             robot.camera.close();
             int i = id.get();
             RobotLog.d("obelisk id", i);
-            Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 1, robot.opModeState);
-            Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G', 'P', 'P'}, i, 2, robot.opModeState);
-            Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 3, robot.opModeState);
+            Action firstShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 1, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
+            Action secondShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'G', 'P', 'P'}, i, 2, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
+            Action thirdShot = Robot.shootSequence(shotReqFR, shotReqBL, slowIntake, new char[]{'P', 'G', 'P'}, i, 3, Robot.OpModeState.AUTO_FAR, Robot.Color.BLUE);
             Actions.runBlocking(
                     new ParallelAction(
                             new SequentialAction(
@@ -129,6 +128,7 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
                                             secondTrajectory_back,
                                             new SequentialAction(
                                                     new InstantAction(() -> slowIntake.set(false)),
+                                                    new SleepAction(0.5),
                                                     new InstantAction(() -> reverseIntake.set(true)),
                                                     new SleepAction(Robot.Constants.outtakePulseTime),
                                                     new InstantAction(() -> reverseIntake.set(false)),
@@ -142,11 +142,17 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
 
                                     // COLLECT ROUND 3 BALLS
                                     thirdTrajectory,
-                                    new InstantAction(() -> intake.set(false)),
-                                    new InstantAction(() -> reverseIntake.set(true)),
-                                    new SleepAction(Robot.Constants.outtakePulseTime),
-                                    new InstantAction(() -> reverseIntake.set(false)),
-                                    new InstantAction(() -> stopIntake.set(true)),
+                                    new ParallelAction(
+                                            thirdTrajectory_back,
+                                            new SequentialAction(
+                                                    new InstantAction(() -> slowIntake.set(false)),
+                                                    new SleepAction(0.5),
+                                                    new InstantAction(() -> reverseIntake.set(true)),
+                                                    new SleepAction(Robot.Constants.outtakePulseTime),
+                                                    new InstantAction(() -> reverseIntake.set(false)),
+                                                    new InstantAction(() -> stopIntake.set(true))
+                                            )
+                                    ),
 
                                     // FIRE ROUND 3
                                     thirdShot,
@@ -154,7 +160,7 @@ public class Auto_Far_Blue_Goal_6 extends LinearOpMode {
                                     //END
                             ),
                             telemetryPacket -> {
-                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get());
+                                robot.controlIntake(intake.get(), reverseIntake.get(), stopIntake.get(), false, slowIntake.get(), false);
                                 robot.updateShooter(shotReqFR.get(), shotReqBL.get(), false, telemetry, true, Robot.Positions.autoShotPose_Far, 0, false,false, false, false, false, false, false, false, false, false, false);
 //                            id.set(robot.camera.detectObelisk(telemetry, detectOb.get()));
                                 telemetry.addData("Obelisk Detected", id.get());

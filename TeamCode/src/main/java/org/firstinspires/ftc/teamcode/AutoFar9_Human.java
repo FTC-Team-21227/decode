@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -16,13 +14,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-@Autonomous(name = "Red_Far_9")
-public class AutoFar9 extends LinearOpMode {
+@Autonomous(name = "Red_Far_9_Human")
+public class AutoFar9_Human extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // SET ROBOT COLOR
@@ -42,13 +39,18 @@ public class AutoFar9 extends LinearOpMode {
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .strafeTo(new Vector2d(56,12))
                 .turnTo(Math.toRadians(120));
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120))) //first specimen
-                .setTangent(Math.toRadians(180))
-                .strafeToLinearHeading(new Vector2d(35,28),Math.toRadians(90))
-                .strafeTo(new Vector2d(35,60), new TranslationalVelConstraint(15))
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
+                .strafeToLinearHeading(new Vector2d(60,55),Math.toRadians(90))
+                .strafeTo(new Vector2d(60,60))
+//                .strafeTo(new Vector2d(60,50))
+//                .strafeTo(new Vector2d(64,50))
+//                .strafeTo(new Vector2d(64,60))
+//                .strafeTo(new Vector2d(56,44))
+//                .strafeToLinearHeading(new Vector2d(56,12), Math.toRadians(120),  new AngularVelConstraint(Math.PI/2), new ProfileAccelConstraint(-20,40))
                 ;
-        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 35,60,Math.toRadians(90))) //first specimen
-                .strafeToLinearHeading(new Vector2d(60,12),Math.toRadians(120))
+        TrajectoryActionBuilder tab2_back = drive.actionBuilder(new Pose2d(/*37*/ 60,60,Math.toRadians(90))) //first specimen
+                .strafeTo(new Vector2d(30,56))
+                .strafeToLinearHeading(new Vector2d(56,12),Math.toRadians(120))
                 ;
         TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(56,12,Math.toRadians(120)))
                 .strafeToLinearHeading(new Vector2d(60,55),Math.toRadians(90))
