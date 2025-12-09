@@ -39,13 +39,25 @@ public class LimelightApriltagTest extends OpMode{
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
         LLResult llResult = limelight.getLatestResult();
-        if (llResult!=null && llResult.isValid())
-        {
-            Pose3D botpose = llResult.getBotpose();
-            telemetry.addData("Tx", llResult.getTx());
-            telemetry.addData("Ty", llResult.getTy());
-            telemetry.addData("Ta", llResult.getTa());
-            telemetry.addData("BotPose", botpose.toString());
+        double robotYaw = orientation.getYaw();
+        limelight.updateRobotOrientation(robotYaw);
+        if (llResult != null && llResult.isValid()) {
+            Pose3D botpose_mt2 = llResult.getBotpose_MT2();
+            if (botpose_mt2 != null) {
+                double x = botpose_mt2.getPosition().x;
+                double y = botpose_mt2.getPosition().y;
+                telemetry.addData("MT2 Location:", "(" + x + ", " + y + ")");
+            }
         }
+//        if (llResult!=null && llResult.isValid())
+//        {
+//            Pose3D botpose = llResult.getBotpose();
+//            telemetry.addData("Tx", llResult.getTx());
+//            telemetry.addData("Ty", llResult.getTy());
+//            telemetry.addData("Ta", llResult.getTa());
+//            telemetry.addData("BotPose", botpose.toString());
+//            telemetry.update();
+//        }
+
     }
 }
