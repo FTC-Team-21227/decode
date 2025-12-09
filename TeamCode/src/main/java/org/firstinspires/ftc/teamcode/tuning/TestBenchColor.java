@@ -41,9 +41,10 @@ public class TestBenchColor {
 
         // TODO add if statements for specific colors
         /* range following colors
-        x         red, green, blue
-        PURPLE =
+        x red, green, blue
+        RED =
         GREEN =
+        BLUE =
          */
 
         if (normRed< 0 && normGreen < 0 && normBlue > 1) // TUNE VALUES
