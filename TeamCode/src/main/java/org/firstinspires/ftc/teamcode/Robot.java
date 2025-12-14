@@ -1089,7 +1089,7 @@ public class Robot {
         switch (obeliskID) {
             case 21: return new char[]{'G','P','P'};
             case 22: return new char[]{'P','G','P'};
-            case 23: return new char[]{'P','P''','G'};
+            case 23: return new char[]{'P','P', 'G'};
             default: return new char[]{'G','P','P'}; // fallback
         }
     }
